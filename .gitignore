@@ -1,0 +1,29 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+.vercel/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Supabase CLI local stack state (secrets, branch metadata) -- created by
+# `supabase start`/`supabase db reset`; never commit, mirrors `supabase init`'s
+# own default .gitignore entry.
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code local state (worktrees, etc.)
+/.claude/

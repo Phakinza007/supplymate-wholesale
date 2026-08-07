@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">SupplyMate Wholesale</title>
+  <rect width="64" height="64" rx="14" fill="#12233f"/>
+  <path d="M18 24.5 32 17l14 7.5v17L32 49 18 41.5v-17Z" fill="none" stroke="#fff7e8" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <path d="M18 24.5 32 32l14-7.5M32 32v17" fill="none" stroke="#fff7e8" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <path d="m39 40 3 3 6-7" fill="none" stroke="#9ee37d" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5"/>
+</svg>
