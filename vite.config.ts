@@ -12,7 +12,10 @@ const isGitHubPagesBuild = deployTarget === 'github-pages'
 export default defineConfig({
   base: isGitHubPagesBuild ? '/supplymate-wholesale/' : '/',
   define: deployTarget
-    ? { 'import.meta.env.VITE_DEPLOY_TARGET': JSON.stringify(deployTarget) }
+    ? {
+        'import.meta.env.VITE_DEPLOY_TARGET': JSON.stringify(deployTarget),
+        'import.meta.env.VITE_SHOWCASE_MODE': JSON.stringify('true'),
+      }
     : undefined,
   plugins: [react(), tailwindcss()],
   resolve: {

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { PackageUnit } from '@/lib/wholesale'
+import { clampToMinimum } from '@/demo/catalogue'
 
 export interface CartItem {
   productId: string
@@ -38,50 +38,50 @@ function sameLine(a: CartLine, b: CartLine) {
   return a.productId === b.productId && a.variantId === b.variantId
 }
 
-export const useCartStore = create<CartState>()(
-  persist(
-    (set) => ({
-      items: [],
-      addItem: (item, quantity = 1) =>
-        set((state) => {
-          const existing = state.items.find((i) => sameLine(i, item))
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                sameLine(i, item) ? { ...i, ...item, quantity: i.quantity + quantity } : i,
-              ),
-            }
-          }
-          return { items: [...state.items, { ...item, quantity }] }
-        }),
-      removeItem: (productId, variantId) =>
-        set((state) => ({
-          items: state.items.filter((i) => !sameLine(i, { productId, variantId })),
-        })),
-      updateQuantity: (productId, variantId, quantity) =>
-        set((state) => {
-          if (quantity <= 0) {
-            return { items: state.items.filter((i) => !sameLine(i, { productId, variantId })) }
-          }
-          return {
-            items: state.items.map((i) =>
-              sameLine(i, { productId, variantId }) ? { ...i, quantity } : i,
-            ),
-          }
-        }),
-      reconcileWholesale: (productId, variantId, packageUnit, minOrderQuantity) =>
-        set((state) => ({
-          items: state.items.map((item) =>
-            sameLine(item, { productId, variantId })
-              ? { ...item, packageUnit, minOrderQuantity }
-              : item,
+export const useCartStore = create<CartState>()((set) => ({
+  items: [],
+  addItem: (item, quantity = 1) =>
+    set((state) => {
+      const minimum = item.minOrderQuantity ?? 1
+      const safeQuantity = clampToMinimum(quantity, minimum)
+      const existing = state.items.find((i) => sameLine(i, item))
+      if (existing) {
+        return {
+          items: state.items.map((i) =>
+            sameLine(i, item) ? { ...i, ...item, quantity: i.quantity + safeQuantity } : i,
           ),
-        })),
-      clear: () => set({ items: [] }),
+        }
+      }
+      return { items: [...state.items, { ...item, quantity: safeQuantity }] }
     }),
-    { name: 'ecom-cart' },
-  ),
-)
+  removeItem: (productId, variantId) =>
+    set((state) => ({
+      items: state.items.filter((i) => !sameLine(i, { productId, variantId })),
+    })),
+  updateQuantity: (productId, variantId, quantity) =>
+    set((state) => {
+      const current = state.items.find((i) => sameLine(i, { productId, variantId }))
+      if (!current) return state
+
+      const minimum = current.minOrderQuantity ?? 1
+      return {
+        items: state.items.map((i) =>
+          sameLine(i, { productId, variantId })
+            ? { ...i, quantity: clampToMinimum(quantity, minimum) }
+            : i,
+        ),
+      }
+    }),
+  reconcileWholesale: (productId, variantId, packageUnit, minOrderQuantity) =>
+    set((state) => ({
+      items: state.items.map((item) =>
+        sameLine(item, { productId, variantId })
+          ? { ...item, packageUnit, minOrderQuantity }
+          : item,
+      ),
+    })),
+  clear: () => set({ items: [] }),
+}))
 
 export function useCartTotalItems() {
   return useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0))

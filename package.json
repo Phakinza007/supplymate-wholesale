@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "pretest:e2e": "supabase start && node scripts/write-e2e-env.mjs && supabase db reset --yes",
     "test:e2e": "playwright test",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:showcase-artifact": "node scripts/assert-static-showcase.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

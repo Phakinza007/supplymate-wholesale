@@ -45,27 +45,10 @@ npm run dev
 
 ## GitHub Pages release status
 
-The source and manual deployment workflow are prepared for
-`https://phakinza007.github.io/supplymate-wholesale/`, but that URL is not a deployed demo yet.
-A release remains pending until an owned hosted Supabase project is configured and the repository
-secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set. The workflow fails before upload
-when either secret is empty, and it can only be started manually.
-
-The hosted Supabase Auth URL configuration must allow this redirect URL:
-
-```text
-https://phakinza007.github.io/supplymate-wholesale/
-```
-
-Password-recovery emails request the browser-side callback
-`https://phakinza007.github.io/supplymate-wholesale/#/reset-password`. That full redirect URL is
-supplied to Supabase, but its fragment is stripped for server-side allowlist matching, so the
-Supabase redirect allowlist entry remains the base URL above. The browser also does not include
-the fragment in its HTTP request to GitHub Pages. On return, the app consumes the recovery session
-before routing and removes token-bearing or auth-error URL fragments.
-
-No hosted credentials or payment credentials belong in this repository. SupplyMate is a
-self-initiated, non-commercial concept demo and must not process real payments or customer data.
+The manually triggered workflow deploys a static concept showcase to
+`https://phakinza007.github.io/supplymate-wholesale/`. It builds without Supabase credentials and
+does not include accounts, payments, or customer data. SupplyMate is a self-initiated,
+non-commercial concept demo.
 
 ## Pre-deploy smoke test
 
