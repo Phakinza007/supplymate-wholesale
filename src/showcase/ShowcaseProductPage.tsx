@@ -4,6 +4,7 @@ import { useCartStore } from '@/core/cart/cartStore'
 import { clampToMinimum, findDemoProduct } from '@/demo/catalogue'
 import { formatPrice } from '@/lib/formatPrice'
 import { formatPackageLabel, quantityLabel } from '@/lib/wholesale'
+import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 export function ShowcaseProductPage() {
   const { slug = '' } = useParams()
@@ -33,7 +34,7 @@ export function ShowcaseProductPage() {
   return (
     <section className="mx-auto grid max-w-4xl gap-8 pb-8 md:grid-cols-2">
       <img
-        src={product.imagePath}
+        src={toShowcaseAssetUrl(product.imagePath)}
         alt={product.name}
         className="aspect-square w-full rounded-2xl bg-muted object-cover"
       />

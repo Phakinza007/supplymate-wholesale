@@ -5,6 +5,7 @@ import { ShowcaseCataloguePage } from '@/showcase/ShowcaseCataloguePage'
 import { ShowcaseCheckoutPage } from '@/showcase/ShowcaseCheckoutPage'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
 import { ShowcaseProductPage } from '@/showcase/ShowcaseProductPage'
+import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 function ShowcaseHeader() {
   const cartCount = useCartTotalItems()
@@ -13,7 +14,11 @@ function ShowcaseHeader() {
     <header className="border-b bg-card">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <img src="/images/supplymate/brandmark.svg" alt="" className="size-8 rounded-lg" />
+          <img
+            src={toShowcaseAssetUrl('/images/supplymate/brandmark.svg')}
+            alt=""
+            className="size-8 rounded-lg"
+          />
           <span>SupplyMate Wholesale</span>
         </Link>
         <nav aria-label="การนำทางหลัก" className="flex items-center gap-4 text-sm font-medium">

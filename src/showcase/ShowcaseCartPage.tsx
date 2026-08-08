@@ -3,6 +3,7 @@ import { useCartStore, useCartSubtotal } from '@/core/cart/cartStore'
 import { formatPrice } from '@/lib/formatPrice'
 import { quantityLabel } from '@/lib/wholesale'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
+import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 export function ShowcaseCartPage() {
   const items = useCartStore((state) => state.items)
@@ -31,7 +32,7 @@ export function ShowcaseCartPage() {
             <li key={`${item.productId}:${item.variantId ?? ''}`} className="flex gap-4 rounded-2xl border bg-card p-4">
               {item.imagePath && (
                 <img
-                  src={item.imagePath}
+                  src={toShowcaseAssetUrl(item.imagePath)}
                   alt={item.productName}
                   className="size-20 shrink-0 rounded-lg bg-muted object-cover"
                 />

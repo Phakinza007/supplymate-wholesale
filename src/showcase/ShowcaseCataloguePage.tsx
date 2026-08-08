@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { formatPrice } from '@/lib/formatPrice'
 import { formatPackageLabel, quantityLabel } from '@/lib/wholesale'
 import { demoCategories, demoProducts, filterDemoProducts, type DemoProduct } from '@/demo/catalogue'
+import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 interface ShowcaseCataloguePageProps {
   mode: 'home' | 'shop'
@@ -14,7 +15,7 @@ function ProductCard({ product }: { product: DemoProduct }) {
       className="group flex flex-col overflow-hidden rounded-2xl border bg-card transition-colors hover:border-primary/50"
     >
       <img
-        src={product.imagePath}
+        src={toShowcaseAssetUrl(product.imagePath)}
         alt={product.name}
         className="aspect-square w-full bg-muted object-cover transition-transform group-hover:scale-105"
       />
