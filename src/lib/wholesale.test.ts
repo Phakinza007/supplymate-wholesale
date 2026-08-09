@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPackageLabel, quantityLabel } from './wholesale'
+import { formatPackageLabel, perItemPrice, quantityLabel } from './wholesale'
 
 describe('wholesale labels', () => {
   it('describes cartons in Thai', () => {
@@ -14,5 +14,16 @@ describe('wholesale labels', () => {
   ] as const)('maps %s to its Thai order unit', (unit, label) => {
     expect(formatPackageLabel(unit, 50)).toBe(`50 ชิ้น / ${label}`)
     expect(quantityLabel(unit, 2)).toBe(`2 ${label}`)
+  })
+})
+
+describe('wholesale per-item pricing', () => {
+  it('derives the wholesale price per individual item', () => {
+    expect(perItemPrice(1_290, 1_000)).toBe(1.29)
+    expect(perItemPrice(890, 300)).toBeCloseTo(2.9666666667)
+  })
+
+  it('does not divide by an invalid package size', () => {
+    expect(perItemPrice(890, 0)).toBe(0)
   })
 })
