@@ -1,35 +1,49 @@
+import type { MouseEvent } from 'react'
 import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useCartTotalItems } from '@/core/cart/cartStore'
 import { ShowcaseCartPage } from '@/showcase/ShowcaseCartPage'
 import { ShowcaseCataloguePage } from '@/showcase/ShowcaseCataloguePage'
 import { ShowcaseCheckoutPage } from '@/showcase/ShowcaseCheckoutPage'
+import { ShowcaseFooter } from '@/showcase/ShowcaseFooter'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
 import { ShowcaseProductPage } from '@/showcase/ShowcaseProductPage'
 import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
+
+function scrollToDemoNotice(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault()
+  document.getElementById('showcase-demo-notice')?.scrollIntoView()
+}
 
 function ShowcaseHeader() {
   const cartCount = useCartTotalItems()
 
   return (
-    <header className="border-b bg-card">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2 font-semibold">
+    <header className="showcase-header">
+      <div className="showcase-utility">
+        <div className="showcase-utility__inner">
+          <span>แคตตาล็อกสำหรับร้านอาหาร คาเฟ่ และครัวกลาง</span>
+          <span>ข้อมูลตัวอย่างจากเครื่องนี้เท่านั้น</span>
+        </div>
+      </div>
+      <div className="showcase-header__inner">
+        <Link to="/" className="showcase-header__brand">
           <img
             src={toShowcaseAssetUrl('/images/supplymate/brandmark.svg')}
             alt=""
-            className="size-8 rounded-lg"
+            className="showcase-header__brandmark"
           />
           <span>SupplyMate Wholesale</span>
         </Link>
-        <nav aria-label="การนำทางหลัก" className="flex items-center gap-4 text-sm font-medium">
-          <Link to="/shop" className="hover:underline">
-            สินค้า
+        <nav aria-label="การนำทางหลัก" className="showcase-header__nav">
+          <Link to="/shop">
+            แคตตาล็อก
           </Link>
-          <Link to="/cart" className="flex items-center gap-1.5 hover:underline">
+          <a href="#showcase-demo-notice" onClick={scrollToDemoNotice}>วิธีสั่งซื้อ (เดโม)</a>
+          <Link to="/cart" className="showcase-header__cart">
             <span>ตะกร้า</span>
             <span
               aria-label={`สินค้าในตะกร้า ${cartCount} รายการ`}
-              className="min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs text-primary-foreground"
+              className="showcase-header__cart-count"
             >
               {cartCount}
             </span>
@@ -56,6 +70,7 @@ export function ShowcaseApp() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        <ShowcaseFooter />
       </div>
     </HashRouter>
   )

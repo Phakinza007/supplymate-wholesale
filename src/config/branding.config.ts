@@ -34,8 +34,8 @@ export const brandConfig: BrandConfig = {
   storeName: 'SupplyMate Wholesale',
   logoUrl: '/images/supplymate/brandmark.svg',
   colors: {
-    primary: 'oklch(0.30 0.06 252)',
-    secondary: 'oklch(0.96 0.02 95)',
+    primary: 'oklch(0.50949 0.08948 166.01)',
+    secondary: 'oklch(0.64795 0.14979 38.33)',
   },
   theme: 'light',
   currencySymbol: '฿',

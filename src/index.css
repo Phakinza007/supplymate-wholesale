@@ -3,27 +3,27 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.975 0.006 95);
-  --foreground: oklch(0.22 0.025 252);
-  --card: oklch(0.995 0.003 95);
-  --card-foreground: oklch(0.22 0.025 252);
-  --popover: oklch(0.995 0.003 95);
-  --popover-foreground: oklch(0.22 0.025 252);
-  --primary: oklch(0.3 0.06 252);
-  --primary-foreground: oklch(0.985 0.005 95);
-  --secondary: oklch(0.96 0.02 95);
-  --secondary-foreground: oklch(0.28 0.04 252);
-  --muted: oklch(0.945 0.008 95);
-  --muted-foreground: oklch(0.48 0.025 252);
-  --accent: oklch(0.94 0.018 95);
-  --accent-foreground: oklch(0.28 0.04 252);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.86 0.012 95);
-  --input: oklch(0.86 0.012 95);
-  --ring: oklch(0.52 0.055 252);
-  --brand-primary: oklch(0.3 0.06 252);
-  --brand-secondary: oklch(0.96 0.02 95);
+  --background: #f5f1e8;
+  --foreground: #173b32;
+  --card: #fffdf8;
+  --card-foreground: #173b32;
+  --popover: #fffdf8;
+  --popover-foreground: #173b32;
+  --primary: #26765a;
+  --primary-foreground: #ffffff;
+  --secondary: #d96945;
+  --secondary-foreground: #221b17;
+  --muted: #e8e1d3;
+  --muted-foreground: #4d625a;
+  --accent: #d96945;
+  --accent-foreground: #221b17;
+  --destructive: #a9362c;
+  --destructive-foreground: #ffffff;
+  --border: #c8bfaf;
+  --input: #8d8273;
+  --ring: #26765a;
+  --brand-primary: oklch(0.50949 0.08948 166.01);
+  --brand-secondary: oklch(0.64795 0.14979 38.33);
 }
 
 /* Client branding overrides these two at runtime — see src/config/branding.config.ts */
@@ -62,5 +62,12 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, Arial, sans-serif;
+    min-width: 0;
+    min-height: 100svh;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
   }
 }
