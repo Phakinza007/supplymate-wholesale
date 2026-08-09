@@ -27,3 +27,6 @@ supabase/.branches/
 
 # Claude Code local state (worktrees, etc.)
 /.claude/
+
+# Local Git worktrees
+/.worktrees/
