@@ -425,6 +425,10 @@
   outline-offset: 3px;
 }
 
+.showcase-footer a:focus-visible {
+  outline-color: var(--background);
+}
+
 input,
 select,
 textarea {

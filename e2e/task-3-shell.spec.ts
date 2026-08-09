@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test'
 
+function relativeLuminance([red, green, blue]: number[]) {
+  const channels = [red, green, blue].map(channel => {
+    const value = channel / 255
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+}
+
+function contrastRatio(first: number[], second: number[]) {
+  const lighter = Math.max(relativeLuminance(first), relativeLuminance(second))
+  const darker = Math.min(relativeLuminance(first), relativeLuminance(second))
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 test('disables wholesale hover and focus transforms under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/')
@@ -42,4 +57,27 @@ test('routes the demo-order link home and keeps notice ids unique', async ({ pag
   await page.getByRole('link', { name: 'วิธีสั่งซื้อ (เดโม)' }).click()
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.locator('#showcase-demo-notice')).toBeVisible()
+})
+
+test('keeps footer keyboard focus visible against the dark surface', async ({ page }) => {
+  await page.goto('/#/')
+  const footerLink = page.locator('.showcase-footer a').first()
+  await footerLink.focus()
+
+  const colors = await footerLink.evaluate(link => {
+    const footer = link.closest('.showcase-footer')
+    if (!footer) throw new Error('Footer surface not found')
+
+    const parseRgb = (value: string) =>
+      value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number) ?? []
+
+    return {
+      outline: parseRgb(getComputedStyle(link).outlineColor),
+      surface: parseRgb(getComputedStyle(footer).backgroundColor),
+    }
+  })
+
+  expect(colors.outline).toHaveLength(3)
+  expect(colors.surface).toHaveLength(3)
+  expect(contrastRatio(colors.outline, colors.surface)).toBeGreaterThanOrEqual(3)
 })

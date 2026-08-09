@@ -17,6 +17,10 @@ test('keeps the B2B catalogue journey usable on mobile', async ({ page }) => {
   await expect(
     page.locator('main [role="note"]').filter({ hasText: 'Concept demo — ไม่รับคำสั่งซื้อจริง' }),
   ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'แคตตาล็อกค้าส่งสำหรับร้านอาหาร คาเฟ่ และครัวกลาง',
+  )
+  await expect(page.getByRole('main')).not.toContainText('ส่งตรงถึงร้าน')
   await page.getByRole('link', { name: 'เลือกดูแคตตาล็อก' }).click()
   await expect(page).toHaveURL(/#\/shop/)
   await page.getByRole('searchbox', { name: 'ค้นหาสินค้า' }).fill('แก้ว')

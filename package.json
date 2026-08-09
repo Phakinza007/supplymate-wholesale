@@ -13,7 +13,7 @@
     "pretest:e2e": "supabase start && node scripts/write-e2e-env.mjs && supabase db reset --yes",
     "test:e2e": "playwright test",
     "test:unit": "vitest run --passWithNoTests",
-    "test:showcase-e2e": "playwright test e2e/static-showcase.spec.ts --project=chromium",
+    "test:showcase-e2e": "playwright test e2e/static-showcase.spec.ts e2e/task-3-shell.spec.ts --project=chromium",
     "test:showcase-artifact": "node scripts/assert-static-showcase.mjs"
   },
   "dependencies": {
