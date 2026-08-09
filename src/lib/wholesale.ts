@@ -14,3 +14,11 @@ export function quantityLabel(unit: PackageUnit, quantity: number) {
 export function formatPackageLabel(unit: PackageUnit, unitsPerPackage: number) {
   return `${unitsPerPackage.toLocaleString('th-TH')} ชิ้น / ${thaiUnit[unit]}`
 }
+
+export function perItemPrice(price: number, unitsPerPackage: number) {
+  if (!Number.isFinite(price) || !Number.isFinite(unitsPerPackage) || unitsPerPackage <= 0) {
+    return 0
+  }
+
+  return price / unitsPerPackage
+}
