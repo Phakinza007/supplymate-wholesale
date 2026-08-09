@@ -1,4 +1,3 @@
-import type { MouseEvent } from 'react'
 import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useCartTotalItems } from '@/core/cart/cartStore'
 import { ShowcaseCartPage } from '@/showcase/ShowcaseCartPage'
@@ -8,11 +7,6 @@ import { ShowcaseFooter } from '@/showcase/ShowcaseFooter'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
 import { ShowcaseProductPage } from '@/showcase/ShowcaseProductPage'
 import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
-
-function scrollToDemoNotice(event: MouseEvent<HTMLAnchorElement>) {
-  event.preventDefault()
-  document.getElementById('showcase-demo-notice')?.scrollIntoView()
-}
 
 function ShowcaseHeader() {
   const cartCount = useCartTotalItems()
@@ -38,7 +32,7 @@ function ShowcaseHeader() {
           <Link to="/shop">
             แคตตาล็อก
           </Link>
-          <a href="#showcase-demo-notice" onClick={scrollToDemoNotice}>วิธีสั่งซื้อ (เดโม)</a>
+          <Link to="/">วิธีสั่งซื้อ (เดโม)</Link>
           <Link to="/cart" className="showcase-header__cart">
             <span>ตะกร้า</span>
             <span
@@ -60,7 +54,7 @@ export function ShowcaseApp() {
       <div className="flex min-h-svh flex-col">
         <ShowcaseHeader />
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:py-8">
-          <ShowcaseNotice />
+          <ShowcaseNotice id="showcase-demo-notice" />
           <Routes>
             <Route path="/" element={<ShowcaseCataloguePage mode="home" />} />
             <Route path="/shop" element={<ShowcaseCataloguePage mode="shop" />} />

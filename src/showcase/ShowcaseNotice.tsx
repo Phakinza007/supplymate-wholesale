@@ -1,9 +1,13 @@
-export function ShowcaseNotice() {
+interface ShowcaseNoticeProps {
+  id?: string
+}
+
+export function ShowcaseNotice({ id }: ShowcaseNoticeProps) {
   return (
     <p
-      id="showcase-demo-notice"
+      id={id}
       role="note"
-      className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm"
+      className="showcase-demo-notice rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm"
     >
       Concept demo — ไม่รับคำสั่งซื้อจริง <span className="block mt-1 text-muted-foreground">ใช้ข้อมูลตัวอย่างในเครื่องเท่านั้น</span>
     </p>

@@ -432,16 +432,20 @@ textarea {
 }
 
 @media (hover: hover) {
-  .wholesale-category-tile:hover,
-  .wholesale-product-card:hover,
-  .wholesale-product-card:focus-within {
+  :where(
+    .wholesale-category-tile:hover,
+    .wholesale-product-card:hover,
+    .wholesale-product-card:focus-within
+  ) {
     border-color: var(--primary);
     transform: translateY(-0.2rem);
   }
 
-  .wholesale-category-tile:hover img,
-  .wholesale-product-card:hover img,
-  .wholesale-product-card:focus-within img {
+  :where(
+    .wholesale-category-tile:hover,
+    .wholesale-product-card:hover,
+    .wholesale-product-card:focus-within
+  ) img {
     transform: scale(1.025);
   }
 }
