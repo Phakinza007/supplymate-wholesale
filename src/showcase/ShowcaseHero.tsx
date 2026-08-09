@@ -11,7 +11,7 @@ export function ShowcaseHero() {
           เลือกบรรจุภัณฑ์และอุปกรณ์หน้าร้าน พร้อมดูจำนวนต่อหน่วยและขั้นต่ำก่อนเพิ่มลงตะกร้า
         </p>
         <Link to="/shop" className="wholesale-hero__action">
-          เลือกสินค้าตามหมวด
+          เลือกดูแคตตาล็อก
         </Link>
       </div>
       <img
