@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCartStore } from '@/core/cart/cartStore'
 import { clampToMinimum, findDemoProduct } from '@/demo/catalogue'
-import { formatPrice } from '@/lib/formatPrice'
-import { formatPackageLabel, quantityLabel } from '@/lib/wholesale'
 import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
+import { WholesaleFacts } from '@/showcase/WholesaleFacts'
 
 export function ShowcaseProductPage() {
   const { slug = '' } = useParams()
@@ -32,28 +31,30 @@ export function ShowcaseProductPage() {
   const minimumQuantity = product.minOrderQuantity
 
   return (
-    <section className="mx-auto grid max-w-4xl gap-8 pb-8 md:grid-cols-2">
-      <img
-        src={toShowcaseAssetUrl(product.imagePath)}
-        alt={product.name}
-        className="aspect-square w-full rounded-2xl bg-muted object-cover"
-      />
-      <div className="flex flex-col gap-4">
+    <section className="mx-auto grid max-w-5xl gap-8 pb-8 md:grid-cols-2 md:items-start">
+      <div className="overflow-hidden rounded-2xl border bg-card p-2">
+        <img
+          src={toShowcaseAssetUrl(product.imagePath)}
+          alt={product.name}
+          className="aspect-square w-full rounded-xl bg-muted object-cover"
+        />
+      </div>
+      <div className="flex flex-col gap-5">
         <Link to={`/shop?category=${product.categorySlug}`} className="text-sm text-muted-foreground hover:underline">
           ← กลับไปยังสินค้า
         </Link>
-        <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="text-lg font-semibold">
-          {formatPrice(product.price)} / {quantityLabel(product.packageUnit, 1)}
-        </p>
-        <div className="rounded-xl border bg-card p-4 text-sm">
-          <p className="font-medium">{formatPackageLabel(product.packageUnit, product.unitsPerPackage)}</p>
-          <p className="mt-1 text-muted-foreground">
-            สั่งขั้นต่ำ {quantityLabel(product.packageUnit, minimumQuantity)} ต่อรายการ
-          </p>
+        <div>
+          <p className="text-sm font-semibold text-primary">ข้อมูลสินค้าค้าส่ง</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
         </div>
         <p className="leading-7 text-muted-foreground">{product.description}</p>
-        <div className="flex items-end gap-3">
+        <WholesaleFacts
+          price={product.price}
+          packageUnit={product.packageUnit}
+          unitsPerPackage={product.unitsPerPackage}
+          minOrderQuantity={product.minOrderQuantity}
+        />
+        <div className="flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4">
           <label className="flex flex-col gap-2 text-sm font-medium">
             จำนวน
             <input
@@ -90,7 +91,7 @@ export function ShowcaseProductPage() {
             เพิ่มลงตะกร้า
           </button>
         </div>
-        {added && <p role="status" className="text-sm text-primary">เพิ่มสินค้าลงตะกร้าแล้ว</p>}
+        {added && <p role="status" className="text-sm font-medium text-primary">เพิ่มสินค้าลงตะกร้าแล้ว</p>}
       </div>
     </section>
   )
