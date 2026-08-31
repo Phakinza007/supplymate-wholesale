@@ -1,5 +1,7 @@
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from '@/core/auth/AuthProvider'
 import { Feature } from '@/lib/Feature'
 import { SiteLayout } from '@/components/SiteLayout'
 import { LoginPage } from '@/core/auth/LoginPage'
@@ -29,9 +31,18 @@ const PromotionsAdminPage = lazy(() => import('@/modules/optional/promotions/Pro
 
 const AppRouter = isGitHubPagesBuild ? HashRouter : BrowserRouter
 
+// One client for the app's lifetime. Created at module scope rather than in
+// render so a re-render never swaps it out and drops every cached query.
+const queryClient = new QueryClient()
+
 function App() {
   return (
-    <AppRouter>
+    // QueryClientProvider must sit OUTSIDE AuthProvider: AuthProvider itself
+    // calls useQueryClient() so its signOut can queryClient.clear(), which is
+    // what stops a shared browser serving a previous user's cached data.
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppRouter>
       <Routes>
         <Route element={<SiteLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -70,8 +81,10 @@ function App() {
             </Route>
           </Route>
         </Route>
-      </Routes>
-    </AppRouter>
+          </Routes>
+        </AppRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 
