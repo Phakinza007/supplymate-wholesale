@@ -26,7 +26,7 @@ test('keeps the B2B catalogue journey usable on mobile', async ({ page }) => {
   await page.getByRole('link', { name: 'เลือกดูแคตตาล็อก' }).click()
   await expect(page).toHaveURL(/#\/shop/)
   await page.getByRole('searchbox', { name: 'ค้นหาสินค้า' }).fill('แก้ว')
-  await expect(page.getByRole('heading', { name: 'แก้วพลาสติกใส 16 ออนซ์ พร้อมฝาโดม' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'แก้วพลาสติกใส 16 ออนซ์พร้อมฝาโดม' })).toBeVisible()
 
   const layout = await page.evaluate(() => ({
     canScrollX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -38,11 +38,11 @@ test('keeps the B2B catalogue journey usable on mobile', async ({ page }) => {
 
 test('keeps MOQ, the cart summary, and simulated confirmation intact', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
-  await page.goto('/#/products/blank-label-roll-50x30')
+  await page.goto('/#/products/thermal-label-50x30')
   const quantity = page.getByRole('spinbutton', { name: 'จำนวน' })
-  await expect(quantity).toHaveValue('3')
+  await expect(quantity).toHaveValue('6')
   await quantity.fill('1')
-  await expect(quantity).toHaveValue('3')
+  await expect(quantity).toHaveValue('6')
   await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
   // Scoped to the header: the detail page now also offers a "ดูตะกร้า" shortcut
   // right after adding.
