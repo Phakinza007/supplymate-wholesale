@@ -7,7 +7,7 @@ export function useProduct(slug: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*, product_images(*), categories(name, slug)')
+        .select('*, product_images(*), product_price_tiers(*), categories(name, slug)')
         .eq('slug', slug!)
         .eq('is_active', true)
         .maybeSingle()
