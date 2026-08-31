@@ -55,7 +55,13 @@ export function AddressBookPage() {
       <PageHeader
         title="สมุดที่อยู่"
         description="ที่อยู่จัดส่งที่เลือกได้ตอนสั่งซื้อ"
-        action={<Button onClick={() => setEditing('new')}>เพิ่มที่อยู่</Button>}
+        // Hidden while the list is empty: the empty state carries the same
+        // action, and two primary buttons for one job is one too many.
+        action={
+          addresses && addresses.length > 0 ? (
+            <Button onClick={() => setEditing('new')}>เพิ่มที่อยู่</Button>
+          ) : undefined
+        }
       />
 
       {isLoading && (
@@ -78,7 +84,7 @@ export function AddressBookPage() {
           icon={<MapPin />}
           title="ยังไม่มีที่อยู่จัดส่ง"
           description="เพิ่มที่อยู่ไว้ก่อน จะได้ไม่ต้องพิมพ์ใหม่ทุกครั้งตอนสั่งซื้อ"
-          action={<Button onClick={() => setEditing('new')}>เพิ่มที่อยู่แรก</Button>}
+          action={<Button onClick={() => setEditing('new')}>เพิ่มที่อยู่</Button>}
         />
       )}
 
