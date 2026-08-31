@@ -33,37 +33,39 @@ export function ShowcaseCataloguePage({ mode }: ShowcaseCataloguePageProps) {
     })
 
     return (
-      <div className="flex flex-col gap-16 pb-8">
+      <div className="flex flex-col gap-14 pb-8">
         <ShowcaseHero />
 
         <section aria-labelledby="category-title">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="showcase-section-header">
             <div>
-              <p className="text-sm font-semibold text-primary">หมวดสินค้า</p>
-              <h2 id="category-title" className="mt-2 text-3xl font-semibold tracking-tight">
+              <p className="showcase-eyebrow">หมวดสินค้า</p>
+              <h2 id="category-title" className="showcase-section-title">
                 เลือกของใช้ให้ตรงกับงานในร้าน
               </h2>
             </div>
-            <Link to="/shop" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-              ดูสินค้าทั้งหมด
+            <Link to="/shop" className="showcase-section-header__link">
+              ค้นหาและกรองสินค้า
             </Link>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="wholesale-category-strip mt-6">
             {categoryTiles.map((category) => (
               <ShowcaseCategoryTile key={category.slug} {...category} />
             ))}
           </div>
         </section>
 
+        {/* The demo catalogue is small enough to show in full here; /shop is the
+            same set with search and category filters on top. */}
         <section aria-labelledby="featured-title">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-primary">สินค้าสำหรับเริ่มต้น</p>
-            <h2 id="featured-title" className="mt-2 text-3xl font-semibold tracking-tight">
-              สินค้าแนะนำจากแคตตาล็อก
+            <p className="showcase-eyebrow">รายการทั้งหมด</p>
+            <h2 id="featured-title" className="showcase-section-title">
+              สินค้าในแคตตาล็อกตัวอย่าง
             </h2>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {demoProducts.slice(0, 3).map((product, index) => (
+            {demoProducts.map((product, index) => (
               <ShowcaseProductCard key={product.id} product={product} eager={index === 0} />
             ))}
           </div>
@@ -72,79 +74,79 @@ export function ShowcaseCataloguePage({ mode }: ShowcaseCataloguePageProps) {
     )
   }
 
+  const hasFilters = Boolean(query || categorySlug)
+
   return (
     <section aria-labelledby="shop-title" className="pb-8">
       <header className="max-w-3xl">
-        <p className="text-sm font-semibold text-primary">แคตตาล็อกค้าส่ง</p>
-        <h1 id="shop-title" className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <p className="showcase-eyebrow">แคตตาล็อกค้าส่ง</p>
+        <h1 id="shop-title" className="showcase-page-title">
           เลือกสินค้าสำหรับร้านของคุณ
         </h1>
-        <p className="mt-3 leading-7 text-muted-foreground">
+        <p className="showcase-lede">
           ค้นหาและกรองสินค้าตัวอย่างตามหมวด โดย URL จะจดจำตัวเลือกไว้เมื่อแชร์หรือย้อนกลับ
         </p>
       </header>
 
-      <section aria-labelledby="catalogue-filter-title" className="mt-8 rounded-2xl border bg-card p-5">
-        <h2 id="catalogue-filter-title" className="text-lg font-semibold">
-          ค้นหาและกรองสินค้า
-        </h2>
-        <div className="mt-4 flex flex-col gap-2">
-          <label htmlFor="product-search" className="font-semibold">
-            ค้นหาสินค้า
-          </label>
+      <div className="wholesale-toolbar mt-8" role="search" aria-label="ค้นหาและกรองสินค้า">
+        <div className="wholesale-toolbar__search">
           <input
             id="product-search"
             type="search"
+            aria-label="ค้นหาสินค้า"
+            placeholder="ค้นหาชื่อสินค้า"
             value={query}
             onChange={(event) => updateFilter('query', event.target.value)}
-            className="min-h-11 w-full rounded-lg border bg-background px-3 py-2 sm:max-w-xl"
           />
         </div>
-        <div className="mt-5">
-          <p className="mb-2 text-sm font-semibold">เลือกหมวดสินค้า</p>
-          <div role="group" aria-label="เลือกหมวดสินค้า" className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => updateFilter('category', '')}
-              aria-pressed={categorySlug === ''}
-              className="rounded-full border px-3 py-1.5 text-sm aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
-            >
-              ทั้งหมด
-            </button>
-            {demoCategories.map((category) => (
-              <button
-                key={category.slug}
-                type="button"
-                onClick={() => updateFilter('category', category.slug)}
-                aria-pressed={categorySlug === category.slug}
-                className="rounded-full border px-3 py-1.5 text-sm aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <p aria-live="polite" className="font-semibold">
-          พบสินค้า {visibleProducts.length.toLocaleString('th-TH')} รายการ
-        </p>
-        {(query || categorySlug) && (
+        <div role="group" aria-label="เลือกหมวดสินค้า" className="wholesale-toolbar__chips">
           <button
             type="button"
-            onClick={() => setSearchParams({})}
-            className="rounded-lg border px-3 py-2 text-sm font-semibold hover:border-primary hover:text-primary"
+            onClick={() => updateFilter('category', '')}
+            aria-pressed={categorySlug === ''}
+            className="wholesale-chip"
           >
-            ล้างตัวกรอง
+            ทั้งหมด
           </button>
-        )}
+          {demoCategories.map((category) => (
+            <button
+              key={category.slug}
+              type="button"
+              onClick={() => updateFilter('category', category.slug)}
+              aria-pressed={categorySlug === category.slug}
+              className="wholesale-chip"
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+        <div className="wholesale-toolbar__status">
+          <p aria-live="polite" className="wholesale-toolbar__count">
+            พบสินค้า {visibleProducts.length.toLocaleString('th-TH')} รายการ
+          </p>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              className="wholesale-toolbar__clear"
+            >
+              ล้างตัวกรอง
+            </button>
+          )}
+        </div>
       </div>
 
       {visibleProducts.length === 0 ? (
-        <p className="mt-8 rounded-2xl border bg-card p-6 text-muted-foreground">
-          ไม่พบสินค้าที่ตรงกับการค้นหา
-        </p>
+        <div className="wholesale-empty mt-6">
+          <p>ไม่พบสินค้าที่ตรงกับการค้นหา</p>
+          <button
+            type="button"
+            onClick={() => setSearchParams({})}
+            className="showcase-button showcase-button--outline"
+          >
+            ล้างตัวกรองแล้วดูทั้งหมด
+          </button>
+        </div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleProducts.map((product) => (

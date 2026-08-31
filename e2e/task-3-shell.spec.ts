@@ -49,10 +49,12 @@ test('disables wholesale hover and focus transforms under reduced motion', async
 test('routes the demo-order link home and keeps notice ids unique', async ({ page }) => {
   await page.goto('/#/products/clear-cup-16oz')
   await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
-  await page.getByRole('link', { name: /ตะกร้า/ }).click()
+  await page.getByRole('banner').getByRole('link', { name: /ตะกร้า/ }).click()
 
+  // One standing disclosure per page: the cart no longer repeats it, so the id
+  // stays unique and `note` never doubles up.
   await expect(page.locator('#showcase-demo-notice')).toHaveCount(1)
-  await expect(page.getByRole('note')).toHaveCount(2)
+  await expect(page.getByRole('note')).toHaveCount(1)
 
   await page.getByRole('link', { name: 'วิธีสั่งซื้อ (เดโม)' }).click()
   await expect(page).toHaveURL(/#\/$/)
@@ -68,12 +70,24 @@ test('keeps footer keyboard focus visible against the dark surface', async ({ pa
     const footer = link.closest('.showcase-footer')
     if (!footer) throw new Error('Footer surface not found')
 
-    const parseRgb = (value: string) =>
-      value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number) ?? []
+    // Paint the colour and read the pixel back. The palette is authored in
+    // oklch(), which computed style serialises as `oklch(...)` -- a digit-scrape
+    // would read 0.24 as an 8-bit channel and quietly report ~1:1 contrast.
+    const toRgb = (value: string) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1
+      canvas.height = 1
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('2d context unavailable')
+      ctx.fillStyle = value
+      ctx.fillRect(0, 0, 1, 1)
+      const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data
+      return [red, green, blue]
+    }
 
     return {
-      outline: parseRgb(getComputedStyle(link).outlineColor),
-      surface: parseRgb(getComputedStyle(footer).backgroundColor),
+      outline: toRgb(getComputedStyle(link).outlineColor),
+      surface: toRgb(getComputedStyle(footer).backgroundColor),
     }
   })
 

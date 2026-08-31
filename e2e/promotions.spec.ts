@@ -8,9 +8,9 @@ test.skip(!brandConfig.features.promotions, 'promotions feature flag is off')
 async function addFirstProductToCartAndReachCheckout(page: import('@playwright/test').Page) {
   await page.goto('/shop')
   await page.locator('a[href^="/products/"]').first().click()
-  await page.getByRole('button', { name: 'Add to cart' }).click()
+  await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
   await page.goto('/cart')
-  await page.getByRole('link', { name: 'Proceed to checkout' }).click()
+  await page.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()
   await fillBusinessDetails(page)
 }
 
@@ -45,11 +45,11 @@ test('promotions module: admin creates a code, customer applies it, discount flo
   await customerPage.getByPlaceholder('Promo code').fill('testsave10')
   await customerPage.getByRole('button', { name: 'Apply' }).click()
   await expect(customerPage.getByText('Code TESTSAVE10 applied')).toBeVisible()
-  await expect(customerPage.getByText('Discount')).toBeVisible()
+  await expect(customerPage.getByText('ส่วนลด')).toBeVisible()
 
-  await customerPage.getByRole('button', { name: 'Place order' }).click()
+  await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await customerPage.waitForURL(/\/orders\/.+/)
-  await expect(customerPage.getByText('Discount (TESTSAVE10)')).toBeVisible()
+  await expect(customerPage.getByText('ส่วนลด (TESTSAVE10)')).toBeVisible()
 
   await adminContext.close()
   await customerContext.close()
@@ -111,7 +111,7 @@ test('promotions module: a code deactivated after validation fails checkout inst
   await adminPage.getByLabel('Active').uncheck()
   await adminPage.getByRole('button', { name: 'Save promotion' }).click()
 
-  await customerPage.getByRole('button', { name: 'Place order' }).click()
+  await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await expect(
     customerPage.getByText('promo code is invalid or no longer available'),
   ).toBeVisible()

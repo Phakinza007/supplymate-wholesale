@@ -42,22 +42,22 @@ test('variants module: admin creates variants, customer must select one, cart/ch
   })
 
   await customerPage.goto(`/products/${productSlug}`)
-  await expect(customerPage.getByRole('button', { name: 'Select an option' })).toBeDisabled()
+  await expect(customerPage.getByRole('button', { name: 'เลือกตัวเลือกก่อน' })).toBeDisabled()
   await expect(
     customerPage.getByRole('button', { name: 'Large (out of stock)' }),
   ).toBeDisabled()
 
   await customerPage.getByRole('button', { name: 'Small', exact: true }).click()
-  await customerPage.getByRole('button', { name: 'Add to cart' }).click()
-  await expect(customerPage.getByText('Added ✓')).toBeVisible()
+  await customerPage.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
+  await expect(customerPage.getByText('เพิ่มแล้ว')).toBeVisible()
 
   await customerPage.goto('/cart')
   await expect(customerPage.getByText('Small')).toBeVisible()
 
-  await customerPage.getByRole('link', { name: 'Proceed to checkout' }).click()
+  await customerPage.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()
   await expect(customerPage.getByText(/\(Small\)/)).toBeVisible()
   await fillBusinessDetails(customerPage)
-  await customerPage.getByRole('button', { name: 'Place order' }).click()
+  await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await customerPage.waitForURL(/\/orders\/.+/)
   await expect(customerPage.getByText(/\(Small\)/)).toBeVisible()
 
@@ -95,8 +95,8 @@ test('variants module: deactivating a variant after it is in the customer cart f
 
   await customerPage.goto(`/products/${productSlug}`)
   await customerPage.getByRole('button', { name: 'Small', exact: true }).click()
-  await customerPage.getByRole('button', { name: 'Add to cart' }).click()
-  await expect(customerPage.getByText('Added ✓')).toBeVisible()
+  await customerPage.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
+  await expect(customerPage.getByText('เพิ่มแล้ว')).toBeVisible()
 
   // Admin deactivates the "Small" variant that's now sitting in the
   // customer's (localStorage-persisted) cart.
@@ -110,9 +110,9 @@ test('variants module: deactivating a variant after it is in the customer cart f
   await expect(adminPage.locator('li', { hasText: 'Small' })).toContainText('(inactive)')
 
   await customerPage.goto('/cart')
-  await customerPage.getByRole('link', { name: 'Proceed to checkout' }).click()
+  await customerPage.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()
   await fillBusinessDetails(customerPage)
-  await customerPage.getByRole('button', { name: 'Place order' }).click()
+  await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await expect(customerPage.getByText(/one or more items are unavailable/i)).toBeVisible()
   // Checkout must not have silently succeeded at the base price.
   expect(customerPage.url()).toContain('/checkout')

@@ -20,9 +20,13 @@ export function WholesaleOrderSummary({ items, subtotal, renderItemControl }: Wh
               <div>
                 <p className="wholesale-order-summary__name">{item.productName}</p>
                 {item.variantName && <p className="wholesale-order-summary__variant">{item.variantName}</p>}
-                <p className="wholesale-order-summary__quantity">
-                  {item.packageUnit ? quantityLabel(item.packageUnit, item.quantity) : `${item.quantity.toLocaleString('th-TH')} รายการ`}
-                </p>
+                {/* The editable cart renders a stepper that already states the
+                    live quantity — only the read-only summary needs this line. */}
+                {!renderItemControl && (
+                  <p className="wholesale-order-summary__quantity">
+                    {item.packageUnit ? quantityLabel(item.packageUnit, item.quantity) : `${item.quantity.toLocaleString('th-TH')} รายการ`}
+                  </p>
+                )}
               </div>
               <p className="wholesale-order-summary__line-total">{formatPrice(item.unitPrice * item.quantity)}</p>
             </div>

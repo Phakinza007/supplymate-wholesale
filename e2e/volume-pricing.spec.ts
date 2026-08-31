@@ -68,16 +68,16 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await customerPage.getByLabel('จำนวนที่สั่งซื้อ').fill('10')
   await expect(customerPage.getByText('฿900.00 / 1 ลัง')).toBeVisible()
 
-  await customerPage.getByRole('button', { name: 'Add to cart' }).click()
-  await customerPage.getByText('Added ✓').waitFor()
+  await customerPage.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
+  await customerPage.getByText('เพิ่มแล้ว').waitFor()
 
   await customerPage.goto('/cart')
   await expect(customerPage.getByText('฿900.00 each')).toBeVisible()
   await expect(customerPage.getByText('฿9,000.00').first()).toBeVisible()
 
-  await customerPage.getByRole('link', { name: 'Proceed to checkout' }).click()
+  await customerPage.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()
   await fillBusinessDetails(customerPage, 'Tier Probe Co')
-  await customerPage.getByRole('button', { name: 'Place order' }).click()
+  await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await customerPage.waitForURL(/\/orders\/.+/)
 
   // The order the server actually created must carry the tier price, not the

@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import type { Database } from '@/lib/database.types'
 
 type Address = Database['public']['Tables']['addresses']['Row']
@@ -46,60 +47,55 @@ export function AddressForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="label">Label</Label>
-        <Input id="label" placeholder="Home, Office…" {...field('label')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="recipient_name">Recipient name</Label>
-        <Input id="recipient_name" required {...field('recipient_name')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" required {...field('phone')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="line1">Address line 1</Label>
+      <Field label="ชื่อเรียกที่อยู่" hint="เช่น หน้าร้าน, ครัวกลาง">
+        <Input id="label" placeholder="หน้าร้าน" {...field('label')} />
+      </Field>
+      <Field label="ชื่อผู้รับ" required>
+        <Input id="recipient_name" autoComplete="name" required {...field('recipient_name')} />
+      </Field>
+      <Field label="เบอร์โทร" required>
+        <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" required {...field('phone')} />
+      </Field>
+      <Field label="ที่อยู่ บรรทัดที่ 1" required>
         <Input id="line1" required {...field('line1')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="line2">Address line 2</Label>
+      </Field>
+      <Field label="ที่อยู่ บรรทัดที่ 2">
         <Input id="line2" {...field('line2')} />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="subdistrict">Subdistrict</Label>
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="แขวง / ตำบล">
           <Input id="subdistrict" {...field('subdistrict')} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="district">District</Label>
+        </Field>
+        <Field label="เขต / อำเภอ">
           <Input id="district" {...field('district')} />
-        </div>
+        </Field>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="province">Province</Label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="จังหวัด" required>
           <Input id="province" required {...field('province')} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="postal_code">Postal code</Label>
-          <Input id="postal_code" required {...field('postal_code')} />
-        </div>
+        </Field>
+        <Field label="รหัสไปรษณีย์" required>
+          <Input
+            id="postal_code"
+            inputMode="numeric"
+            autoComplete="postal-code"
+            required
+            {...field('postal_code')}
+          />
+        </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={form.is_default ?? false}
-          onChange={(e) => setForm((f) => ({ ...f, is_default: e.target.checked }))}
-        />
-        Set as default address
-      </label>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save address'}
+      <Checkbox
+        checked={form.is_default ?? false}
+        onChange={(e) => setForm((f) => ({ ...f, is_default: e.target.checked }))}
+      >
+        ตั้งเป็นที่อยู่หลัก
+      </Checkbox>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังบันทึก' : 'บันทึกที่อยู่'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          ยกเลิก
         </Button>
       </div>
     </form>

@@ -11,8 +11,8 @@ test('shows wholesale pack truth and enforces the product minimum', async ({ pag
   await quantity.fill('0')
   await expect(quantity).toHaveValue('1')
 
-  await page.getByRole('button', { name: 'Add to cart' }).click()
-  await expect(page.getByText('Added ✓')).toBeVisible()
+  await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
+  await expect(page.getByText('เพิ่มแล้ว')).toBeVisible()
   await page.goto('/cart')
   await expect(page.getByText('1 ลัง')).toBeVisible()
 })
@@ -24,7 +24,7 @@ test('enforces a larger MOQ again in the cart', async ({ page }) => {
   await expect(detailQuantity).toHaveValue('6')
   await detailQuantity.fill('1')
   await expect(detailQuantity).toHaveValue('6')
-  await page.getByRole('button', { name: 'Add to cart' }).click()
+  await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
 
   await page.goto('/cart')
   const cartQuantity = page.getByRole('spinbutton', {
@@ -40,7 +40,7 @@ test('keeps snapshotted pack truth but blocks checkout when a product disappears
   page,
 }) => {
   await page.goto('/products/clear-cup-16oz')
-  await page.getByRole('button', { name: 'Add to cart' }).click()
+  await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
 
   await page.route(/\/rest\/v1\/products\?/, async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
@@ -49,7 +49,7 @@ test('keeps snapshotted pack truth but blocks checkout when a product disappears
 
   await expect(page.getByText('1 ลัง')).toBeVisible()
   await expect(page.getByText('สินค้านี้ไม่พร้อมจำหน่ายแล้ว')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Proceed to checkout' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'ไปหน้าชำระเงิน' })).toBeDisabled()
 })
 
 test('does not offer a tracked product when stock is below its MOQ', async ({ page }) => {
@@ -72,7 +72,7 @@ test('does not offer a tracked product when stock is below its MOQ', async ({ pa
     'max',
     '5',
   )
-  await expect(page.getByRole('button', { name: 'Out of stock' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'สินค้าหมด' })).toBeDisabled()
 })
 
 test('starts a B2B buyer in the catalogue', async ({ page }) => {
@@ -89,8 +89,8 @@ test('starts a B2B buyer in the catalogue', async ({ page }) => {
 
 test('records business checkout details in the buyer order snapshot', async ({ page }) => {
   await page.goto('/products/clear-cup-16oz')
-  await page.getByRole('button', { name: 'Add to cart' }).click()
-  await expect(page.getByText('Added ✓')).toBeVisible()
+  await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
+  await expect(page.getByText('เพิ่มแล้ว')).toBeVisible()
 
   await signUp(page, {
     fullName: 'SupplyMate Buyer',
@@ -114,7 +114,7 @@ test('records business checkout details in the buyer order snapshot', async ({ p
   ).toBeVisible()
   await expect(businessFields.getByRole('textbox', { name: 'สาขา' })).toBeVisible()
 
-  const submit = page.getByRole('button', { name: 'Place order' })
+  const submit = page.getByRole('button', { name: 'สั่งซื้อ' })
   await expect(submit).toBeDisabled()
   await businessFields
     .getByRole('textbox', { name: 'เลขประจำตัวผู้เสียภาษี' })

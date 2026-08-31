@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { AuthShell } from '@/core/auth/AuthShell'
 import { brandConfig } from '@/config/branding.config'
 
 export function LoginPage() {
@@ -29,42 +31,49 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-semibold">Log in to {brandConfig.storeName}</h1>
+    <AuthShell
+      title="เข้าสู่ระบบ"
+      description={`สั่งซื้อและติดตามคำสั่งซื้อกับ ${brandConfig.storeName}`}
+      footer={
+        <div className="flex flex-wrap justify-between gap-x-4 gap-y-2">
+          <Link to="/signup" className="font-semibold text-signal underline-offset-4 hover:underline">
+            สมัครสมาชิกใหม่
+          </Link>
+          <Link
+            to="/forgot-password"
+            className="font-semibold text-signal underline-offset-4 hover:underline"
+          >
+            ลืมรหัสผ่าน
+          </Link>
+        </div>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+        {error && <Alert tone="error" title="เข้าสู่ระบบไม่สำเร็จ">{error}</Alert>}
+        <Field label="อีเมล">
           <Input
             id="email"
             type="email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Password</Label>
+        </Field>
+        <Field label="รหัสผ่าน">
           <Input
             id="password"
             type="password"
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Logging in…' : 'Log in'}
+        </Field>
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังเข้าสู่ระบบ' : 'เข้าสู่ระบบ'}
         </Button>
       </form>
-      <div className="flex justify-between text-sm text-muted-foreground">
-        <Link to="/signup" className="hover:underline">
-          Create an account
-        </Link>
-        <Link to="/forgot-password" className="hover:underline">
-          Forgot password?
-        </Link>
-      </div>
-    </div>
+    </AuthShell>
   )
 }

@@ -1,10 +1,12 @@
 import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import '@/showcase/showcase.css'
 import { useCartTotalItems } from '@/core/cart/cartStore'
 import { ShowcaseCartPage } from '@/showcase/ShowcaseCartPage'
 import { ShowcaseCataloguePage } from '@/showcase/ShowcaseCataloguePage'
 import { ShowcaseCheckoutPage } from '@/showcase/ShowcaseCheckoutPage'
 import { ShowcaseFooter } from '@/showcase/ShowcaseFooter'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
+import { PrimitivesPage } from '@/showcase/PrimitivesPage'
 import { ShowcaseProductPage } from '@/showcase/ShowcaseProductPage'
 import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
@@ -53,7 +55,10 @@ export function ShowcaseApp() {
     <HashRouter>
       <div className="flex min-h-svh flex-col">
         <ShowcaseHeader />
-        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:py-8">
+        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-4 py-5 sm:py-7">
+          {/* The single standing disclosure. Pages restate only the part that
+              applies to the action in front of the buyer — see
+              showcase-commit-caption. */}
           <ShowcaseNotice id="showcase-demo-notice" />
           <Routes>
             <Route path="/" element={<ShowcaseCataloguePage mode="home" />} />
@@ -61,6 +66,8 @@ export function ShowcaseApp() {
             <Route path="/products/:slug" element={<ShowcaseProductPage />} />
             <Route path="/cart" element={<ShowcaseCartPage />} />
             <Route path="/checkout" element={<ShowcaseCheckoutPage />} />
+            {/* Design-system workbench. Unlinked on purpose — see PrimitivesPage. */}
+            <Route path="/dev/primitives" element={<PrimitivesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

@@ -3,9 +3,16 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useCategories } from '@/core/catalog/useCategories'
 import { useProducts } from '@/core/catalog/useProducts'
 import { ProductCard } from '@/core/catalog/ProductCard'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { cn } from '@/lib/utils'
+
+const CHIP =
+  'min-h-9 rounded-full border border-border px-3 text-sm font-semibold transition-colors'
 
 const PAGE_SIZE = 12
 
@@ -58,59 +65,106 @@ export function ProductListPage() {
   const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / PAGE_SIZE)) : 1
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-12">
-      <form onSubmit={handleSearchSubmit} className="flex gap-2">
-        <Input
-          type="search"
-          aria-label="ค้นหาสินค้า"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="ค้นหาชื่อสินค้า…"
-        />
-        <Button type="submit">ค้นหา</Button>
-      </form>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10">
+      <PageHeader
+        title="แคตตาล็อกสินค้า"
+        description="ค้นหาและกรองตามหมวด ตัวเลือกจะถูกจดจำไว้ใน URL เมื่อแชร์หรือย้อนกลับ"
+      />
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => updateParams({ category: undefined, page: undefined })}
-          className={cn(
-            'rounded-full border px-3 py-1 text-sm',
-            !categorySlug ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
-          )}
-        >
-          ทุกหมวด
-        </button>
-        {categories?.map((cat) => (
+      {/* One toolbar: search, categories and the result state together, so the
+          products stay in the first screen instead of below a filter panel. */}
+      <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-3">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <Input
+            type="search"
+            aria-label="ค้นหาสินค้า"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="ค้นหาชื่อสินค้า"
+          />
+          <Button type="submit">ค้นหา</Button>
+        </form>
+
+        <div role="group" aria-label="เลือกหมวดสินค้า" className="flex flex-wrap gap-2">
           <button
-            key={cat.id}
-            onClick={() => updateParams({ category: cat.slug, page: undefined })}
-            className={cn(
-              'rounded-full border px-3 py-1 text-sm',
-              categorySlug === cat.slug ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
-            )}
+            type="button"
+            aria-pressed={!categorySlug}
+            onClick={() => updateParams({ category: undefined, page: undefined })}
+            className={cn(CHIP, !categorySlug ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-accent')}
           >
-            {cat.name}
+            ทุกหมวด
           </button>
-        ))}
+          {categories?.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              aria-pressed={categorySlug === cat.slug}
+              onClick={() => updateParams({ category: cat.slug, page: undefined })}
+              className={cn(
+                CHIP,
+                categorySlug === cat.slug
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'hover:bg-accent',
+              )}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {data && !categoryNotFound && (
+          <p aria-live="polite" className="text-sm tabular-nums text-muted-foreground">
+            พบสินค้า {data.totalCount.toLocaleString('th-TH')} รายการ
+          </p>
+        )}
       </div>
 
-      {showLoading && <p className="text-muted-foreground">กำลังโหลดสินค้า…</p>}
-      {isError && <p className="text-destructive">โหลดสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</p>}
-      {categoryNotFound && (
-        <p className="text-muted-foreground">
-          ไม่พบหมวดสินค้านี้{' '}
-          <Link to="/shop" className="underline">
-            ดูสินค้าทั้งหมด
-          </Link>
-        </p>
-      )}
-      {!categoryNotFound && data && data.products.length === 0 && (
-        <p className="text-muted-foreground">ไม่พบสินค้าที่ตรงกับการค้นหา</p>
+      {showLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          {[0, 1, 2, 3].map((card) => (
+            <Skeleton key={card} className="h-72 w-full" />
+          ))}
+        </div>
       )}
 
-      {!categoryNotFound && (
+      {/* Distinct from "no results": a failed query must never read as an empty
+          catalogue. */}
+      {isError && (
+        <Alert tone="error" title="โหลดสินค้าไม่สำเร็จ">
+          ลองรีเฟรชอีกครั้ง รายการนี้ไม่ใช่แคตตาล็อกทั้งหมดของร้าน
+        </Alert>
+      )}
+
+      {categoryNotFound && (
+        <EmptyState
+          title="ไม่พบหมวดสินค้านี้"
+          description="ลิงก์อาจเก่าหรือหมวดถูกปิดไปแล้ว"
+          action={
+            <Button asChild variant="outline">
+              <Link to="/shop">ดูสินค้าทั้งหมด</Link>
+            </Button>
+          }
+        />
+      )}
+
+      {!showLoading && !isError && !categoryNotFound && data && data.products.length === 0 && (
+        <EmptyState
+          title="ไม่พบสินค้าที่ตรงกับการค้นหา"
+          description="ลองใช้คำค้นที่สั้นลง หรือเลือกดูทุกหมวด"
+          action={
+            <Button
+              variant="outline"
+              onClick={() => updateParams({ q: undefined, category: undefined, page: undefined })}
+            >
+              ล้างตัวกรอง
+            </Button>
+          }
+        />
+      )}
+
+      {!showLoading && !categoryNotFound && data && data.products.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {data?.products.map((product) => (
+          {data.products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -126,7 +180,7 @@ export function ProductListPage() {
           >
             ก่อนหน้า
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm tabular-nums text-muted-foreground">
             หน้า {page} จาก {totalPages}
           </span>
           <Button

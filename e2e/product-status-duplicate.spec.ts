@@ -28,7 +28,7 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
 
   // A draft is invisible to customers.
   await page.goto(`/products/${slug}`)
-  await expect(page.getByText('Product not found.')).toBeVisible()
+  await expect(page.getByText('ไม่พบสินค้านี้')).toBeVisible()
 
   // Publishing it makes it visible.
   await page.goto('/admin/products')
@@ -48,7 +48,7 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
   await expect(page.locator('#status')).toHaveValue('draft')
 
   await page.goto(`/products/${slug}-copy`)
-  await expect(page.getByText('Product not found.')).toBeVisible()
+  await expect(page.getByText('ไม่พบสินค้านี้')).toBeVisible()
 
   // Archiving drops the original out of the default admin view. Two rows now
   // carry `name` (the original and its copy), so each lookup is narrowed by

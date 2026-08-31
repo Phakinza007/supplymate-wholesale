@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCartStore } from '@/core/cart/cartStore'
-import { clampToMinimum, findDemoProduct } from '@/demo/catalogue'
-import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
+import { demoCategories, findDemoProduct } from '@/demo/catalogue'
+import { formatPrice } from '@/lib/formatPrice'
+import { quantityLabel } from '@/lib/wholesale'
+import { QuantityStepper } from '@/showcase/QuantityStepper'
 import { WholesaleFacts } from '@/showcase/WholesaleFacts'
+import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 export function ShowcaseProductPage() {
   const { slug = '' } = useParams()
@@ -20,7 +23,7 @@ export function ShowcaseProductPage() {
   if (!product) {
     return (
       <section className="py-12 text-center">
-        <h1 className="text-2xl font-semibold">ไม่พบสินค้าที่ต้องการ</h1>
+        <h1 className="showcase-page-title">ไม่พบสินค้าที่ต้องการ</h1>
         <Link to="/shop" className="mt-4 inline-block text-primary hover:underline">
           กลับไปดูสินค้า
         </Link>
@@ -29,6 +32,7 @@ export function ShowcaseProductPage() {
   }
 
   const minimumQuantity = product.minOrderQuantity
+  const category = demoCategories.find((item) => item.slug === product.categorySlug)
 
   return (
     <section className="mx-auto grid max-w-5xl gap-8 pb-8 md:grid-cols-2 md:items-start">
@@ -40,13 +44,35 @@ export function ShowcaseProductPage() {
         />
       </div>
       <div className="flex flex-col gap-5">
-        <Link to={`/shop?category=${product.categorySlug}`} className="text-sm text-muted-foreground hover:underline">
-          ← กลับไปยังสินค้า
-        </Link>
+        <nav aria-label="เส้นทางหน้า" className="wholesale-breadcrumb">
+          <ol>
+            <li>
+              <Link to="/">หน้าแรก</Link>
+            </li>
+            <li aria-hidden="true" className="wholesale-breadcrumb__separator">
+              /
+            </li>
+            <li>
+              <Link to={`/shop?category=${encodeURIComponent(product.categorySlug)}`}>
+                {category?.name ?? 'แคตตาล็อก'}
+              </Link>
+            </li>
+            <li aria-hidden="true" className="wholesale-breadcrumb__separator">
+              /
+            </li>
+            <li aria-current="page">{product.name}</li>
+          </ol>
+        </nav>
         <div>
-          <p className="text-sm font-semibold text-primary">ข้อมูลสินค้าค้าส่ง</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
+          <p className="showcase-eyebrow">ข้อมูลสินค้าค้าส่ง</p>
+          <h1 className="showcase-page-title">{product.name}</h1>
         </div>
+        <p className="wholesale-detail-price">
+          {formatPrice(product.price)}
+          <span className="wholesale-detail-price__unit">
+            / {quantityLabel(product.packageUnit, 1)}
+          </span>
+        </p>
         <p className="leading-7 text-muted-foreground">{product.description}</p>
         <WholesaleFacts
           price={product.price}
@@ -54,19 +80,21 @@ export function ShowcaseProductPage() {
           unitsPerPackage={product.unitsPerPackage}
           minOrderQuantity={product.minOrderQuantity}
         />
-        <div className="flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4">
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            จำนวน
-            <input
-              type="number"
-              min={minimumQuantity}
-              value={quantity}
-              onChange={(event) =>
-                setQuantity(clampToMinimum(Number(event.target.value), minimumQuantity))
-              }
-              className="w-24 rounded-lg border bg-background px-3 py-2"
-            />
-          </label>
+        <div className="rounded-2xl border bg-card p-4">
+          <QuantityStepper
+            inputId="product-quantity"
+            value={quantity}
+            min={minimumQuantity}
+            onChange={setQuantity}
+            packageUnit={product.packageUnit}
+            unitsPerPackage={product.unitsPerPackage}
+          />
+        </div>
+        <div className="wholesale-buy-bar">
+          <p className="wholesale-buy-bar__total">
+            {formatPrice(product.price * quantity)}
+            <span>{quantityLabel(product.packageUnit, quantity)}</span>
+          </p>
           <button
             type="button"
             onClick={() => {
@@ -86,12 +114,19 @@ export function ShowcaseProductPage() {
               )
               setAdded(true)
             }}
-            className="rounded-lg bg-primary px-5 py-2 font-medium text-primary-foreground"
+            className="showcase-button showcase-button--primary"
           >
             เพิ่มลงตะกร้า
           </button>
         </div>
-        {added && <p role="status" className="text-sm font-medium text-primary">เพิ่มสินค้าลงตะกร้าแล้ว</p>}
+        {added && (
+          <p role="status" className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-semibold text-primary">เพิ่มสินค้าลงตะกร้าแล้ว</span>
+            <Link to="/cart" className="font-semibold underline underline-offset-4">
+              ดูตะกร้า
+            </Link>
+          </p>
+        )}
       </div>
     </section>
   )

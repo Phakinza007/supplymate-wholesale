@@ -1,15 +1,22 @@
+:root {
+  /* Utility strip (~1.6rem) + brand row (~4.3rem). The sticky catalogue
+     toolbar parks just below it — keep this in sync if the header grows. */
+  --showcase-header-height: 5.875rem;
+}
+
 .showcase-header {
   position: sticky;
-  z-index: 20;
+  z-index: var(--z-sticky);
   top: 0;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 96%, transparent);
+  backdrop-filter: blur(8px);
 }
 
 .showcase-utility {
   background: var(--foreground);
   color: var(--background);
-  font-size: 0.75rem;
+  font-size: var(--text-fine);
   line-height: 1.35;
 }
 
@@ -22,8 +29,9 @@
 
 .showcase-utility__inner {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.15rem 1rem;
   padding-block: 0.42rem;
 }
 
@@ -45,7 +53,7 @@
 .showcase-header__brand {
   min-width: 0;
   gap: 0.65rem;
-  font-weight: 700;
+  font-weight: var(--weight-title);
   letter-spacing: -0.015em;
 }
 
@@ -61,7 +69,7 @@
   justify-content: flex-end;
   gap: 1.25rem;
   font-size: 0.875rem;
-  font-weight: 650;
+  font-weight: var(--weight-strong);
   white-space: nowrap;
 }
 
@@ -85,18 +93,78 @@
   color: var(--primary-foreground);
   padding: 0.14rem 0.45rem;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--text-fine);
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Shared typography ---------- */
+
+/* Quiet label, not an accent: in the Ledger palette `--primary` IS the ink the
+   heading is set in, so an eyebrow in primary just muddies the pair. */
+.showcase-eyebrow {
+  color: var(--muted-foreground);
+  font-size: var(--text-eyebrow);
+  font-weight: 750;
+  letter-spacing: var(--tracking-eyebrow);
+}
+
+.showcase-page-title {
+  margin-top: 0.5rem;
+  font-size: var(--text-page-title);
+  font-weight: var(--weight-title);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+}
+
+.showcase-section-title {
+  margin-top: 0.5rem;
+  font-size: var(--text-section-title);
+  font-weight: var(--weight-title);
+  line-height: 1.25;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+}
+
+.showcase-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Ledger rule: a navigational link is the one place the signal colour appears
+   outside a status chip. Filled buttons stay ink. */
+.showcase-section-header__link {
+  color: var(--brand-secondary);
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+  text-underline-offset: 0.25em;
+}
+
+.showcase-section-header__link:hover {
+  text-decoration-line: underline;
+}
+
+.showcase-lede {
+  max-width: 60ch;
+  margin-top: 0.75rem;
+  color: var(--muted-foreground);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+/* ---------- Hero ---------- */
+
 :where(.showcase-hero, .wholesale-hero) {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(16rem, 0.9fr);
   align-items: center;
-  gap: clamp(2rem, 5vw, 5rem);
-  padding-block: clamp(2.75rem, 7vw, 5.5rem);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  gap: clamp(1.75rem, 4vw, 4rem);
+  border-radius: calc(var(--radius) * 1.75);
+  background: color-mix(in srgb, var(--primary) 6%, var(--card));
+  padding: clamp(1.75rem, 4vw, 3.5rem);
 }
 
 :where(.showcase-hero__content, .wholesale-hero__content) {
@@ -105,24 +173,24 @@
 
 :where(.showcase-hero__eyebrow, .wholesale-hero__eyebrow) {
   margin-bottom: 1rem;
-  color: var(--primary);
-  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-eyebrow);
   font-weight: 750;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-eyebrow);
 }
 
 :where(.showcase-hero, .wholesale-hero) h1 {
   max-width: 16ch;
-  font-size: clamp(2.35rem, 5.5vw, 4.75rem);
+  font-size: clamp(2.1rem, 1.35rem + 3.2vw, 3.75rem);
   font-weight: 720;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 :where(.showcase-hero__copy, .wholesale-hero__copy) {
-  max-width: 60ch;
-  margin-top: 1.25rem;
+  max-width: 56ch;
+  margin-top: 1.1rem;
   color: var(--muted-foreground);
   font-size: 1.0625rem;
   line-height: 1.75;
@@ -139,7 +207,7 @@
   background: var(--primary);
   color: var(--primary-foreground);
   padding: 0.7rem 1.15rem;
-  font-weight: 700;
+  font-weight: var(--weight-title);
 }
 
 .showcase-hero__collage {
@@ -163,19 +231,45 @@
   margin-top: 2rem;
 }
 
-.wholesale-category-tile {
+/* ---------- Category strip ---------- */
+
+/* Matches the product grid's column rhythm so the two sections line up. */
+.wholesale-category-strip {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .wholesale-category-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .wholesale-category-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.wholesale-category-tile {
+  display: flex;
+  align-items: center;
   min-width: 0;
   overflow: hidden;
+  gap: 0.85rem;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) * 1.5);
+  border-radius: calc(var(--radius) * 1.25);
   background: var(--card);
+  padding: 0.6rem;
   transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .wholesale-category-tile__image {
-  width: 100%;
-  aspect-ratio: 16 / 10;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius);
   background: var(--muted);
   object-fit: cover;
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -183,21 +277,23 @@
 
 .wholesale-category-tile__content {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 
 .wholesale-category-tile__name {
-  font-weight: 700;
+  font-weight: var(--weight-title);
+  line-height: 1.4;
 }
 
 .wholesale-category-tile__count {
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  white-space: nowrap;
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Product card ---------- */
 
 .wholesale-product-card {
   display: flex;
@@ -217,7 +313,7 @@
 
 .wholesale-product-card img {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
   background: var(--muted);
   object-fit: cover;
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -233,34 +329,259 @@
 .wholesale-product-card__eyebrow {
   margin-bottom: 0.4rem;
   color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-weight: 650;
+  font-size: var(--text-fine);
+  font-weight: var(--weight-strong);
 }
 
 .wholesale-product-card h3 {
-  font-size: 1.0625rem;
-  font-weight: 700;
+  font-size: var(--text-card-title);
+  font-weight: var(--weight-title);
   line-height: 1.45;
   text-wrap: balance;
 }
 
 .wholesale-product-card__price {
-  margin-top: 1.1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-top: 0.85rem;
   color: var(--primary);
+  font-size: 1.375rem;
   font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.wholesale-product-card__unit,
-.wholesale-product-card__moq {
-  margin-top: 0.25rem;
+.wholesale-product-card__price-unit {
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+  letter-spacing: 0;
+}
+
+.wholesale-product-card__actions {
+  /* auto keeps the button on the baseline of every card in a row, whatever the
+     title wraps to */
+  margin-top: auto;
+  padding-top: 0.9rem;
+}
+
+/* Aligned spec rows: every card shows the same three rows in the same order,
+   so a buyer compares straight down a column instead of re-reading each card. */
+.wholesale-spec-list {
+  display: grid;
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.wholesale-spec-list > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding-block: 0.45rem;
+}
+
+.wholesale-spec-list > div:last-child {
+  border-bottom: 0;
+}
+
+.wholesale-spec-list dt {
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
   line-height: 1.5;
 }
 
-.wholesale-product-card__moq {
+.wholesale-spec-list dd {
+  font-size: var(--text-meta);
+  font-weight: var(--weight-title);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- Buttons ---------- */
+
+.showcase-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 0.6rem 1.15rem;
+  font-weight: var(--weight-title);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.showcase-button--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.showcase-button--outline {
+  border-color: var(--input);
+  background: var(--card);
   color: var(--foreground);
-  font-weight: 650;
+}
+
+.showcase-button--outline:hover {
+  border-color: var(--primary);
+}
+
+.showcase-button--block {
+  width: 100%;
+}
+
+/* ---------- Catalogue toolbar ---------- */
+
+.wholesale-toolbar {
+  position: sticky;
+  z-index: var(--z-dropdown);
+  top: calc(var(--showcase-header-height) + 0.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.25);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  padding: 0.75rem;
+  backdrop-filter: blur(6px);
+}
+
+.wholesale-toolbar__search {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.wholesale-toolbar__search input {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  padding: 0.5rem 0.85rem;
+}
+
+.wholesale-toolbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.wholesale-chip {
+  min-height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+}
+
+.wholesale-chip[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.wholesale-toolbar__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  width: 100%;
+}
+
+.wholesale-toolbar__count {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wholesale-toolbar__clear {
+  border-radius: var(--radius);
+  color: var(--brand-secondary);
+  padding: 0.35rem 0;
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+  text-underline-offset: 0.25em;
+}
+
+.wholesale-toolbar__clear:hover {
+  text-decoration-line: underline;
+}
+
+.wholesale-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: calc(var(--radius) * 1.25);
+  background: var(--card);
+  padding: 2rem 1.5rem;
+}
+
+.wholesale-empty p {
+  color: var(--muted-foreground);
+}
+
+/* ---------- Breadcrumb ---------- */
+
+.wholesale-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+}
+
+.wholesale-breadcrumb a {
+  text-underline-offset: 0.25em;
+}
+
+.wholesale-breadcrumb a:hover {
+  color: var(--primary);
+  text-decoration-line: underline;
+}
+
+.wholesale-breadcrumb li[aria-current='page'] {
+  color: var(--foreground);
+  font-weight: var(--weight-strong);
+}
+
+.wholesale-breadcrumb__separator {
+  color: var(--border);
+}
+
+/* ---------- Product detail ---------- */
+
+.wholesale-detail-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: var(--primary);
+  font-size: clamp(1.875rem, 1.5rem + 1.5vw, 2.5rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.wholesale-detail-price__unit {
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  font-weight: var(--weight-strong);
+  letter-spacing: 0;
 }
 
 .wholesale-facts {
@@ -287,16 +608,83 @@
 
 .wholesale-facts dt {
   color: var(--muted-foreground);
-  font-size: 0.75rem;
+  font-size: var(--text-fine);
   line-height: 1.5;
 }
 
 .wholesale-facts dd {
   margin-top: 0.25rem;
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: var(--weight-title);
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
 }
+
+/* ---------- Quantity stepper ---------- */
+
+.wholesale-quantity__label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: var(--weight-strong);
+}
+
+.wholesale-quantity__control {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.wholesale-quantity__step {
+  width: 2.75rem;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: var(--weight-title);
+  line-height: 1;
+}
+
+.wholesale-quantity__step:disabled {
+  color: var(--muted-foreground);
+  opacity: 0.45;
+}
+
+.wholesale-quantity__step:not(:disabled):hover {
+  background: var(--muted);
+}
+
+.wholesale-quantity__input {
+  width: 4rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-inline: 1px solid var(--input);
+  background: var(--background);
+  padding-inline: 0.25rem;
+  font-size: 1rem;
+  font-weight: var(--weight-title);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.wholesale-quantity__summary {
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.wholesale-quantity__summary strong {
+  color: var(--foreground);
+  font-weight: var(--weight-title);
+}
+
+/* ---------- Order summary ---------- */
 
 :where(.wholesale-summary, .wholesale-order-summary) {
   overflow: hidden;
@@ -336,18 +724,20 @@
 .wholesale-order-summary__name,
 .wholesale-order-summary__line-total,
 .wholesale-order-summary__subtotal dd {
-  font-weight: 700;
+  font-weight: var(--weight-title);
 }
 
 .wholesale-order-summary__variant,
 .wholesale-order-summary__quantity {
   margin-top: 0.2rem;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
 }
 
-.wholesale-order-summary__line-total {
+.wholesale-order-summary__line-total,
+.wholesale-order-summary__subtotal dd {
   flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -357,14 +747,63 @@
   background: var(--muted);
 }
 
+/* ---------- Demo disclosure ---------- */
+
 .showcase-demo-notice,
 #showcase-demo-notice {
-  border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--brand-secondary) 30%, var(--border));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--primary) 8%, var(--card));
+  background: color-mix(in srgb, var(--brand-secondary) 6%, var(--card));
   color: var(--foreground);
-  padding: 0.85rem 1rem;
-  line-height: 1.55;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.showcase-demo-notice strong {
+  font-weight: var(--weight-title);
+}
+
+.showcase-demo-notice span {
+  color: var(--muted-foreground);
+}
+
+/* Point-of-commit caption: the standing notice above already carries the
+   disclosure, so the confirm button only needs a short restatement. */
+.showcase-commit-caption {
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---------- Buy bar ---------- */
+
+/* One add-to-cart control only: a normal row on desktop, pinned to the bottom
+   of the viewport on small screens so it stays reachable down a long page. */
+.wholesale-buy-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.wholesale-buy-bar__total {
+  min-width: 0;
+  flex: 1 1 auto;
+  font-weight: var(--weight-title);
+  font-variant-numeric: tabular-nums;
+}
+
+.wholesale-buy-bar__total span {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+  font-weight: 400;
 }
 
 .showcase-footer {
@@ -380,15 +819,15 @@
 }
 
 .showcase-footer__eyebrow {
-  font-size: 0.75rem;
+  font-size: var(--text-fine);
   font-weight: 750;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-eyebrow);
 }
 
 .showcase-footer__statement {
   margin-top: 0.65rem;
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: var(--weight-title);
 }
 
 .showcase-footer__local-data {
@@ -400,7 +839,7 @@
 
 .showcase-footer__categories > p {
   margin-bottom: 0.65rem;
-  font-weight: 700;
+  font-weight: var(--weight-title);
 }
 
 .showcase-footer__categories ul {
@@ -420,19 +859,10 @@
   text-decoration-line: underline;
 }
 
-:where(a, button, input, select, textarea):focus-visible {
-  outline: 3px solid var(--ring);
-  outline-offset: 3px;
-}
-
+/* The base focus ring lives in index.css; only the dark footer needs a
+   different colour to stay visible against it. */
 .showcase-footer a:focus-visible {
   outline-color: var(--background);
-}
-
-input,
-select,
-textarea {
-  border-color: var(--input);
 }
 
 @media (hover: hover) {
@@ -454,11 +884,14 @@ textarea {
   }
 }
 
-@media (max-width: 48rem) {
-  .showcase-utility__inner span:last-child {
-    display: none;
+@media (min-width: 40rem) {
+  .showcase-section-header {
+    flex-direction: row;
+    align-items: flex-end;
   }
+}
 
+@media (max-width: 48rem) {
   .showcase-header__inner {
     flex-wrap: wrap;
     gap: 0.75rem;
@@ -477,11 +910,30 @@ textarea {
   }
 
   :where(.showcase-hero, .wholesale-hero) h1 {
-    font-size: clamp(2.25rem, 12vw, 3.5rem);
+    font-size: clamp(2rem, 9vw, 3rem);
   }
 
   .showcase-hero__collage {
     max-width: 34rem;
+  }
+
+  /* The toolbar can only stick under a fixed-height header; the mobile header
+     wraps to two rows, so let the toolbar scroll away instead of covering
+     products. */
+  .wholesale-toolbar {
+    position: static;
+  }
+
+  .wholesale-buy-bar {
+    position: sticky;
+    z-index: var(--z-sticky);
+    bottom: 0;
+    flex-wrap: nowrap;
+    margin-inline: -1rem;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card) 96%, transparent);
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    backdrop-filter: blur(6px);
   }
 }
 

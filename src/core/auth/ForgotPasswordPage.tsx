@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { AuthShell } from '@/core/auth/AuthShell'
 import { getPasswordResetRedirect, isGitHubPagesBuild } from '@/lib/githubPagesAuth'
 
 export function ForgotPasswordPage() {
@@ -29,37 +31,50 @@ export function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 px-4 text-center">
-        <h1 className="text-2xl font-semibold">Check your email</h1>
-        <p className="text-muted-foreground">
-          If an account exists for {email}, a password reset link is on its way.
+      <AuthShell
+        title="ตรวจอีเมลของคุณ"
+        // Deliberately non-committal about whether the account exists — saying
+        // so would let anyone test which emails are registered.
+        description={`ถ้ามีบัญชีที่ใช้ ${email} อยู่ ลิงก์ตั้งรหัสผ่านใหม่กำลังถูกส่งไป`}
+        footer={
+          <Link to="/login" className="font-semibold text-signal underline-offset-4 hover:underline">
+            กลับไปหน้าเข้าสู่ระบบ
+          </Link>
+        }
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          ลิงก์มีอายุจำกัด ถ้าหมดอายุแล้วขอใหม่ได้จากหน้านี้
         </p>
-        <Link to="/login" className="text-sm hover:underline">
-          Back to login
-        </Link>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-semibold">Reset your password</h1>
+    <AuthShell
+      title="ตั้งรหัสผ่านใหม่"
+      description="กรอกอีเมลที่ใช้สมัคร แล้วเราจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้"
+      footer={
+        <Link to="/login" className="font-semibold text-signal underline-offset-4 hover:underline">
+          กลับไปหน้าเข้าสู่ระบบ
+        </Link>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+        {error && <Alert tone="error" title="ส่งลิงก์ไม่สำเร็จ">{error}</Alert>}
+        <Field label="อีเมล">
           <Input
             id="email"
             type="email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Sending…' : 'Send reset link'}
+        </Field>
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังส่ง' : 'ส่งลิงก์ตั้งรหัสผ่าน'}
         </Button>
       </form>
-    </div>
+    </AuthShell>
   )
 }

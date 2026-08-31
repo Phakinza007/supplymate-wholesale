@@ -6,8 +6,13 @@ import { formatPrice } from '@/lib/formatPrice'
 import { resolveTierPrice } from '@/lib/priceTiers'
 import { useProduct } from '@/core/catalog/useProduct'
 import { quantityLabel, type PackageUnit } from '@/lib/wholesale'
+import { ShoppingCart } from 'lucide-react'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/PageHeader'
 
 export function CartPage() {
   const items = useCartStore((state) => state.items)
@@ -22,11 +27,17 @@ export function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto flex max-w-lg flex-col items-center gap-4 px-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold">Your cart is empty</h1>
-        <Button asChild>
-          <Link to="/shop">Continue shopping</Link>
-        </Button>
+      <div className="mx-auto w-full max-w-2xl px-4 py-10">
+        <EmptyState
+          icon={<ShoppingCart />}
+          title="ตะกร้าของคุณยังว่างอยู่"
+          description="เลือกสินค้าจากแคตตาล็อก ระบบจะคำนวณราคาต่อหน่วยตามจำนวนที่สั่งให้อัตโนมัติ"
+          action={
+            <Button asChild>
+              <Link to="/shop">เลือกดูสินค้า</Link>
+            </Button>
+          }
+        />
       </div>
     )
   }
@@ -36,10 +47,10 @@ export function CartPage() {
   )
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-2xl font-semibold">Your cart</h1>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
+      <PageHeader title="ตะกร้าสินค้า" />
 
-      <ul className="flex flex-col gap-4">
+      <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
         {items.map((item) => (
           <CartLineItem
             key={cartLineKey(item)}
@@ -49,26 +60,28 @@ export function CartPage() {
         ))}
       </ul>
 
-      <div className="flex items-center justify-between text-lg font-medium">
-        <span>Subtotal</span>
-        <span>{formatPrice(subtotal)}</span>
+      <div className="rounded-md border border-border bg-card px-4 py-3.5">
+        <div className="flex items-baseline justify-between gap-4 text-lg font-bold">
+          <span>ยอดรวมสินค้า</span>
+          <span className="tabular-nums">{formatPrice(subtotal)}</span>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          ค่าจัดส่งคำนวณตอนยืนยันคำสั่งซื้อ และแสดงในหน้ายืนยัน
+        </p>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Shipping is calculated when you place your order.
-      </p>
 
       {checkoutBlocked ? (
         <>
-          <p className="text-sm text-destructive">
-            กรุณาตรวจสอบสินค้าที่ไม่พร้อมจำหน่ายก่อนดำเนินการชำระเงิน
-          </p>
+          <Alert tone="warning" title="ยังดำเนินการต่อไม่ได้">
+            มีสินค้าที่ไม่พร้อมจำหน่ายอยู่ในตะกร้า นำออกก่อนจึงจะไปหน้าชำระเงินได้
+          </Alert>
           <Button size="lg" disabled>
-            Proceed to checkout
+            ไปหน้าชำระเงิน
           </Button>
         </>
       ) : (
         <Button asChild size="lg">
-          <Link to="/checkout">Proceed to checkout</Link>
+          <Link to="/checkout">ไปหน้าชำระเงิน</Link>
         </Button>
       )}
     </div>
@@ -167,8 +180,8 @@ function CartLineItem({
   }
 
   return (
-    <li className="flex gap-4 border-b pb-4">
-      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted">
+    <li className="flex gap-4 p-4">
+      <div className="size-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
         {item.imagePath && (
           <img
             src={resolveImageUrl(item.imagePath)}
@@ -178,32 +191,38 @@ function CartLineItem({
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1">
-        <Link to={`/products/${item.productSlug}`} className="font-medium hover:underline">
+        <Link
+          to={`/products/${item.productSlug}`}
+          className="font-semibold underline-offset-4 hover:underline"
+        >
           {item.productName}
         </Link>
         {item.variantName && (
           <span className="text-sm text-muted-foreground">{item.variantName}</span>
         )}
-        <span className="text-sm text-muted-foreground">
-          {formatPrice(item.unitPrice)} each
+        <span className="flex flex-wrap items-center gap-2 text-sm tabular-nums text-muted-foreground">
+          <span>
+            {formatPrice(item.unitPrice)}
+            {packageUnit ? ` / ${quantityLabel(packageUnit, 1)}` : ''}
+          </span>
           {product && item.unitPrice < Number(product.price) && (
-            <span className="ml-2 text-foreground">· ราคาขายส่งตามจำนวน</span>
+            <Badge tone="verified">ราคาขายส่งตามจำนวน</Badge>
           )}
         </span>
         {packageUnit ? (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm tabular-nums text-muted-foreground">
             {quantityLabel(packageUnit, item.quantity)}
           </span>
         ) : (
-          <span className="text-sm text-destructive">ไม่พบข้อมูลหน่วยสั่งซื้อ</span>
+          <span className="text-sm font-semibold text-destructive">ไม่พบข้อมูลหน่วยสั่งซื้อ</span>
         )}
         {status === 'loading' && (
           <span className="text-sm text-muted-foreground">กำลังตรวจสอบสินค้า…</span>
         )}
         {status === 'unavailable' && (
-          <span className="text-sm text-destructive">สินค้านี้ไม่พร้อมจำหน่ายแล้ว</span>
+          <span className="text-sm font-semibold text-destructive">สินค้านี้ไม่พร้อมจำหน่ายแล้ว</span>
         )}
-        <div className="flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-2">
           <Input
             type="number"
             aria-label={`จำนวน ${item.productName}`}
@@ -225,18 +244,22 @@ function CartLineItem({
                 setQuantityInput(String(item.quantity))
               }
             }}
-            className="w-16"
+            className="w-20"
           />
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
+            className="text-destructive hover:bg-[var(--status-cancelled-bg)]"
+            aria-label={`นำ ${item.productName} ออกจากตะกร้า`}
             onClick={() => removeItem(item.productId, item.variantId)}
           >
-            Remove
+            ลบ
           </Button>
         </div>
       </div>
-      <span className="font-medium">{formatPrice(item.unitPrice * item.quantity)}</span>
+      <span className="shrink-0 font-semibold tabular-nums">
+        {formatPrice(item.unitPrice * item.quantity)}
+      </span>
     </li>
   )
 }

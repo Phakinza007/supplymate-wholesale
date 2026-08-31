@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCartStore, useCartSubtotal, type CartItem } from '@/core/cart/cartStore'
-import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
+import { QuantityStepper } from '@/showcase/QuantityStepper'
 import { WholesaleOrderSummary } from '@/showcase/WholesaleOrderSummary'
 
 interface CartLineControlsProps {
@@ -13,21 +13,32 @@ function CartLineControls({ item, onQuantityChange, onRemove }: CartLineControls
   const minimumQuantity = item.minOrderQuantity ?? 1
 
   return (
-    <div className="mt-4 flex items-end justify-between gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        จำนวน
-        <input
-          type="number"
-          min={minimumQuantity}
+    <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+      {item.packageUnit ? (
+        <QuantityStepper
           value={item.quantity}
-          onChange={(event) => onQuantityChange(Number(event.target.value))}
-          className="w-24 rounded-lg border bg-background px-3 py-2"
+          min={minimumQuantity}
+          onChange={onQuantityChange}
+          packageUnit={item.packageUnit}
+          context={item.productName}
         />
-      </label>
+      ) : (
+        <label className="flex flex-col gap-1 text-sm">
+          จำนวน {item.productName}
+          <input
+            type="number"
+            min={minimumQuantity}
+            value={item.quantity}
+            onChange={(event) => onQuantityChange(Number(event.target.value))}
+            className="w-24 rounded-lg border bg-background px-3 py-2"
+          />
+        </label>
+      )}
       <button
         type="button"
         onClick={onRemove}
-        className="text-sm font-medium text-destructive hover:underline"
+        aria-label={`ลบ ${item.productName} ออกจากตะกร้า`}
+        className="min-h-11 text-sm font-semibold text-destructive hover:underline"
       >
         ลบสินค้า
       </button>
@@ -44,8 +55,8 @@ export function ShowcaseCartPage() {
   if (items.length === 0) {
     return (
       <section className="py-12 text-center">
-        <h1 className="text-2xl font-semibold">ตะกร้าของคุณยังว่างอยู่</h1>
-        <Link to="/shop" className="mt-4 inline-block rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground">
+        <h1 className="showcase-page-title">ตะกร้าของคุณยังว่างอยู่</h1>
+        <Link to="/shop" className="showcase-button showcase-button--primary mt-6">
           เลือกสินค้า
         </Link>
       </section>
@@ -55,8 +66,8 @@ export function ShowcaseCartPage() {
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6 pb-8">
       <div>
-        <p className="text-sm font-semibold text-primary">รายการที่เลือก</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">ตะกร้าสินค้า</h1>
+        <p className="showcase-eyebrow">รายการที่เลือก</p>
+        <h1 className="showcase-page-title">ตะกร้าสินค้า</h1>
       </div>
       <WholesaleOrderSummary
         items={items}
@@ -69,11 +80,17 @@ export function ShowcaseCartPage() {
           />
         )}
       />
+      {/* The standing notice at the top of every page already carries the
+          disclosure — this page repeats only the part that applies to the next
+          step. */}
       <div className="flex flex-col gap-3">
-        <ShowcaseNotice />
-        <Link to="/checkout" className="rounded-lg bg-primary px-5 py-3 text-center font-medium text-primary-foreground">
+        <Link
+          to="/checkout"
+          className="showcase-button showcase-button--primary showcase-button--block"
+        >
           ไปยังการสั่งซื้อจำลอง
         </Link>
+        <p className="showcase-commit-caption">ขั้นตอนถัดไปเป็นการจำลอง ไม่มีการส่งคำสั่งซื้อจริง</p>
       </div>
     </section>
   )

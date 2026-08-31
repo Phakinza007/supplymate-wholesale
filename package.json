@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:app": "VITE_SHOWCASE_MODE=false vite",
     "build": "tsc -b && vite build",
+    "build:app": "tsc -b && VITE_SHOWCASE_MODE=false vite build",
     "build:pages": "VITE_DEPLOY_TARGET=github-pages tsc -b && vite build",
     "lint": "oxlint && node scripts/check-core-boundary.mjs && node scripts/check-database-types.mjs",
     "typecheck": "tsc -b",
@@ -13,7 +15,7 @@
     "pretest:e2e": "supabase start && node scripts/write-e2e-env.mjs && supabase db reset --yes",
     "test:e2e": "playwright test",
     "test:unit": "vitest run --passWithNoTests",
-    "test:showcase-e2e": "playwright test e2e/static-showcase.spec.ts e2e/task-3-shell.spec.ts --project=chromium",
+    "test:showcase-e2e": "E2E_SERVERS=showcase playwright test --project=showcase",
     "test:showcase-artifact": "node scripts/assert-static-showcase.mjs"
   },
   "dependencies": {

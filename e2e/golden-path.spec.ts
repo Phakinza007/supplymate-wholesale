@@ -25,7 +25,7 @@ test('golden path: register, buy, pay, admin fulfills, customer sees tracking an
     postalCode: '10110',
   })
 
-  const { orderUrl, orderHeading } = await buyFirstProductAndUploadSlip(customerPage, SLIP_PATH)
+  const { orderUrl, orderNumber } = await buyFirstProductAndUploadSlip(customerPage, SLIP_PATH)
   await expect(customerPage.getByText('รอตรวจสอบการชำระเงิน', { exact: true })).toBeVisible()
 
   const adminContext = await browser.newContext()
@@ -33,7 +33,7 @@ test('golden path: register, buy, pay, admin fulfills, customer sees tracking an
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
 
   await adminPage.goto('/admin/orders')
-  await adminPage.getByRole('link', { name: orderHeading }).click()
+  await adminPage.getByRole('link', { name: orderNumber }).click()
   await adminPage.waitForURL(/\/admin\/orders\/.+/)
   await expect(adminPage.getByRole('heading', { name: 'ข้อมูลธุรกิจผู้สั่งซื้อ' })).toBeVisible()
   await expect(adminPage.getByText('Golden Path Business', { exact: true })).toBeVisible()
@@ -77,7 +77,7 @@ test('admin must explain a rejected slip and buyer can safely re-upload', async 
     postalCode: '10110',
   })
 
-  const { orderUrl, orderHeading } = await buyFirstProductAndUploadSlip(
+  const { orderUrl, orderNumber } = await buyFirstProductAndUploadSlip(
     customerPage,
     SLIP_PATH,
     'Rejected Slip Business',
@@ -87,7 +87,7 @@ test('admin must explain a rejected slip and buyer can safely re-upload', async 
   const adminPage = await adminContext.newPage()
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
   await adminPage.goto('/admin/orders')
-  await adminPage.getByRole('link', { name: orderHeading }).click()
+  await adminPage.getByRole('link', { name: orderNumber }).click()
   await adminPage.getByRole('button', { name: 'Verify payment' }).click()
   await expect(adminPage.getByText('Status: verified')).toBeVisible()
 
@@ -106,7 +106,7 @@ test('admin must explain a rejected slip and buyer can safely re-upload', async 
   await customerPage.goto(orderUrl)
   await expect(customerPage.getByText('ยอดโอนไม่ตรง', { exact: true })).toBeVisible()
   await expect(customerPage.locator('input[type="file"]')).toBeVisible()
-  await expect(customerPage.getByRole('button', { name: 'Upload payment slip' })).toBeVisible()
+  await expect(customerPage.getByRole('button', { name: 'แนบสลิปการโอน' })).toBeVisible()
 
   await customerContext.close()
   await adminContext.close()

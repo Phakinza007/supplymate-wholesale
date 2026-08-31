@@ -12,7 +12,7 @@ export async function signUp(
   await page.locator('#fullName').fill(opts.fullName)
   await page.locator('#email').fill(opts.email)
   await page.locator('#password').fill(opts.password)
-  await page.getByRole('button', { name: 'Sign up' }).click()
+  await page.getByRole('button', { name: 'สมัครสมาชิก' }).click()
   await page.waitForURL('/')
 }
 
@@ -23,6 +23,6 @@ export async function logIn(
   await page.goto('/login')
   await page.locator('#email').fill(opts.email)
   await page.locator('#password').fill(opts.password)
-  await page.getByRole('button', { name: 'Log in' }).click()
+  await page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click()
   await page.waitForURL('/')
 }

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { AuthShell } from '@/core/auth/AuthShell'
 
 export function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -25,25 +27,24 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-semibold">Choose a new password</h1>
+    <AuthShell title="ตั้งรหัสผ่านใหม่" description="ตั้งรหัสผ่านใหม่เพื่อเข้าใช้งานบัญชีต่อ">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">New password</Label>
+        {error && <Alert tone="error" title="บันทึกรหัสผ่านไม่สำเร็จ">{error}</Alert>}
+        <Field label="รหัสผ่านใหม่" hint="อย่างน้อย 6 ตัวอักษร">
           <Input
             id="password"
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save new password'}
+        </Field>
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังบันทึก' : 'บันทึกรหัสผ่านใหม่'}
         </Button>
       </form>
-    </div>
+    </AuthShell>
   )
 }

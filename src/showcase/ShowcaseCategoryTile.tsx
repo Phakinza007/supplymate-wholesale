@@ -17,11 +17,14 @@ export function ShowcaseCategoryTile({ name, slug, imagePath, productCount }: Sh
       <img
         src={toShowcaseAssetUrl(imagePath)}
         alt=""
+        loading="lazy"
         className="wholesale-category-tile__image"
       />
       <span className="wholesale-category-tile__content">
         <span className="wholesale-category-tile__name">{name}</span>
-        <span className="wholesale-category-tile__count">{productCount.toLocaleString('th-TH')} รายการ</span>
+        <span className="wholesale-category-tile__count">
+          {productCount.toLocaleString('th-TH')} รายการ
+        </span>
       </span>
     </Link>
   )

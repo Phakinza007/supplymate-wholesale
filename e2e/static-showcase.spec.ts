@@ -8,7 +8,9 @@ test('keeps the B2B catalogue journey usable on mobile', async ({ page }) => {
     if (message.type() === 'error') consoleErrors.push(message.text())
   })
   page.on('response', response => {
-    if (new URL(response.url()).origin === 'http://localhost:5174' && response.status() >= 400) {
+    // Own-origin only: the Google Fonts stylesheet lives elsewhere and its
+    // availability is not what this spec is testing.
+    if (new URL(response.url()).origin === new URL(page.url()).origin && response.status() >= 400) {
       resourceErrors.push(`${response.status()} ${response.url()}`)
     }
   })
@@ -42,7 +44,9 @@ test('keeps MOQ, the cart summary, and simulated confirmation intact', async ({ 
   await quantity.fill('1')
   await expect(quantity).toHaveValue('3')
   await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
-  await page.getByRole('link', { name: /ตะกร้า/ }).click()
+  // Scoped to the header: the detail page now also offers a "ดูตะกร้า" shortcut
+  // right after adding.
+  await page.getByRole('banner').getByRole('link', { name: /ตะกร้า/ }).click()
   await expect(page.getByText('ยอดรวมสินค้า')).toBeVisible()
   await page.getByRole('link', { name: 'ไปยังการสั่งซื้อจำลอง' }).click()
   await page.getByRole('button', { name: 'ยืนยันคำสั่งซื้อจำลอง' }).click()

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { AuthShell } from '@/core/auth/AuthShell'
 import { brandConfig } from '@/config/branding.config'
 
 export function SignupPage() {
@@ -29,8 +31,10 @@ export function SignupPage() {
       setError(error.message)
       return
     }
+    // signUp() reports "already registered" as a success with an empty
+    // identities array, not as an error — see CLAUDE.md.
     if (data.user && data.user.identities?.length === 0) {
-      setError('An account with that email already exists.')
+      setError('อีเมลนี้มีบัญชีอยู่แล้ว ลองเข้าสู่ระบบหรือกู้คืนรหัสผ่าน')
       return
     }
     if (!data.session) {
@@ -42,64 +46,71 @@ export function SignupPage() {
 
   if (sent) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 px-4 text-center">
-        <h1 className="text-2xl font-semibold">Check your email</h1>
-        <p className="text-muted-foreground">
-          We sent a confirmation link to {email}. Confirm your email to finish creating your
-          account.
+      <AuthShell
+        title="ตรวจอีเมลของคุณ"
+        description={`ส่งลิงก์ยืนยันไปที่ ${email} แล้ว กดลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชี`}
+        footer={
+          <Link to="/login" className="font-semibold text-signal underline-offset-4 hover:underline">
+            กลับไปหน้าเข้าสู่ระบบ
+          </Link>
+        }
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          ถ้าไม่พบอีเมลภายในไม่กี่นาที ลองดูในโฟลเดอร์อีเมลขยะ
         </p>
-        <Link to="/login" className="text-sm hover:underline">
-          Back to login
-        </Link>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-semibold">Create your {brandConfig.storeName} account</h1>
+    <AuthShell
+      title="สมัครสมาชิก"
+      description={`เปิดบัญชีสำหรับสั่งซื้อกับ ${brandConfig.storeName}`}
+      footer={
+        <span>
+          มีบัญชีอยู่แล้ว?{' '}
+          <Link to="/login" className="font-semibold text-signal underline-offset-4 hover:underline">
+            เข้าสู่ระบบ
+          </Link>
+        </span>
+      }
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="fullName">Full name</Label>
+        {error && <Alert tone="error" title="สมัครสมาชิกไม่สำเร็จ">{error}</Alert>}
+        <Field label="ชื่อ-นามสกุล">
           <Input
             id="fullName"
+            autoComplete="name"
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+        </Field>
+        <Field label="อีเมล">
           <Input
             id="email"
             type="email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Password</Label>
+        </Field>
+        <Field label="รหัสผ่าน" hint="อย่างน้อย 6 ตัวอักษร">
           <Input
             id="password"
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Creating account…' : 'Sign up'}
+        </Field>
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังสมัคร' : 'สมัครสมาชิก'}
         </Button>
       </form>
-      <p className="text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link to="/login" className="hover:underline">
-          Log in
-        </Link>
-      </p>
-    </div>
+    </AuthShell>
   )
 }

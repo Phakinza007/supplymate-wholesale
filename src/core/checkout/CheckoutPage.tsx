@@ -6,9 +6,12 @@ import { useAddresses } from '@/core/profile/useAddresses'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/formatPrice'
 import { getErrorMessage } from '@/lib/getErrorMessage'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import { Feature } from '@/lib/Feature'
 
 const PromoCodeField = lazy(() => import('@/modules/optional/promotions/PromoCodeField'))
@@ -78,50 +81,56 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-2xl font-semibold">Checkout</h1>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
+      <PageHeader title="ยืนยันคำสั่งซื้อ" />
 
-      <div className="flex flex-col gap-3">
-        <h2 className="font-medium">Shipping address</h2>
-        {addressesLoading && <p className="text-sm text-muted-foreground">Loading addresses…</p>}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold">ที่อยู่จัดส่ง</h2>
+        {addressesLoading && (
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        )}
         {!addressesLoading && addresses?.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            You don't have any saved addresses yet.{' '}
-            <Link to="/account/addresses" className="underline">
-              Add one
+          <Alert tone="warning" title="ยังไม่มีที่อยู่จัดส่ง">
+            <Link
+              to="/account/addresses"
+              className="font-semibold text-signal underline underline-offset-4"
+            >
+              เพิ่มที่อยู่ก่อน
             </Link>{' '}
-            before checking out.
-          </p>
+            จึงจะสั่งซื้อได้
+          </Alert>
         )}
         {addresses?.map((address) => (
           <label
             key={address.id}
-            className="flex items-start gap-3 rounded-md border p-3 text-sm has-[:checked]:border-foreground"
+            className="flex items-start gap-3 rounded-md border border-border bg-card p-3 text-sm transition-colors has-[:checked]:border-primary has-[:checked]:bg-accent"
           >
             <input
               type="radio"
               name="address"
               checked={effectiveAddressId === address.id}
               onChange={() => setSelectedAddressId(address.id)}
-              className="mt-1"
+              className="mt-1 accent-[var(--brand-secondary)]"
             />
             <span>
-              <span className="block font-medium">{address.recipient_name}</span>
+              <span className="block font-semibold">{address.recipient_name}</span>
               <span className="block text-muted-foreground">
                 {address.line1}
                 {address.line2 ? `, ${address.line2}` : ''}, {address.province}{' '}
                 {address.postal_code}
               </span>
-              <span className="block text-muted-foreground">{address.phone}</span>
+              <span className="block font-mono text-muted-foreground">{address.phone}</span>
             </span>
           </label>
         ))}
-      </div>
+      </section>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border p-4">
-        <legend className="px-1 font-medium">ข้อมูลสำหรับธุรกิจ</legend>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="business-name">ชื่อร้านหรือบริษัท</Label>
+      <fieldset className="flex flex-col gap-4 rounded-md border border-border bg-card p-4">
+        <legend className="px-1 text-sm font-semibold">ข้อมูลสำหรับธุรกิจ</legend>
+        <Field label="ชื่อร้านหรือบริษัท" required>
           <Input
             id="business-name"
             required
@@ -133,19 +142,18 @@ export function CheckoutPage() {
               }))
             }
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="tax-id">เลขประจำตัวผู้เสียภาษี</Label>
+        </Field>
+        <Field label="เลขประจำตัวผู้เสียภาษี" hint="ใส่ไว้เพื่อออกใบกำกับภาษี">
           <Input
             id="tax-id"
+            inputMode="numeric"
             value={businessDetails.tax_id}
             onChange={(event) =>
               setBusinessDetails((current) => ({ ...current, tax_id: event.target.value }))
             }
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="branch-name">สาขา</Label>
+        </Field>
+        <Field label="สาขา">
           <Input
             id="branch-name"
             value={businessDetails.branch_name}
@@ -153,26 +161,29 @@ export function CheckoutPage() {
               setBusinessDetails((current) => ({ ...current, branch_name: event.target.value }))
             }
           />
-        </div>
+        </Field>
       </fieldset>
 
-      <div className="flex flex-col gap-2 border-t pt-4">
-        <h2 className="font-medium">Order summary</h2>
+      <section className="flex flex-col gap-2.5 rounded-md border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">สรุปรายการ</h2>
         {items.map((item) => (
           <div
             key={`${item.productId}:${item.variantId ?? ''}`}
-            className="flex justify-between text-sm"
+            className="flex justify-between gap-4 text-sm"
           >
             <span>
               {item.productName}
-              {item.variantName ? ` (${item.variantName})` : ''} × {item.quantity}
+              {item.variantName ? ` (${item.variantName})` : ''}
+              <span className="text-muted-foreground"> × {item.quantity}</span>
             </span>
-            <span>{formatPrice(item.unitPrice * item.quantity)}</span>
+            <span className="shrink-0 tabular-nums">
+              {formatPrice(item.unitPrice * item.quantity)}
+            </span>
           </div>
         ))}
-        <div className="flex justify-between font-medium">
-          <span>Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
+        <div className="flex justify-between gap-4 border-t border-border pt-2.5 font-semibold">
+          <span>ยอดรวมสินค้า</span>
+          <span className="tabular-nums">{formatPrice(subtotal)}</span>
         </div>
         <Feature flag="promotions">
           <Suspense fallback={null}>
@@ -192,33 +203,33 @@ export function CheckoutPage() {
           </Suspense>
         </Feature>
         {appliedPromo && (
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Discount</span>
-            <span>-{formatPrice(appliedPromo.discountAmount)}</span>
+          <div className="flex justify-between gap-4 text-sm text-muted-foreground">
+            <span>ส่วนลด</span>
+            <span className="tabular-nums">-{formatPrice(appliedPromo.discountAmount)}</span>
           </div>
         )}
-        <p className="text-sm text-muted-foreground">
-          Shipping is calculated when your order is placed and shown on the confirmation page.
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          ค่าจัดส่งคำนวณตอนสร้างคำสั่งซื้อ และแสดงในหน้ายืนยัน
         </p>
-      </div>
+      </section>
 
       {placeOrder.isError && (
-        <p className="text-sm text-destructive">
-          {getErrorMessage(placeOrder.error, 'Something went wrong placing your order.')}
-        </p>
+        <Alert tone="error" title="สั่งซื้อไม่สำเร็จ">
+          {getErrorMessage(placeOrder.error, 'ลองใหม่อีกครั้ง')}
+        </Alert>
       )}
 
       <Button
         size="lg"
+        loading={placeOrder.isPending}
         disabled={
           !effectiveAddressId ||
           !businessDetails.business_name.trim() ||
-          placeOrder.isPending ||
           placeOrder.isSuccess
         }
         onClick={() => placeOrder.mutate()}
       >
-        {placeOrder.isPending ? 'Placing order…' : 'Place order'}
+        {placeOrder.isPending ? 'กำลังสั่งซื้อ' : 'สั่งซื้อ'}
       </Button>
     </div>
   )

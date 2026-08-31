@@ -1,28 +1,28 @@
 import { useState, type ChangeEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/core/auth/useAuth'
 import { formatPrice } from '@/lib/formatPrice'
-import { brandConfig } from '@/config/branding.config'
 import { getErrorMessage } from '@/lib/getErrorMessage'
-import { Button } from '@/components/ui/button'
+import { orderStatusLabel, orderStatusTone } from '@/lib/orderStatus'
+import { brandConfig } from '@/config/branding.config'
 import { Feature } from '@/lib/Feature'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 
 const MAX_SLIP_SIZE_BYTES = 5 * 1024 * 1024
 const ACCEPTED_SLIP_TYPES = 'image/jpeg,image/png,image/webp,application/pdf'
-const orderStatusLabel = {
-  pending: 'รอตรวจสอบการชำระเงิน',
-  verified: 'ตรวจสอบการชำระเงินแล้ว',
-  shipped: 'จัดส่งแล้ว',
-  done: 'คำสั่งซื้อเสร็จสมบูรณ์',
-  cancelled: 'ยกเลิกคำสั่งซื้อ',
-} as const
 
 function useOrder(orderId: string | undefined, userId: string | undefined) {
   return useQuery({
     queryKey: ['order', userId, orderId],
     queryFn: async () => {
+      // `orders` RLS ORs `user_id = auth.uid()` with is_admin(), so the
+      // user_id filter is load-bearing, not redundant — see CLAUDE.md.
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
@@ -37,6 +37,38 @@ function useOrder(orderId: string | undefined, userId: string | undefined) {
   })
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-md border border-border bg-card">
+      <h2 className="border-b border-border px-4 py-3 text-sm font-semibold">{title}</h2>
+      <div className="px-4 py-3.5 text-sm">{children}</div>
+    </section>
+  )
+}
+
+function MoneyRow({
+  label,
+  value,
+  strong,
+}: {
+  label: string
+  value: string
+  strong?: boolean
+}) {
+  return (
+    <div
+      className={
+        strong
+          ? 'flex items-baseline justify-between gap-4 border-t border-border pt-2.5 font-semibold'
+          : 'flex items-baseline justify-between gap-4 text-muted-foreground'
+      }
+    >
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
+  )
+}
+
 export function OrderDetailPage() {
   const { orderId } = useParams()
   const { user } = useAuth()
@@ -47,8 +79,10 @@ export function OrderDetailPage() {
   const uploadSlip = useMutation({
     mutationFn: async () => {
       if (!file || !user || !order) throw new Error('Missing file')
-      if (file.size > MAX_SLIP_SIZE_BYTES) throw new Error('File must be under 5MB.')
+      if (file.size > MAX_SLIP_SIZE_BYTES) throw new Error('ไฟล์ต้องมีขนาดไม่เกิน 5MB')
       const ext = file.name.split('.').pop() ?? 'jpg'
+      // The caller's own id must be the first path segment: storage RLS and
+      // attach_payment_slip() both reject anything else.
       const path = `${user.id}/${order.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('payment-slips')
@@ -71,117 +105,156 @@ export function OrderDetailPage() {
     setFile(e.target.files?.[0] ?? null)
   }
 
-  if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
-  if (isError || !order) return <p className="p-8 text-destructive">Order not found.</p>
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
+  }
+
+  if (isError || !order) {
+    return (
+      <div className="mx-auto w-full max-w-2xl px-4 py-10">
+        <Alert tone="error" title="ไม่พบคำสั่งซื้อนี้">
+          คำสั่งซื้ออาจถูกลบ หรือไม่ได้อยู่ในบัญชีนี้{' '}
+          <Link to="/orders" className="font-semibold underline underline-offset-4">
+            กลับไปหน้ารายการคำสั่งซื้อ
+          </Link>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-2xl font-semibold">Order #{order.order_number}</h1>
-      <p className="text-sm text-muted-foreground">
-        สถานะ:{' '}
-        <span>
-          {orderStatusLabel[order.status as keyof typeof orderStatusLabel] ?? order.status}
-        </span>
-      </p>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
+      <PageHeader
+        title={
+          <>
+            คำสั่งซื้อ <span className="font-mono">#{order.order_number}</span>
+          </>
+        }
+        action={
+          <Badge tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</Badge>
+        }
+      />
+
+      {order.status === 'cancelled' && order.cancel_reason && (
+        <Alert tone="warning" title="คำสั่งซื้อถูกยกเลิก">{order.cancel_reason}</Alert>
+      )}
 
       {order.business_name && (
-        <div className="flex flex-col gap-1 rounded-md border p-4 text-sm">
-          <h2 className="font-medium">ข้อมูลธุรกิจ</h2>
-          <p>{order.business_name}</p>
+        <Section title="ข้อมูลธุรกิจ">
+          <p className="font-semibold">{order.business_name}</p>
           {order.tax_id && (
-            <p className="text-muted-foreground">เลขประจำตัวผู้เสียภาษี: {order.tax_id}</p>
+            <p className="mt-1 text-muted-foreground">
+              เลขประจำตัวผู้เสียภาษี <span className="font-mono">{order.tax_id}</span>
+            </p>
           )}
           {order.branch_name && <p className="text-muted-foreground">สาขา: {order.branch_name}</p>}
-        </div>
+        </Section>
       )}
 
       {order.shipping_carrier && order.tracking_number && (
-        <div className="text-sm">
-          <h2 className="font-medium">ข้อมูลจัดส่ง</h2>
-          <p className="text-muted-foreground">
+        <Section title="ข้อมูลจัดส่ง">
+          <p className="font-mono">
             {order.shipping_carrier} · {order.tracking_number}
           </p>
-        </div>
+        </Section>
       )}
 
-      <div className="flex flex-col gap-2 border-y py-4">
-        {order.order_items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between text-sm">
-            <span>
-              {item.product_name}
-              {item.variant_name ? ` (${item.variant_name})` : ''} × {item.quantity}
-              {order.status === 'done' && item.product_slug && (
-                <Feature flag="reviews">
-                  {' · '}
-                  <Link
-                    to={`/products/${item.product_slug}?review=1`}
-                    className="text-primary underline"
-                  >
-                    Write a review
-                  </Link>
-                </Feature>
-              )}
-            </span>
-            <span>{formatPrice(item.line_total ?? item.unit_price * item.quantity)}</span>
-          </div>
-        ))}
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Subtotal</span>
-          <span>{formatPrice(order.subtotal)}</span>
+      <Section title="รายการสินค้า">
+        <ul className="flex flex-col gap-2.5">
+          {order.order_items.map((item) => (
+            <li key={item.id} className="flex items-baseline justify-between gap-4">
+              <span>
+                {item.product_name}
+                {item.variant_name ? ` (${item.variant_name})` : ''}
+                <span className="text-muted-foreground"> × {item.quantity}</span>
+                {order.status === 'done' && item.product_slug && (
+                  <Feature flag="reviews">
+                    {' · '}
+                    <Link
+                      to={`/products/${item.product_slug}?review=1`}
+                      className="font-semibold text-signal underline-offset-4 hover:underline"
+                    >
+                      Write a review
+                    </Link>
+                  </Feature>
+                )}
+              </span>
+              <span className="shrink-0 tabular-nums">
+                {formatPrice(item.line_total ?? item.unit_price * item.quantity)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3.5 flex flex-col gap-1.5 border-t border-border pt-3">
+          <MoneyRow label="ยอดรวมสินค้า" value={formatPrice(order.subtotal)} />
+          {order.discount_total > 0 && (
+            <MoneyRow
+              label={`ส่วนลด${order.promo_code ? ` (${order.promo_code})` : ''}`}
+              value={`-${formatPrice(order.discount_total)}`}
+            />
+          )}
+          <MoneyRow label="ค่าจัดส่ง" value={formatPrice(order.shipping_fee)} />
+          <MoneyRow label="ยอดรวมทั้งสิ้น" value={formatPrice(order.total)} strong />
         </div>
-        {order.discount_total > 0 && (
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Discount{order.promo_code ? ` (${order.promo_code})` : ''}</span>
-            <span>-{formatPrice(order.discount_total)}</span>
-          </div>
-        )}
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Shipping</span>
-          <span>{formatPrice(order.shipping_fee)}</span>
-        </div>
-        <div className="flex justify-between font-medium">
-          <span>Total</span>
-          <span>{formatPrice(order.total)}</span>
-        </div>
-      </div>
+      </Section>
 
       {order.status === 'pending' && !order.payment_slip_path && (
-        <div className="flex flex-col gap-3">
+        <Section title="ชำระเงินด้วยการโอน">
           {order.payment_rejection_reason && (
-            <div role="alert" className="rounded-md border border-destructive p-3 text-sm">
-              <p className="font-medium">กรุณาแนบสลิปใหม่</p>
-              <p>{order.payment_rejection_reason}</p>
+            <Alert tone="warning" title="กรุณาแนบสลิปใหม่" className="mb-3.5">
+              {order.payment_rejection_reason}
+            </Alert>
+          )}
+          <dl className="flex flex-col gap-1">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">ธนาคาร</dt>
+              <dd>{brandConfig.bankTransfer.bankName}</dd>
             </div>
-          )}
-          <h2 className="font-medium">Pay by bank transfer</h2>
-          <div className="rounded-md border p-3 text-sm">
-            <p>{brandConfig.bankTransfer.bankName}</p>
-            <p>{brandConfig.bankTransfer.accountName}</p>
-            <p>{brandConfig.bankTransfer.accountNumber}</p>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">ชื่อบัญชี</dt>
+              <dd>{brandConfig.bankTransfer.accountName}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">เลขที่บัญชี</dt>
+              <dd className="font-mono">{brandConfig.bankTransfer.accountNumber}</dd>
+            </div>
+            <div className="flex justify-between gap-4 border-t border-border pt-1.5 font-semibold">
+              <dt>ยอดที่ต้องโอน</dt>
+              <dd className="tabular-nums">{formatPrice(order.total)}</dd>
+            </div>
+          </dl>
+          <div className="mt-4 flex flex-col gap-3">
+            <input
+              type="file"
+              accept={ACCEPTED_SLIP_TYPES}
+              onChange={handleFileChange}
+              aria-label="เลือกไฟล์สลิปการโอน"
+              className="text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-card file:px-3 file:py-1.5 file:text-sm file:font-semibold"
+            />
+            {uploadSlip.isError && (
+              <Alert tone="error" title="แนบสลิปไม่สำเร็จ">
+                {getErrorMessage(uploadSlip.error, 'ลองใหม่อีกครั้ง')}
+              </Alert>
+            )}
+            <Button
+              disabled={!file}
+              loading={uploadSlip.isPending}
+              onClick={() => uploadSlip.mutate()}
+            >
+              {uploadSlip.isPending ? 'กำลังอัปโหลด' : 'แนบสลิปการโอน'}
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Transfer {formatPrice(order.total)} and upload your payment slip below.
-          </p>
-          <input type="file" accept={ACCEPTED_SLIP_TYPES} onChange={handleFileChange} />
-          {uploadSlip.isError && (
-            <p className="text-sm text-destructive">
-              {getErrorMessage(uploadSlip.error, 'Failed to upload payment slip.')}
-            </p>
-          )}
-          <Button disabled={!file || uploadSlip.isPending} onClick={() => uploadSlip.mutate()}>
-            {uploadSlip.isPending ? 'Uploading…' : 'Upload payment slip'}
-          </Button>
-        </div>
+        </Section>
       )}
 
       {order.status === 'pending' && order.payment_slip_path && (
-        <p className="text-sm text-muted-foreground">
-          Payment slip received — we'll verify it shortly.
-        </p>
-      )}
-
-      {order.status === 'cancelled' && order.cancel_reason && (
-        <p className="text-sm text-muted-foreground">เหตุผลที่ยกเลิก: {order.cancel_reason}</p>
+        <Alert tone="info" title="ได้รับสลิปแล้ว">กำลังตรวจสอบการชำระเงิน จะแจ้งผลให้ทราบอีกครั้ง</Alert>
       )}
     </div>
   )

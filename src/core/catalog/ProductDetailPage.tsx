@@ -5,8 +5,11 @@ import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
 import { resolveTierPrice, sortTiers } from '@/lib/priceTiers'
 import { useCartStore } from '@/core/cart/cartStore'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Feature } from '@/lib/Feature'
 import { formatPackageLabel, quantityLabel, type PackageUnit } from '@/lib/wholesale'
 import type { Database } from '@/lib/database.types'
@@ -31,8 +34,32 @@ export function ProductDetailPage() {
     if (product) setQuantity(product.min_order_quantity)
   }, [product])
 
-  if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
-  if (isError || !product) return <p className="p-8 text-destructive">Product not found.</p>
+  if (isLoading) {
+    return (
+      <div className="mx-auto grid w-full max-w-4xl gap-8 px-4 py-10 md:grid-cols-2">
+        <Skeleton className="aspect-square w-full" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-11 w-48" />
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !product) {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 py-10">
+        <Alert tone="error" title="ไม่พบสินค้านี้">
+          สินค้าอาจถูกปิดการขายหรือลิงก์ไม่ถูกต้อง{' '}
+          <Link to="/shop" className="font-semibold underline underline-offset-4">
+            กลับไปดูแคตตาล็อก
+          </Link>
+        </Alert>
+      </div>
+    )
+  }
 
   const images = [...product.product_images].sort((a, b) => a.sort_order - b.sort_order)
   const activeImage = images[activeImageIndex]
@@ -55,11 +82,11 @@ export function ProductDetailPage() {
   const tierApplied = effectiveUnitPrice < Number(product.price)
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-12">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
       {product.categories && (
         <Link
           to={`/shop?category=${product.categories.slug}`}
-          className="text-sm text-muted-foreground hover:underline"
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-signal hover:underline"
         >
           ← {product.categories.name}
         </Link>
@@ -67,7 +94,7 @@ export function ProductDetailPage() {
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <div className="aspect-square overflow-hidden rounded-md bg-muted">
+          <div className="aspect-square overflow-hidden rounded-md border border-border bg-muted">
             {activeImage && (
               <img
                 src={resolveImageUrl(activeImage.storage_path)}
@@ -82,9 +109,12 @@ export function ProductDetailPage() {
                 <button
                   key={image.id}
                   onClick={() => setActiveImageIndex(i)}
+                  type="button"
+                  aria-label={`ดูรูปที่ ${i + 1}`}
+                  aria-pressed={i === activeImageIndex}
                   className={
-                    'h-16 w-16 overflow-hidden rounded-sm border ' +
-                    (i === activeImageIndex ? 'border-foreground' : 'border-transparent')
+                    'size-16 overflow-hidden rounded-md border ' +
+                    (i === activeImageIndex ? 'border-primary' : 'border-border')
                   }
                 >
                   <img
@@ -99,51 +129,69 @@ export function ProductDetailPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">
-              {formatPrice(effectiveUnitPrice)} / {quantityLabel(packageUnit, 1)}
+          <h1 className="text-[length:var(--text-app-title)] font-bold tracking-tight text-balance">
+            {product.name}
+          </h1>
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <span className="text-3xl font-bold tabular-nums tracking-tight">
+              {formatPrice(effectiveUnitPrice)}
+            </span>
+            <span className="text-sm font-semibold text-muted-foreground">
+              / {quantityLabel(packageUnit, 1)}
             </span>
             {tierApplied && (
-              <span className="text-muted-foreground line-through">
-                {formatPrice(Number(product.price))}
-              </span>
+              <>
+                <span className="text-sm text-muted-foreground line-through tabular-nums">
+                  {formatPrice(Number(product.price))}
+                </span>
+                <Badge tone="verified">ราคาตามจำนวน</Badge>
+              </>
             )}
             {product.compare_at_price && (
-              <span className="text-muted-foreground line-through">
+              <span className="text-sm text-muted-foreground line-through tabular-nums">
                 {formatPrice(Number(product.compare_at_price))}
               </span>
             )}
           </div>
-          <div className="rounded-md border bg-muted/40 p-3 text-sm">
-            <p className="font-medium">
-              {formatPackageLabel(packageUnit, product.units_per_package)}
-            </p>
-            <p className="text-muted-foreground">
-              สั่งขั้นต่ำ {quantityLabel(packageUnit, minimumQuantity)} ต่อรายการ
-            </p>
-          </div>
+          <dl className="grid grid-cols-2 overflow-hidden rounded-md border border-border bg-card text-sm">
+            <div className="border-r border-border p-3">
+              <dt className="text-xs text-muted-foreground">จำนวนต่อหน่วย</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">
+                {formatPackageLabel(packageUnit, product.units_per_package)}
+              </dd>
+            </div>
+            <div className="p-3">
+              <dt className="text-xs text-muted-foreground">สั่งขั้นต่ำ</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">
+                {quantityLabel(packageUnit, minimumQuantity)} ต่อรายการ
+              </dd>
+            </div>
+          </dl>
           {tiers.length > 0 && (
-            <div className="rounded-md border p-3 text-sm">
-              <p className="mb-2 font-medium">ราคาขายส่งตามจำนวน</p>
+            <div className="rounded-md border border-border bg-card p-3 text-sm">
+              <p className="mb-2 font-semibold">ราคาขายส่งตามจำนวน</p>
               <table className="w-full">
                 <tbody>
-                  <tr className="border-b">
-                    <td className="py-1">{quantityLabel(packageUnit, minimumQuantity)} ขึ้นไป</td>
-                    <td className="py-1 text-right">{formatPrice(Number(product.price))}</td>
+                  <tr className="border-b border-border">
+                    <td className="py-1.5">{quantityLabel(packageUnit, minimumQuantity)} ขึ้นไป</td>
+                    <td className="py-1.5 text-right tabular-nums">
+                      {formatPrice(Number(product.price))}
+                    </td>
                   </tr>
                   {tiers.map((tier) => (
                     <tr
                       key={tier.id}
                       className={
-                        'border-b last:border-0 ' +
-                        (effectiveUnitPrice === Number(tier.unit_price) ? 'font-medium' : '')
+                        'border-b border-border last:border-0 ' +
+                        (effectiveUnitPrice === Number(tier.unit_price) ? 'font-bold' : '')
                       }
                     >
-                      <td className="py-1">
+                      <td className="py-1.5">
                         {quantityLabel(packageUnit, tier.min_quantity)} ขึ้นไป
                       </td>
-                      <td className="py-1 text-right">{formatPrice(Number(tier.unit_price))}</td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {formatPrice(Number(tier.unit_price))}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -166,21 +214,23 @@ export function ProductDetailPage() {
           </Feature>
           {hasVariants
             ? selectedVariant && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm tabular-nums text-muted-foreground">
                   {selectedVariant.stock_quantity > 0
-                    ? `${selectedVariant.stock_quantity} in stock`
-                    : 'Out of stock'}
+                    ? `คงเหลือ ${quantityLabel(packageUnit, selectedVariant.stock_quantity)}`
+                    : 'สินค้าหมด'}
                 </p>
               )
             : product.track_inventory && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm tabular-nums text-muted-foreground">
                   {product.stock_quantity > 0
-                    ? `${product.stock_quantity} in stock`
-                    : 'Out of stock'}
+                    ? `คงเหลือ ${quantityLabel(packageUnit, product.stock_quantity)}`
+                    : 'สินค้าหมด'}
                 </p>
               )}
-          {product.description && <p className="text-sm">{product.description}</p>}
-          <div className="flex items-center gap-3">
+          {product.description && (
+            <p className="text-sm leading-relaxed text-muted-foreground">{product.description}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
             <Input
               type="number"
               aria-label="จำนวนที่สั่งซื้อ"
@@ -195,7 +245,7 @@ export function ProductDetailPage() {
                   ),
                 )
               }
-              className="w-20"
+              className="w-24"
               disabled={addToCartDisabled}
             />
             <Button
@@ -220,14 +270,21 @@ export function ProductDetailPage() {
               }}
             >
               {variantsErrored
-                ? 'Unable to load options'
+                ? 'โหลดตัวเลือกไม่ได้'
                 : needsSelection
-                  ? 'Select an option'
+                  ? 'เลือกตัวเลือกก่อน'
                   : outOfStock
-                    ? 'Out of stock'
-                    : 'Add to cart'}
+                    ? 'สินค้าหมด'
+                    : 'เพิ่มลงตะกร้า'}
             </Button>
-            {justAdded && <span className="text-sm text-muted-foreground">Added ✓</span>}
+            {justAdded && (
+              <span role="status" className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-semibold">เพิ่มแล้ว</span>
+                <Link to="/cart" className="font-semibold text-signal underline underline-offset-4">
+                  ดูตะกร้า
+                </Link>
+              </span>
+            )}
           </div>
         </div>
       </div>

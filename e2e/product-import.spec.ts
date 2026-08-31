@@ -36,7 +36,7 @@ test('CSV import inserts new products as drafts and updates existing ones withou
 
   // New rows land as drafts, so neither is on the storefront yet.
   await page.goto(`/products/${slugA}`)
-  await expect(page.getByText('Product not found.')).toBeVisible()
+  await expect(page.getByText('ไม่พบสินค้านี้')).toBeVisible()
 
   // Publish A by hand.
   await page.goto('/admin/products')
@@ -76,5 +76,5 @@ test('CSV import inserts new products as drafts and updates existing ones withou
 
   // B was never published, so the refresh must not have published it either.
   await page.goto(`/products/${slugB}`)
-  await expect(page.getByText('Product not found.')).toBeVisible()
+  await expect(page.getByText('ไม่พบสินค้านี้')).toBeVisible()
 })
