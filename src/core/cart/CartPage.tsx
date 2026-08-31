@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useCartStore, useCartSubtotal, type CartItem } from '@/core/cart/cartStore'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
+import { resolveTierPrice } from '@/lib/priceTiers'
 import { useProduct } from '@/core/catalog/useProduct'
 import { quantityLabel, type PackageUnit } from '@/lib/wholesale'
 import { Button } from '@/components/ui/button'
@@ -90,6 +91,7 @@ function CartLineItem({
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
   const reconcileWholesale = useCartStore((state) => state.reconcileWholesale)
+  const reconcilePricing = useCartStore((state) => state.reconcilePricing)
   const { data: product, isLoading, isFetching, isError } = useProduct(item.productSlug)
   const livePackageUnit = product?.package_unit as PackageUnit | undefined
   const packageUnit = livePackageUnit ?? item.packageUnit
@@ -100,6 +102,13 @@ function CartLineItem({
     : !isError && !!product && hasWholesaleMetadata
       ? 'available'
       : 'unavailable'
+
+  // A variant line keeps its stored price: this page does not fetch variants,
+  // and a variant price_override outranks any product-level tier anyway.
+  const resolvedUnitPrice =
+    product && !item.variantId
+      ? resolveTierPrice(Number(product.price), product.product_price_tiers ?? [], item.quantity)
+      : null
 
   // Local, freely-editable copy of the quantity text. Kept separate from the
   // store value so an intermediate empty/invalid string while retyping (e.g.
@@ -132,6 +141,12 @@ function CartLineItem({
       )
     }
   }, [item, livePackageUnit, product, reconcileWholesale])
+
+  useEffect(() => {
+    if (resolvedUnitPrice !== null && resolvedUnitPrice !== item.unitPrice) {
+      reconcilePricing(item.productId, item.variantId, resolvedUnitPrice)
+    }
+  }, [item, reconcilePricing, resolvedUnitPrice])
 
   useEffect(() => {
     if (status === 'available' && minimumQuantity && item.quantity < minimumQuantity) {
@@ -169,7 +184,12 @@ function CartLineItem({
         {item.variantName && (
           <span className="text-sm text-muted-foreground">{item.variantName}</span>
         )}
-        <span className="text-sm text-muted-foreground">{formatPrice(item.unitPrice)} each</span>
+        <span className="text-sm text-muted-foreground">
+          {formatPrice(item.unitPrice)} each
+          {product && item.unitPrice < Number(product.price) && (
+            <span className="ml-2 text-foreground">· ราคาขายส่งตามจำนวน</span>
+          )}
+        </span>
         {packageUnit ? (
           <span className="text-sm text-muted-foreground">
             {quantityLabel(packageUnit, item.quantity)}
