@@ -30,3 +30,5 @@ supabase/.branches/
 
 # Local Git worktrees
 /.worktrees/
+.vercel
+.env*
