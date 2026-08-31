@@ -498,6 +498,7 @@ export type Database = {
           sku: string | null
           slug: string
           sort_order: number
+          status: string
           stock_quantity: number
           track_inventory: boolean
           units_per_package: number
@@ -519,6 +520,7 @@ export type Database = {
           sku?: string | null
           slug: string
           sort_order?: number
+          status?: string
           stock_quantity?: number
           track_inventory?: boolean
           units_per_package?: number
@@ -540,6 +542,7 @@ export type Database = {
           sku?: string | null
           slug?: string
           sort_order?: number
+          status?: string
           stock_quantity?: number
           track_inventory?: boolean
           units_per_package?: number
