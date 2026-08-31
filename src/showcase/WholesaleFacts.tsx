@@ -6,11 +6,18 @@ interface WholesaleFactsProps {
   packageUnit: PackageUnit
   unitsPerPackage: number
   minOrderQuantity: number
+  sku?: string
 }
 
-export function WholesaleFacts({ price, packageUnit, unitsPerPackage, minOrderQuantity }: WholesaleFactsProps) {
+export function WholesaleFacts({ price, packageUnit, unitsPerPackage, minOrderQuantity, sku }: WholesaleFactsProps) {
   return (
     <dl className="wholesale-facts">
+      {sku && (
+        <div className="wholesale-facts__item">
+          <dt>รหัสสินค้า</dt>
+          <dd>{sku}</dd>
+        </div>
+      )}
       <div className="wholesale-facts__item">
         <dt>ราคาต่อหน่วยสั่งซื้อ</dt>
         <dd>{formatPrice(price)} / {quantityLabel(packageUnit, 1)}</dd>

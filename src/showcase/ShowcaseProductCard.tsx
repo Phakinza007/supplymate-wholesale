@@ -19,7 +19,16 @@ export function ShowcaseProductCard({ product, eager = false }: ShowcaseProductC
 
   return (
     <article className="wholesale-product-card">
-      <Link to={`/products/${product.slug}`} className="wholesale-product-card__image-link">
+      {/* aria-hidden + tabIndex=-1: this image link duplicates the title link
+          just below it. Without hiding it, a screen reader announces the same
+          destination twice per card — the standard "redundant adjacent link"
+          fix is to keep exactly one of the pair in the accessibility tree. */}
+      <Link
+        to={`/products/${product.slug}`}
+        className="wholesale-product-card__image-link"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
         <img
           src={toShowcaseAssetUrl(product.imagePath)}
           alt={product.name}

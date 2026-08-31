@@ -53,3 +53,26 @@ test('keeps MOQ, the cart summary, and simulated confirmation intact', async ({ 
   await expect(page.getByRole('heading', { name: 'บันทึกการสาธิตแล้ว' })).toBeVisible()
   await expect(page.getByText('ไม่มีการส่งหรือบันทึกคำสั่งซื้อ การชำระเงิน หรือข้อมูลลูกค้า')).toBeVisible()
 })
+
+test('curates the home page and offers the rest of the catalogue', async ({ page }) => {
+  await page.goto('/#/')
+
+  const featured = page.getByRole('region', { name: 'สินค้าแนะนำจากทุกหมวด' })
+  await expect(featured.locator('.wholesale-product-card')).toHaveCount(6)
+  await featured.getByRole('link', { name: /ดูสินค้าทั้งหมด 36 รายการ/ }).click()
+
+  await expect(page).toHaveURL(/#\/shop/)
+  await expect(page.getByText('พบสินค้า 36 รายการ')).toBeVisible()
+  await page.getByRole('button', { name: 'อุปกรณ์บาร์' }).click()
+  await expect(page.getByText('พบสินค้า 6 รายการ')).toBeVisible()
+})
+
+test('shows the product code and a way into the rest of the category', async ({ page }) => {
+  await page.goto('/#/products/milk-pitcher-600ml')
+  await expect(page.getByText('SM-BAR-PITCHER-600')).toBeVisible()
+
+  const related = page.getByRole('region', { name: 'สินค้าอื่นในหมวดอุปกรณ์บาร์' })
+  await expect(related.locator('.wholesale-product-card')).toHaveCount(3)
+  await related.getByRole('link', { name: 'เชคเกอร์สเตนเลส' }).click()
+  await expect(page).toHaveURL(/#\/products\/cocktail-shaker/)
+})
