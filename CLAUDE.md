@@ -196,6 +196,28 @@ Step 8 (E2E tests) are done.
   a new upload is being requested (no rejection reason surfaces anywhere on their page) — a known,
   deferred gap; see the Admin order management section below.
 
+## PromptPay (static QR)
+
+- **Static means the QR carries no amount.** The shop shows one fixed image, the buyer scans it,
+  types the amount into their banking app themselves, and uploads a slip — the same
+  `attach_payment_slip()` path a bank transfer takes. There is no gateway, no webhook and no
+  auto-confirmation, so "verified in a minute" is not achievable here by definition: nothing tells
+  the shop who paid until a human reads the slip.
+- The QR lives in `brandConfig.promptPay.qrImageUrl`, not the database — it is per-shop branding,
+  and **an empty string is the off switch**: `CheckoutPage` never offers the method without it, so
+  a client who does not use PromptPay needs no flag. Same shape as `lineNotify` using vault-secret
+  presence rather than a feature flag.
+- `orders.payment_method` accepts `('bank_transfer', 'promptpay')`. `create_order()` takes
+  `p_payment_method` and **re-validates it server-side** rather than trusting the client, and
+  `enforce_order_immutability()` freezes it: an admin lifecycle update can change status, tracking
+  and cancel reason, but never how the buyer said they would pay.
+- **The 6-argument `create_order` overload had to be dropped** before adding the 7-argument one —
+  leaving both makes the call ambiguous to PostgREST whenever a client omits the new parameter.
+  Any future parameter addition needs the same `drop function if exists` first.
+- The demo QR in `public/images/supplymate/` is **deliberately not scannable** and says so on its
+  face. A placeholder that looked like a real payment target could be scanned and paid to by
+  someone testing the demo.
+
 ## Order history
 
 - `src/core/orders/OrderDetailPage.tsx` (route `/orders/:orderId`) is shared between two entry
