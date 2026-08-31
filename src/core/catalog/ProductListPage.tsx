@@ -86,7 +86,11 @@ export function ProductListPage() {
               type="search"
               aria-label="ค้นหาสินค้า"
               autoComplete="off"
+              // ARIA 1.2 combobox: an input that owns a suggestion listbox
+              // takes role="combobox", which replaces the implicit searchbox
+              // role. aria-autocomplete says the popup narrows as you type.
               role="combobox"
+              aria-autocomplete="list"
               aria-expanded={suggestionsOpen}
               aria-controls="search-suggestions"
               value={searchInput}

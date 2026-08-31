@@ -90,7 +90,9 @@ test('starts a B2B buyer in the catalogue', async ({ page }) => {
   ).toBeVisible()
   await page.getByRole('link', { name: 'เลือกสินค้าตามหมวด' }).click()
   await expect(page).toHaveURL(/\/shop/)
-  await expect(page.getByRole('searchbox', { name: 'ค้นหาสินค้า' })).toBeVisible()
+  // The search input owns a suggestion listbox, so its role is combobox,
+  // not the implicit searchbox.
+  await expect(page.getByRole('combobox', { name: 'ค้นหาสินค้า' })).toBeVisible()
 })
 
 test('records business checkout details in the buyer order snapshot', async ({ page }) => {
