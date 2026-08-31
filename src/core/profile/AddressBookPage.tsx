@@ -110,13 +110,13 @@ export function AddressBookPage() {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <Button size="sm" variant="outline" onClick={() => setEditing(address)}>
+                <Button size="sm" variant="outline" className="min-h-11 sm:min-h-9" onClick={() => setEditing(address)}>
                   แก้ไข
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-destructive hover:bg-[var(--status-cancelled-bg)]"
+                  className="min-h-11 text-destructive hover:bg-[var(--status-cancelled-bg)] sm:min-h-9"
                   onClick={() => {
                     setDeleteError(null)
                     deleteAddress.mutate(address.id, {

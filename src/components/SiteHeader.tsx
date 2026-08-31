@@ -9,7 +9,9 @@ import { cn } from '@/lib/utils'
 
 function navClass({ isActive }: { isActive: boolean }) {
   return cn(
-    'rounded-sm py-1 text-sm font-semibold underline-offset-4 hover:underline',
+    // Own height rather than the header's padding: these are the primary
+    // navigation on a phone and were 28px tall.
+    'inline-flex min-h-11 items-center rounded-sm text-sm font-semibold underline-offset-4 hover:underline',
     isActive && 'text-signal',
   )
 }
@@ -21,10 +23,10 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-card/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-1.5">
         <Link
           to="/"
-          className="flex min-w-0 items-center gap-2.5 font-bold tracking-tight"
+          className="flex min-h-11 min-w-0 items-center gap-2.5 font-bold tracking-tight"
         >
           <img src={brandConfig.logoUrl} alt="" className="size-8 shrink-0 rounded-md border border-border" />
           <span className="truncate">{brandConfig.storeName}</span>
@@ -64,7 +66,7 @@ export function SiteHeader() {
             </span>
           </NavLink>
           {user ? (
-            <Button variant="outline" size="sm" onClick={() => signOut()}>
+            <Button variant="outline" size="sm" className="min-h-11 sm:min-h-9" onClick={() => signOut()}>
               ออกจากระบบ
             </Button>
           ) : (

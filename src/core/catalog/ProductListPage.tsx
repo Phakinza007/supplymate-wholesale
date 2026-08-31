@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { cn } from '@/lib/utils'
 
 const CHIP =
-  'min-h-9 rounded-full border border-border px-3 text-sm font-semibold transition-colors'
+  'min-h-11 rounded-full border border-border px-3 text-sm font-semibold transition-colors sm:min-h-9'
 
 const PAGE_SIZE = 12
 
@@ -221,6 +221,7 @@ export function ProductListPage() {
           <Button
             variant="outline"
             size="sm"
+            className="min-h-11 sm:min-h-9"
             disabled={page <= 1}
             onClick={() => updateParams({ page: String(page - 1) })}
           >
@@ -232,6 +233,7 @@ export function ProductListPage() {
           <Button
             variant="outline"
             size="sm"
+            className="min-h-11 sm:min-h-9"
             disabled={page >= totalPages}
             onClick={() => updateParams({ page: String(page + 1) })}
           >

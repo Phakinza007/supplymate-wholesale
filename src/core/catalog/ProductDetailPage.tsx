@@ -94,7 +94,7 @@ export function ProductDetailPage() {
       {product.categories && (
         <Link
           to={`/shop?category=${product.categories.slug}`}
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-signal hover:underline"
+          className="inline-flex min-h-11 w-fit items-center text-sm text-muted-foreground underline-offset-4 hover:text-signal hover:underline"
         >
           ← {product.categories.name}
         </Link>

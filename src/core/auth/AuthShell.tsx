@@ -31,7 +31,13 @@ export function AuthShell({ title, description, children, footer }: AuthShellPro
         </div>
       </div>
       <div className="rounded-md border border-border bg-card p-5">{children}</div>
-      {footer && <div className="text-sm text-muted-foreground">{footer}</div>}
+      {/* Links here are how a stuck buyer leaves this screen; give them a
+          real touch target rather than the height of their own text. */}
+      {footer && (
+        <div className="text-sm text-muted-foreground [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center">
+          {footer}
+        </div>
+      )}
     </div>
   )
 }

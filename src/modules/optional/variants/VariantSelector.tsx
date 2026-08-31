@@ -30,12 +30,12 @@ export default function VariantSelector({
   }, [variants, isError, hasActiveVariants, onVariantsLoaded, onError])
 
   if (isLoading) return null
-  if (isError) return <p className="text-sm text-destructive">Failed to load options.</p>
+  if (isError) return <p className="text-sm text-destructive">โหลดตัวเลือกไม่สำเร็จ</p>
   if (!hasActiveVariants) return null
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">Options</span>
+      <span className="text-sm font-semibold">ตัวเลือก</span>
       <div className="flex flex-wrap gap-2">
         {activeVariants.map((v) => {
           const outOfStock = v.stock_quantity <= 0
@@ -47,8 +47,8 @@ export default function VariantSelector({
               disabled={outOfStock}
               onClick={() => onSelect(v)}
               className={
-                'rounded-md border px-3 py-1.5 text-sm ' +
-                (selected ? 'border-foreground' : 'border-input') +
+                'inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-semibold transition-colors sm:min-h-9 ' +
+                (selected ? 'border-primary bg-accent' : 'border-input hover:bg-accent') +
                 (outOfStock ? ' cursor-not-allowed opacity-50 line-through' : '')
               }
             >

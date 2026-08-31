@@ -335,7 +335,7 @@ function CartLineItem({
           <Button
             variant="ghost"
             size="sm"
-            className="text-destructive hover:bg-[var(--status-cancelled-bg)]"
+            className="min-h-11 text-destructive hover:bg-[var(--status-cancelled-bg)] sm:min-h-9"
             aria-label={`นำ ${item.productName} ออกจากตะกร้า`}
             onClick={() => removeItem(item.productId, item.variantId)}
           >

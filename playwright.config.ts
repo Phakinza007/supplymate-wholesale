@@ -26,6 +26,12 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: 'list',
+  // The golden path drives two browser contexts through signup, address,
+  // order, slip upload and three admin transitions. Warm it runs in ~3s; on a
+  // cold Supabase it has been measured at ~25s, which the 30s default clips
+  // often enough to look like a code failure. The budget was too tight, not
+  // the test.
+  timeout: 60_000,
   use: {
     trace: 'retain-on-failure',
   },
