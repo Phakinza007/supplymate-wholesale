@@ -5,13 +5,11 @@ import { Label } from '@/components/ui/label'
 import { slugify } from '@/lib/slugify'
 import type { Database } from '@/lib/database.types'
 import type { PackageUnit } from '@/lib/wholesale'
+import { PRODUCT_STATUSES, productStatusLabel, type ProductStatus } from '@/lib/productStatus'
+import type { ProductInput } from '@/core/admin/duplicateProduct'
 
 type Category = Database['public']['Tables']['categories']['Row']
 type Product = Database['public']['Tables']['products']['Row']
-type ProductInput = Omit<
-  Database['public']['Tables']['products']['Insert'],
-  'id' | 'created_at' | 'updated_at'
->
 
 export function AdminProductForm({
   initial,
@@ -37,7 +35,7 @@ export function AdminProductForm({
     track_inventory: initial?.track_inventory ?? true,
     category_id: initial?.category_id ?? null,
     sort_order: initial?.sort_order ?? 0,
-    is_active: initial?.is_active ?? true,
+    status: (initial?.status as ProductStatus | undefined) ?? 'draft',
     package_unit: initial?.package_unit ?? 'carton',
     units_per_package: initial?.units_per_package ?? 1,
     min_order_quantity: initial?.min_order_quantity ?? 1,
@@ -218,14 +216,24 @@ export function AdminProductForm({
         />
         Track inventory
       </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={form.is_active ?? true}
-          onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-        />
-        Active (visible in the storefront)
-      </label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="status">สถานะ</Label>
+        <select
+          id="status"
+          value={form.status ?? 'draft'}
+          onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ProductStatus }))}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          {PRODUCT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {productStatusLabel(status)}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          เฉพาะสถานะ "เปิดขาย" เท่านั้นที่ลูกค้าเห็นในหน้าร้าน
+        </p>
+      </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={submitting}>
           {submitting ? 'Saving…' : 'Save product'}
