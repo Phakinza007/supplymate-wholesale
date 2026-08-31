@@ -57,7 +57,7 @@ test('keeps MOQ, the cart summary, and simulated confirmation intact', async ({ 
 test('curates the home page and offers the rest of the catalogue', async ({ page }) => {
   await page.goto('/#/')
 
-  const featured = page.getByRole('region', { name: 'สินค้าแนะนำจากทุกหมวด' })
+  const featured = page.getByRole('region', { name: 'ตัวอย่างจากทุกหมวด' })
   await expect(featured.locator('.wholesale-product-card')).toHaveCount(6)
   await featured.getByRole('link', { name: /ดูสินค้าทั้งหมด 36 รายการ/ }).click()
 

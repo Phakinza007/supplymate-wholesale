@@ -27,6 +27,10 @@ describe('catalogue.data.json', () => {
     expect(unique(catalogue.products.map((product) => product.slug))).toBe(true)
     expect(unique(catalogue.products.map((product) => product.sku))).toBe(true)
     expect(unique(catalogue.categories.map((category) => category.id))).toBe(true)
+    // A duplicated category slug would collapse in generate-seed-catalogue.mjs's
+    // `categoryId` Map (last wins) and merge two filter chips in the showcase --
+    // only `id` uniqueness was asserted here before.
+    expect(unique(catalogue.categories.map((category) => category.slug))).toBe(true)
     expect(catalogue.products.map((product) => product.sortOrder))
       .toEqual(Array.from({ length: 36 }, (_, index) => index + 1))
   })

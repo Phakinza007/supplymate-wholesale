@@ -172,8 +172,23 @@ Step 8 (E2E tests) are done.
   product ids, so **a product's `id` in the JSON is not free to change** —
   `b1000000-…-0001/0005/0010/0018` are named by the seeded orders.
 - **A product's image path is derived, never stored:** `/images/supplymate/products/{slug}.svg`.
-  Renaming a slug renames its art; the orphan file must be deleted by hand (the generator reports
-  orphans in both modes and deletes in neither).
+  Renaming a slug renames its art; the orphan file **fails `npm run lint`** (the `--check` run of
+  `generate-product-art.mjs`) until it is deleted by hand — the generator reports orphans in both
+  modes and deletes in neither, so re-running `npm run generate:catalogue` writes the renamed
+  file but never removes the old one.
+- **This JSON is the demo catalogue, not a client's real one.** It exists so the static showcase
+  and `supabase/seed.sql` describe the same thirty-six products instead of drifting; it is not
+  where a cloning client's actual inventory goes. `supabase/seed.sql` is local-dev-only (see the
+  Supabase section) and is never pushed to a hosted project. A client's real products arrive
+  through the admin product UI (`/admin/products`) or the CSV import at
+  `/admin/products/import` — both write directly to the `products`/`categories` tables, no JSON
+  or generator involved. A client who wants their own photographs in the showcase instead of
+  generated line art has to edit code, not data: the derived `.svg` path is expressed in two
+  places — `src/demo/catalogue.ts`'s `productImagePath()` and `generate-seed-catalogue.mjs`'s
+  own copy of the same formula — and `generate-product-art.mjs --check` runs inside `npm run
+  lint`, so every product's `art.shape` must still name a shape `productArt.mjs` knows until that
+  pipeline is changed or removed. There is no opt-out flag for this; swapping in real photography
+  is a deliberate code change, not a per-client toggle.
 - **The six photographic PNGs are category tiles and the hero only.** Product cards use the
   generated line art — thirty-six cards sharing six photos is what made the catalogue read as a
   demo. The SVGs carry literal hex colours and a `system-ui` font stack with Latin-only captions,

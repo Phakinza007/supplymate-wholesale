@@ -63,9 +63,9 @@ export function ShowcaseCataloguePage({ mode }: ShowcaseCataloguePageProps) {
         <section aria-labelledby="featured-title">
           <div className="showcase-section-header">
             <div>
-              <p className="showcase-eyebrow">สินค้าแนะนำ</p>
+              <p className="showcase-eyebrow">ตัวอย่างสินค้า</p>
               <h2 id="featured-title" className="showcase-section-title">
-                สินค้าแนะนำจากทุกหมวด
+                ตัวอย่างจากทุกหมวด
               </h2>
             </div>
             <Link to="/shop" className="showcase-section-header__link">

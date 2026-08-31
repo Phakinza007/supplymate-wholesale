@@ -81,7 +81,9 @@ if (start === -1 || stop === -1 || stop < start) {
 
 const next = seed.slice(0, start) + block + seed.slice(stop + END.length)
 if (next === seed) {
-  console.log('seed catalogue check OK')
+  console.log(
+    check ? 'seed catalogue check OK' : `${SEED_PATH}'s generated catalogue block is already up to date`,
+  )
   process.exit(0)
 }
 
