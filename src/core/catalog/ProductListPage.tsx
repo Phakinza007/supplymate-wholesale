@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCategories } from '@/core/catalog/useCategories'
 import { PRODUCT_SORTS, useProducts, type ProductSort } from '@/core/catalog/useProducts'
+import { SearchSuggestions } from '@/core/catalog/SearchSuggestions'
 import { ProductCard } from '@/core/catalog/ProductCard'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ export function ProductListPage() {
   const tieredOnly = searchParams.get('tiered') === '1'
 
   const [searchInput, setSearchInput] = useState(search ?? '')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
 
   useEffect(() => {
     setSearchInput(search ?? '')
@@ -79,13 +81,39 @@ export function ProductListPage() {
           products stay in the first screen instead of below a filter panel. */}
       <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-3">
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <Input
-            type="search"
-            aria-label="ค้นหาสินค้า"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="ค้นหาชื่อสินค้า"
-          />
+          <div className="relative flex-1">
+            <Input
+              type="search"
+              aria-label="ค้นหาสินค้า"
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={suggestionsOpen}
+              aria-controls="search-suggestions"
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value)
+                setSuggestionsOpen(true)
+              }}
+              onFocus={() => setSuggestionsOpen(true)}
+              // Blur is deferred so a click on a suggestion lands before the
+              // list unmounts out from under the pointer.
+              onBlur={() => window.setTimeout(() => setSuggestionsOpen(false), 150)}
+              onKeyDown={(e) => e.key === 'Escape' && setSuggestionsOpen(false)}
+              placeholder="ค้นหาชื่อสินค้า"
+            />
+            {suggestionsOpen && (
+              <div id="search-suggestions">
+                <SearchSuggestions
+                  query={searchInput}
+                  onDismiss={() => setSuggestionsOpen(false)}
+                  onRefine={(next) => {
+                    setSuggestionsOpen(false)
+                    updateParams({ ...next, page: undefined })
+                  }}
+                />
+              </div>
+            )}
+          </div>
           <Button type="submit">ค้นหา</Button>
         </form>
 
