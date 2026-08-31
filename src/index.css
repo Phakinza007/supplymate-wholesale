@@ -79,6 +79,10 @@
   --z-modal: 40;
   --z-toast: 50;
   --z-tooltip: 60;
+  /* The guided tour dims the page, so it sits above everything else in this
+     scale -- including the sticky header at 20, which would otherwise stay lit
+     and clickable inside a dimmed page and read as a rendering fault. */
+  --z-tour: 70;
 
   /* Type scale — the single source for showcase headings and labels.
      Tailwind utilities still handle layout; typography goes through these so
