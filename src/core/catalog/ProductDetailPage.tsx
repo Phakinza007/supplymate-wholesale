@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useProduct } from '@/core/catalog/useProduct'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
+import { resolveTierPrice, sortTiers } from '@/lib/priceTiers'
 import { useCartStore } from '@/core/cart/cartStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,6 +47,12 @@ export function ProductDetailPage() {
   const outOfStock = availableStock !== null && availableStock < minimumQuantity
   const addToCartDisabled = variantsErrored || outOfStock || needsSelection
   const maxQuantity = availableStock ?? Math.max(99, minimumQuantity)
+  const tiers = sortTiers(product.product_price_tiers ?? [])
+  // A variant price_override is an explicit per-variant price and is never
+  // undercut by a product-level tier.
+  const effectiveUnitPrice =
+    selectedVariant?.price_override ?? resolveTierPrice(Number(product.price), tiers, quantity)
+  const tierApplied = effectiveUnitPrice < Number(product.price)
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-12">
@@ -95,9 +102,13 @@ export function ProductDetailPage() {
           <h1 className="text-2xl font-semibold">{product.name}</h1>
           <div className="flex items-center gap-2">
             <span className="text-xl">
-              {formatPrice(selectedVariant?.price_override ?? Number(product.price))} /{' '}
-              {quantityLabel(packageUnit, 1)}
+              {formatPrice(effectiveUnitPrice)} / {quantityLabel(packageUnit, 1)}
             </span>
+            {tierApplied && (
+              <span className="text-muted-foreground line-through">
+                {formatPrice(Number(product.price))}
+              </span>
+            )}
             {product.compare_at_price && (
               <span className="text-muted-foreground line-through">
                 {formatPrice(Number(product.compare_at_price))}
@@ -112,6 +123,36 @@ export function ProductDetailPage() {
               สั่งขั้นต่ำ {quantityLabel(packageUnit, minimumQuantity)} ต่อรายการ
             </p>
           </div>
+          {tiers.length > 0 && (
+            <div className="rounded-md border p-3 text-sm">
+              <p className="mb-2 font-medium">ราคาขายส่งตามจำนวน</p>
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-1">{quantityLabel(packageUnit, minimumQuantity)} ขึ้นไป</td>
+                    <td className="py-1 text-right">{formatPrice(Number(product.price))}</td>
+                  </tr>
+                  {tiers.map((tier) => (
+                    <tr
+                      key={tier.id}
+                      className={
+                        'border-b last:border-0 ' +
+                        (effectiveUnitPrice === Number(tier.unit_price) ? 'font-medium' : '')
+                      }
+                    >
+                      <td className="py-1">
+                        {quantityLabel(packageUnit, tier.min_quantity)} ขึ้นไป
+                      </td>
+                      <td className="py-1 text-right">{formatPrice(Number(tier.unit_price))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-2 text-xs text-muted-foreground">
+                ราคาต่อหน่วยจะปรับอัตโนมัติตามจำนวนที่สั่ง
+              </p>
+            </div>
+          )}
           <Feature flag="variants">
             <Suspense fallback={null}>
               <VariantSelector
@@ -167,7 +208,7 @@ export function ProductDetailPage() {
                     productName: product.name,
                     productSlug: product.slug,
                     variantName: selectedVariant?.name ?? null,
-                    unitPrice: selectedVariant?.price_override ?? Number(product.price),
+                    unitPrice: effectiveUnitPrice,
                     imagePath: images[0]?.storage_path ?? null,
                     packageUnit,
                     minOrderQuantity: minimumQuantity,
