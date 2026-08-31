@@ -14,9 +14,10 @@ test('shows wholesale pack truth and enforces the product minimum', async ({ pag
   await page.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click()
   await expect(page.getByText('เพิ่มแล้ว')).toBeVisible()
   await page.goto('/cart')
-  // `exact`: the cart's price line now ends "/ 1 ลัง" too, so a substring
-  // match hits both it and the quantity line.
-  await expect(page.getByText('1 ลัง', { exact: true })).toBeVisible()
+  // Anchored: the quantity line starts with the unit count and may continue
+  // "· N ชิ้น" once the product loads, while the price line ends with "/ 1 ลัง".
+  // Only the quantity line starts with it.
+  await expect(page.getByText(/^1 ลัง/)).toBeVisible()
 })
 
 test('enforces a larger MOQ again in the cart', async ({ page }) => {
@@ -49,9 +50,10 @@ test('keeps snapshotted pack truth but blocks checkout when a product disappears
   })
   await page.goto('/cart')
 
-  // `exact`: the cart's price line now ends "/ 1 ลัง" too, so a substring
-  // match hits both it and the quantity line.
-  await expect(page.getByText('1 ลัง', { exact: true })).toBeVisible()
+  // Anchored: the quantity line starts with the unit count and may continue
+  // "· N ชิ้น" once the product loads, while the price line ends with "/ 1 ลัง".
+  // Only the quantity line starts with it.
+  await expect(page.getByText(/^1 ลัง/)).toBeVisible()
   await expect(page.getByText('สินค้านี้ไม่พร้อมจำหน่ายแล้ว')).toBeVisible()
   await expect(page.getByRole('button', { name: 'ไปหน้าชำระเงิน' })).toBeDisabled()
 })
