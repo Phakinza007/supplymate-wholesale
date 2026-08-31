@@ -32,7 +32,8 @@ test('reviews module: eligible customer can review, ineligible cannot, admin can
   const adminPage = await adminContext.newPage()
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
   await adminPage.goto('/admin/orders')
-  await adminPage.getByRole('link', { name: /Order #/ }).first().click()
+  // The admin list is a table and the link is the bare order number.
+  await adminPage.locator('a[href^="/admin/orders/"]').first().click()
   await adminPage.getByRole('button', { name: 'ยืนยันการชำระเงิน' }).click()
   await adminPage.getByRole('button', { name: 'บันทึกการจัดส่ง' }).click()
   await adminPage.getByRole('button', { name: 'ปิดคำสั่งซื้อ' }).click()
@@ -45,10 +46,10 @@ test('reviews module: eligible customer can review, ineligible cannot, admin can
   await customerPage.goto(reviewHref!)
 
   await customerPage.getByRole('button', { name: 'ให้ 5 ดาว' }).click()
-  await customerPage.getByPlaceholder('Optional comment').fill('Excellent product')
+  await customerPage.getByPlaceholder('ความเห็นเพิ่มเติม (ไม่บังคับ)').fill('Excellent product')
   await customerPage.getByRole('button', { name: 'ส่งรีวิว' }).click()
   await expect(customerPage.getByText('Excellent product')).toBeVisible()
-  await expect(customerPage.getByText('5.0 ★ (1 review)')).toBeVisible()
+  await expect(customerPage.getByText('5.0 ★ · 1 รีวิว')).toBeVisible()
 
   const strangerContext = await browser.newContext()
   const strangerPage = await strangerContext.newPage()

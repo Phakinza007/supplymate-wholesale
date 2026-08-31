@@ -72,7 +72,7 @@ export const brandConfig: BrandConfig = {
     promptPayId: '0-0000-00000-00-0 (demo only)',
   },
   features: {
-    reviews: false,
+    reviews: true,
     qna: false,
     variants: true,
     analyticsDashboard: false,
