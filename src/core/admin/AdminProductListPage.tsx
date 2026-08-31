@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAdminProducts } from '@/core/admin/useAdminProducts'
 import { useAdminCategories } from '@/core/admin/useAdminCategories'
 import { useAdminProductMutations } from '@/core/admin/useAdminProductMutations'
@@ -91,9 +92,14 @@ export function AdminProductListPage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 pb-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
-        <Button size="sm" onClick={() => setEditing('new')}>
-          New product
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/admin/products/import">นำเข้า CSV</Link>
+          </Button>
+          <Button size="sm" onClick={() => setEditing('new')}>
+            New product
+          </Button>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2">
         {(['current', 'all', ...PRODUCT_STATUSES] as const).map((filter) => (

@@ -10,6 +10,7 @@ import { ProtectedRoute } from '@/core/auth/ProtectedRoute'
 import { AdminRoute } from '@/core/auth/AdminRoute'
 import { AdminLayout } from '@/core/admin/AdminLayout'
 import { AdminProductListPage } from '@/core/admin/AdminProductListPage'
+import { AdminProductImportPage } from '@/core/admin/AdminProductImportPage'
 import { AdminCategoryListPage } from '@/core/admin/AdminCategoryListPage'
 import { AdminOrderListPage } from '@/core/admin/AdminOrderListPage'
 import { AdminOrderDetailPage } from '@/core/admin/AdminOrderDetailPage'
@@ -52,6 +53,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/products" replace />} />
               <Route path="products" element={<AdminProductListPage />} />
+              <Route path="products/import" element={<AdminProductImportPage />} />
               <Route path="categories" element={<AdminCategoryListPage />} />
               <Route path="orders" element={<AdminOrderListPage />} />
               <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
