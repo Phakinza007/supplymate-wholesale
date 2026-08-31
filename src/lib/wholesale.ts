@@ -22,3 +22,10 @@ export function perItemPrice(price: number, unitsPerPackage: number) {
 
   return price / unitsPerPackage
 }
+
+// The bare unit noun ("ลัง"), with no number in front. Table headers and the
+// stepper's suffix need the word alone; deriving it by splitting the output of
+// quantityLabel() breaks the moment that string's shape changes.
+export function unitNoun(unit: PackageUnit) {
+  return thaiUnit[unit]
+}

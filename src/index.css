@@ -55,6 +55,14 @@
   --status-cancelled: oklch(0.5 0.17 27);
   --status-cancelled-bg: oklch(0.96 0.03 27);
 
+  /* Wholesale pricing. `--price-per-unit` is the per-piece figure buyers use to
+     compare suppliers — it is deliberately NOT the price they pay, so it never
+     competes with the per-carton price for weight. `--tier-current` tints the
+     ladder row the buyer's quantity currently sits in. */
+  --price-per-unit: oklch(0.47 0.11 155);
+  --tier-current-bg: oklch(0.965 0.015 265);
+  --tier-current-border: oklch(0.24 0.045 265);
+
   /* Semantic stacking order. Never write a bare z-index in a component. */
   --z-dropdown: 10;
   --z-sticky: 20;

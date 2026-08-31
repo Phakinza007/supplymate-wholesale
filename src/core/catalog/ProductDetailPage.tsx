@@ -3,12 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import { useProduct } from '@/core/catalog/useProduct'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
-import { resolveTierPrice, sortTiers } from '@/lib/priceTiers'
+import { buildTierRows, nextTierUpgrade, resolveTierPrice, sortTiers } from '@/lib/priceTiers'
+import { PriceBlock } from '@/core/catalog/PriceBlock'
+import { TierLadder } from '@/core/catalog/TierLadder'
+import { QuantityCalculator } from '@/core/catalog/QuantityCalculator'
 import { useCartStore } from '@/core/cart/cartStore'
 import { Alert } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Feature } from '@/lib/Feature'
 import { formatPackageLabel, quantityLabel, type PackageUnit } from '@/lib/wholesale'
@@ -79,7 +80,14 @@ export function ProductDetailPage() {
   // undercut by a product-level tier.
   const effectiveUnitPrice =
     selectedVariant?.price_override ?? resolveTierPrice(Number(product.price), tiers, quantity)
-  const tierApplied = effectiveUnitPrice < Number(product.price)
+  const tierRows = buildTierRows(
+    Number(product.price),
+    tiers,
+    minimumQuantity,
+    product.units_per_package,
+    quantity,
+  )
+  const tierUpgrade = nextTierUpgrade(Number(product.price), tiers, quantity)
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
@@ -132,27 +140,22 @@ export function ProductDetailPage() {
           <h1 className="text-[length:var(--text-app-title)] font-bold tracking-tight text-balance">
             {product.name}
           </h1>
-          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <span className="text-3xl font-bold tabular-nums tracking-tight">
-              {formatPrice(effectiveUnitPrice)}
-            </span>
-            <span className="text-sm font-semibold text-muted-foreground">
-              / {quantityLabel(packageUnit, 1)}
-            </span>
-            {tierApplied && (
-              <>
-                <span className="text-sm text-muted-foreground line-through tabular-nums">
-                  {formatPrice(Number(product.price))}
-                </span>
-                <Badge tone="verified">ราคาตามจำนวน</Badge>
-              </>
-            )}
-            {product.compare_at_price && (
-              <span className="text-sm text-muted-foreground line-through tabular-nums">
+          <PriceBlock
+            unitPrice={effectiveUnitPrice}
+            basePrice={Number(product.price)}
+            packageUnit={packageUnit}
+            unitsPerPackage={product.units_per_package}
+            tierCount={tierRows.length > 1 ? tierRows.length : 0}
+            quantity={quantity}
+          />
+          {product.compare_at_price && (
+            <p className="text-sm text-muted-foreground">
+              ราคาปกติ{' '}
+              <span className="line-through tabular-nums">
                 {formatPrice(Number(product.compare_at_price))}
               </span>
-            )}
-          </div>
+            </p>
+          )}
           <dl className="grid grid-cols-2 overflow-hidden rounded-md border border-border bg-card text-sm">
             <div className="border-r border-border p-3">
               <dt className="text-xs text-muted-foreground">จำนวนต่อหน่วย</dt>
@@ -167,40 +170,7 @@ export function ProductDetailPage() {
               </dd>
             </div>
           </dl>
-          {tiers.length > 0 && (
-            <div className="rounded-md border border-border bg-card p-3 text-sm">
-              <p className="mb-2 font-semibold">ราคาขายส่งตามจำนวน</p>
-              <table className="w-full">
-                <tbody>
-                  <tr className="border-b border-border">
-                    <td className="py-1.5">{quantityLabel(packageUnit, minimumQuantity)} ขึ้นไป</td>
-                    <td className="py-1.5 text-right tabular-nums">
-                      {formatPrice(Number(product.price))}
-                    </td>
-                  </tr>
-                  {tiers.map((tier) => (
-                    <tr
-                      key={tier.id}
-                      className={
-                        'border-b border-border last:border-0 ' +
-                        (effectiveUnitPrice === Number(tier.unit_price) ? 'font-bold' : '')
-                      }
-                    >
-                      <td className="py-1.5">
-                        {quantityLabel(packageUnit, tier.min_quantity)} ขึ้นไป
-                      </td>
-                      <td className="py-1.5 text-right tabular-nums">
-                        {formatPrice(Number(tier.unit_price))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="mt-2 text-xs text-muted-foreground">
-                ราคาต่อหน่วยจะปรับอัตโนมัติตามจำนวนที่สั่ง
-              </p>
-            </div>
-          )}
+          <TierLadder rows={tierRows} upgrade={tierUpgrade} packageUnit={packageUnit} />
           <Feature flag="variants">
             <Suspense fallback={null}>
               <VariantSelector
@@ -230,22 +200,16 @@ export function ProductDetailPage() {
           {product.description && (
             <p className="text-sm leading-relaxed text-muted-foreground">{product.description}</p>
           )}
-          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-            <Input
-              type="number"
-              aria-label="จำนวนที่สั่งซื้อ"
-              min={minimumQuantity}
-              max={maxQuantity}
-              value={quantity}
-              onChange={(e) =>
-                setQuantity(
-                  Math.min(
-                    maxQuantity,
-                    Math.max(minimumQuantity, Number(e.target.value) || minimumQuantity),
-                  ),
-                )
-              }
-              className="w-24"
+          <div className="flex flex-col gap-4 border-t border-border pt-4">
+            <QuantityCalculator
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+              minQuantity={minimumQuantity}
+              maxQuantity={maxQuantity}
+              packageUnit={packageUnit}
+              unitsPerPackage={product.units_per_package}
+              unitPrice={effectiveUnitPrice}
+              basePrice={Number(product.price)}
               disabled={addToCartDisabled}
             />
             <Button
