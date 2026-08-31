@@ -11,7 +11,8 @@ import { formatPrice } from '@/lib/formatPrice'
 import { Button } from '@/components/ui/button'
 import { Feature } from '@/lib/Feature'
 import { PRODUCT_STATUSES, productStatusLabel, type ProductStatus } from '@/lib/productStatus'
-import { formatPackageLabel, quantityLabel, type PackageUnit } from '@/lib/wholesale'
+import { ProductStatusControl } from '@/core/admin/ProductStatusControl'
+import { unitNoun, type PackageUnit } from '@/lib/wholesale'
 import type { Database } from '@/lib/database.types'
 
 const VariantsPanel = lazy(() => import('@/modules/optional/variants/VariantsPanel'))
@@ -82,95 +83,182 @@ export function AdminProductListPage() {
     )
   }
 
+  const counts = {
+    all: (products ?? []).length,
+    active: (products ?? []).filter((p) => p.status === 'active').length,
+    draft: (products ?? []).filter((p) => p.status === 'draft').length,
+    archived: (products ?? []).filter((p) => p.status === 'archived').length,
+  }
   const visibleProducts = (products ?? []).filter((product) => {
     if (statusFilter === 'all') return true
     if (statusFilter === 'current') return product.status !== 'archived'
     return product.status === statusFilter
   })
+  const filters = [
+    { key: 'current' as const, label: 'กำลังใช้งาน', count: counts.active + counts.draft },
+    { key: 'all' as const, label: 'ทั้งหมด', count: counts.all },
+    ...PRODUCT_STATUSES.map((status) => ({
+      key: status,
+      label: productStatusLabel(status),
+      count: counts[status],
+    })),
+  ]
+
+  async function changeStatus(product: Product, status: ProductStatus) {
+    setError(null)
+    try {
+      await updateProduct.mutateAsync({ id: product.id, status })
+    } catch (err) {
+      setError(getErrorMessage(err, 'เปลี่ยนสถานะสินค้าไม่สำเร็จ'))
+    }
+  }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 pb-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Products</h1>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pb-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[length:var(--text-section-title)] font-bold tracking-tight">
+            สินค้าทั้งหมด
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+            {counts.all} รายการ · แสดงหน้าร้าน {counts.active} · ฉบับร่าง {counts.draft} · เก็บถาวร{' '}
+            {counts.archived}
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" asChild>
             <Link to="/admin/products/import">นำเข้า CSV</Link>
           </Button>
           <Button size="sm" onClick={() => setEditing('new')}>
-            New product
+            + เพิ่มสินค้า
           </Button>
         </div>
       </div>
+
       <div className="flex flex-wrap gap-2">
-        {(['current', 'all', ...PRODUCT_STATUSES] as const).map((filter) => (
+        {filters.map((filter) => (
           <button
-            key={filter}
+            key={filter.key}
             type="button"
-            onClick={() => setStatusFilter(filter)}
+            aria-pressed={statusFilter === filter.key}
+            onClick={() => setStatusFilter(filter.key)}
             className={
-              'rounded-full border px-3 py-1 text-xs ' +
-              (statusFilter === filter
-                ? 'border-foreground font-medium'
-                : 'border-input text-muted-foreground hover:text-foreground')
+              'rounded-md border px-3 py-2 text-xs font-medium tabular-nums transition-colors ' +
+              (statusFilter === filter.key
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground')
             }
           >
-            {filter === 'current'
-              ? 'กำลังใช้งาน'
-              : filter === 'all'
-                ? 'ทั้งหมด'
-                : productStatusLabel(filter)}
+            {filter.label} {filter.count}
           </button>
         ))}
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <ul className="flex flex-col gap-2">
-        {visibleProducts.map((product) => {
-          const packageUnit = product.package_unit as PackageUnit
 
-          return (
-            <li
-              key={product.id}
-              className="flex items-center justify-between rounded-md border p-3 text-sm"
-            >
-              <div>
-                <p className="font-medium">
-                  {product.name}
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    ({productStatusLabel(product.status)})
-                  </span>
-                </p>
-                <p className="text-muted-foreground">
-                  {product.categories?.name ?? 'Uncategorized'} · {formatPrice(product.price)}
-                </p>
-                <p className="text-muted-foreground">
-                  {formatPackageLabel(packageUnit, product.units_per_package)} · ขั้นต่ำ{' '}
-                  {quantityLabel(packageUnit, product.min_order_quantity)}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <Button size="sm" variant="outline" onClick={() => setEditing(product)}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={duplicateProduct.isPending}
-                  onClick={async () => {
-                    setError(null)
-                    try {
-                      setEditing(await duplicateProduct.mutateAsync(product))
-                    } catch (err) {
-                      setError(getErrorMessage(err, 'Failed to duplicate product.'))
-                    }
-                  }}
-                >
-                  ทำซ้ำ
-                </Button>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {visibleProducts.length === 0 ? (
+        <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+          ไม่มีสินค้าในสถานะนี้
+        </p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full min-w-[46rem] text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50 text-left text-xs font-semibold text-muted-foreground">
+                <th scope="col" className="px-4 py-3">สินค้า</th>
+                <th scope="col" className="px-4 py-3">หน่วย</th>
+                <th scope="col" className="px-4 py-3">ราคา / ขั้น</th>
+                <th scope="col" className="px-4 py-3">สถานะ</th>
+                <th scope="col" className="px-4 py-3 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleProducts.map((product) => {
+                const packageUnit = product.package_unit as PackageUnit
+                const tierCount = product.product_price_tiers?.[0]?.count ?? 0
+                const archived = product.status === 'archived'
+
+                return (
+                  <tr key={product.id} className={'border-b last:border-0 ' + (archived ? 'opacity-60' : '')}>
+                    <td className="px-4 py-3">
+                      <p className={'font-semibold ' + (archived ? 'line-through' : '')}>
+                        {product.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {product.sku ?? 'ไม่มี SKU'} · {product.categories?.name ?? 'ไม่มีหมวดหมู่'}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums">
+                      {unitNoun(packageUnit)}
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {product.units_per_package.toLocaleString('th-TH')} ชิ้น
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold tabular-nums">
+                      {formatPrice(product.price)}
+                      <span
+                        className={
+                          'mt-0.5 block text-xs font-normal ' +
+                          (tierCount > 0
+                            ? 'text-[var(--price-per-unit)]'
+                            : 'text-[var(--status-pending)]')
+                        }
+                      >
+                        {tierCount > 0 ? `${tierCount} ขั้น` : 'ยังไม่มีขั้น'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <ProductStatusControl
+                        value={product.status}
+                        productName={product.name}
+                        disabled={updateProduct.isPending}
+                        onChange={(status) => changeStatus(product, status)}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setEditing(product)}>
+                          แก้ไข
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={duplicateProduct.isPending}
+                          onClick={async () => {
+                            setError(null)
+                            try {
+                              setEditing(await duplicateProduct.mutateAsync(product))
+                            } catch (err) {
+                              setError(getErrorMessage(err, 'Failed to duplicate product.'))
+                            }
+                          }}
+                        >
+                          ทำซ้ำ
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <dl className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+        <div>
+          <dt className="inline font-semibold text-[var(--status-pending)]">ร่าง</dt>{' '}
+          <dd className="inline">— ไม่แสดงหน้าร้าน แก้ไขได้</dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold text-[var(--status-verified)]">แสดง</dt>{' '}
+          <dd className="inline">— ขายได้ตามปกติ</dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold text-[var(--status-done)]">เก็บ</dt>{' '}
+          <dd className="inline">— ซ่อนจากหน้าร้าน แต่ยังอยู่ในบิลเก่า</dd>
+        </div>
+      </dl>
     </div>
   )
 }

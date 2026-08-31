@@ -14,7 +14,7 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
 
   await adminPage.goto('/admin/products')
-  await adminPage.getByRole('button', { name: 'New product' }).click()
+  await adminPage.getByRole('button', { name: '+ เพิ่มสินค้า' }).click()
   await adminPage.locator('#name').fill(name)
   // Let the form's blur-driven auto-slug fire and settle BEFORE writing the
   // slug, then overwrite it. Filling #slug directly after #name races that

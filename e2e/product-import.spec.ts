@@ -41,9 +41,9 @@ test('CSV import inserts new products as drafts and updates existing ones withou
   // Publish A by hand.
   await page.goto('/admin/products')
   await page
-    .getByRole('listitem')
+    .getByRole('row')
     .filter({ hasText: `Import A ${suffix}` })
-    .getByRole('button', { name: 'Edit' })
+    .getByRole('button', { name: 'แก้ไข' })
     .click()
   await page.locator('#status').selectOption('active')
   await page.getByRole('button', { name: 'Save product' }).click()
