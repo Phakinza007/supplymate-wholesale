@@ -81,9 +81,21 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await customerPage.waitForURL(/\/orders\/.+/)
 
   // The order the server actually created must carry the tier price, not the
-  // base price the client happened to display.
-  await expect(customerPage.getByText('฿9,000.00').first()).toBeVisible()
+  // base price the client happened to display. Asserted on the named rows
+  // rather than "the first ฿9,000.00 anywhere", so the goods total and the
+  // amount charged are checked as the distinct figures they are.
+  //
+  // 10 x ฿900 = ฿9,000 goods, free delivery over ฿1,000, VAT 7% = ฿630.
+  // Each figure is asserted on its own summary row. ฿9,000.00 legitimately
+  // appears twice — once as the line total, once as the goods subtotal — so a
+  // bare getByText would be ambiguous and would not prove which row is which.
+  const summaryRow = (label: string) => customerPage.getByText(label).locator('..')
+  await expect(summaryRow('ยอดรวมสินค้า')).toContainText('฿9,000.00')
+  await expect(summaryRow('ภาษีมูลค่าเพิ่ม 7%')).toContainText('฿630.00')
+  await expect(summaryRow('ยอดรวมทั้งสิ้น')).toContainText('฿9,630.00')
+  // Never the undiscounted base price, with or without tax on top.
   await expect(customerPage.getByText('฿10,000.00')).toHaveCount(0)
+  await expect(customerPage.getByText('฿10,700.00')).toHaveCount(0)
 
   await customerContext.close()
   await adminContext.close()

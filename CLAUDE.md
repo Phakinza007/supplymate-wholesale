@@ -196,6 +196,28 @@ Step 8 (E2E tests) are done.
   a new upload is being requested (no rejection reason surfaces anywhere on their page) — a known,
   deferred gap; see the Admin order management section below.
 
+## VAT
+
+- **Catalogue prices are VAT-exclusive.** Tax is added at order time, never folded into a price.
+  Base = `subtotal - discount_total + shipping_fee` — discounts reduce the taxable amount and
+  delivery is part of the taxable supply. `total = base + vat_total`.
+- The rate lives in `calc_vat()` (`supabase/migrations/20260831000500_vat.sql`), marked
+  **EDIT PER CLIENT** like `calc_shipping_fee()`. A shop that is not VAT-registered returns 0 and
+  every total collapses to the old arithmetic with no other change.
+- **The cart and checkout deliberately do not compute VAT.** They say prices exclude it and leave
+  the figure to `create_order()`, exactly as they already do for shipping — a second
+  implementation on the client is how the two drift apart.
+- **Existing orders are not backfilled.** `vat_total` defaults to 0, which still satisfies the
+  identity, and those orders were placed when the shop charged no VAT. Rewriting them would
+  falsify what the buyer agreed to pay.
+- **Trap that cost a debugging round: `orders_total_check` is NOT the total formula.** It is
+  Postgres's auto-generated name for the inline `check (total >= 0)` on the column. The formula is
+  `orders_total_identity`, declared by name in `20250101000400_orders.sql`. Dropping the wrong one
+  removes the non-negative guard *and* leaves the old formula in place — and `supabase migration
+  up` will not catch it, because nothing violates the stale formula until an order carries tax.
+  Only `db reset` does, because `seed.sql` creates its orders through `create_order()`. Any future
+  change to how `total` is composed must edit `orders_total_identity`.
+
 ## PromptPay (static QR)
 
 - **Static means the QR carries no amount.** The shop shows one fixed image, the buyer scans it,

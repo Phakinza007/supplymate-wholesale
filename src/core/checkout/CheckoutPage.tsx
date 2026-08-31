@@ -258,7 +258,7 @@ export function CheckoutPage() {
           </div>
         )}
         <p className="text-sm leading-relaxed text-muted-foreground">
-          ค่าจัดส่งคำนวณตอนสร้างคำสั่งซื้อ และแสดงในหน้ายืนยัน
+          ราคายังไม่รวม VAT 7% · ภาษีและค่าจัดส่งคำนวณตอนสร้างคำสั่งซื้อ และแสดงในหน้ายืนยัน
         </p>
       </section>
 

@@ -121,6 +121,12 @@ export function AdminOrderDetailPage() {
           <span>Shipping</span>
           <span>{formatPrice(order.shipping_fee)}</span>
         </div>
+        {order.vat_total > 0 && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">ภาษีมูลค่าเพิ่ม 7%</span>
+            <span>{formatPrice(order.vat_total)}</span>
+          </div>
+        )}
         <div className="flex justify-between font-medium">
           <span>Total</span>
           <span>{formatPrice(order.total)}</span>

@@ -131,7 +131,7 @@ export function OrderDetailPage() {
   const isPromptPay = order.payment_method === 'promptpay'
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
+    <div className="animate-in fade-in duration-150 motion-reduce:animate-none mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
       <PageHeader
         title={
           <>
@@ -202,6 +202,11 @@ export function OrderDetailPage() {
             />
           )}
           <MoneyRow label="ค่าจัดส่ง" value={formatPrice(order.shipping_fee)} />
+          {/* Catalogue prices are VAT-exclusive, so the tax is a line of its
+              own rather than something folded into the prices above. */}
+          {order.vat_total > 0 && (
+            <MoneyRow label="ภาษีมูลค่าเพิ่ม 7%" value={formatPrice(order.vat_total)} />
+          )}
           <MoneyRow label="ยอดรวมทั้งสิ้น" value={formatPrice(order.total)} strong />
         </div>
       </Section>

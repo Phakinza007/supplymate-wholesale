@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
+import { useToastStore } from '@/lib/toastStore'
 
 export function CartPage() {
   const items = useCartStore((state) => state.items)
@@ -96,7 +97,7 @@ export function CartPage() {
           <span className="tabular-nums">{formatPrice(subtotal)}</span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          ค่าจัดส่งคำนวณตอนยืนยันคำสั่งซื้อ และแสดงในหน้ายืนยัน
+          ราคายังไม่รวม VAT 7% · ภาษีและค่าจัดส่งคำนวณตอนยืนยันคำสั่งซื้อ และแสดงในหน้ายืนยัน
         </p>
       </div>
 
@@ -135,6 +136,8 @@ function CartLineItem({
 }) {
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
+  const addItem = useCartStore((state) => state.addItem)
+  const showToast = useToastStore((state) => state.show)
   const reconcileWholesale = useCartStore((state) => state.reconcileWholesale)
   const reconcilePricing = useCartStore((state) => state.reconcilePricing)
   const { data: product, isLoading, isFetching, isError } = useProduct(item.productSlug)
@@ -337,7 +340,21 @@ function CartLineItem({
             size="sm"
             className="min-h-11 text-destructive hover:bg-[var(--status-cancelled-bg)] sm:min-h-9"
             aria-label={`นำ ${item.productName} ออกจากตะกร้า`}
-            onClick={() => removeItem(item.productId, item.variantId)}
+            onClick={() => {
+              // Recovery beats prevention for something this cheap to restore:
+              // no dialog in the way, but the line is never gone for good on a
+              // mis-tap.
+              const removed = { ...item }
+              removeItem(item.productId, item.variantId)
+              showToast({
+                title: 'นำออกจากตะกร้าแล้ว',
+                detail: removed.productName,
+                action: {
+                  label: 'เลิกทำ',
+                  onClick: () => addItem(removed, removed.quantity),
+                },
+              })
+            }}
           >
             ลบ
           </Button>

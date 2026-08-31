@@ -294,6 +294,7 @@ export type Database = {
           subtotal: number
           tax_id: string | null
           total: number
+          vat_total: number
           tracking_number: string | null
           updated_at: string
           user_id: string
@@ -330,6 +331,7 @@ export type Database = {
           subtotal?: number
           tax_id?: string | null
           total?: number
+          vat_total?: number
           tracking_number?: string | null
           updated_at?: string
           user_id: string
@@ -366,6 +368,7 @@ export type Database = {
           subtotal?: number
           tax_id?: string | null
           total?: number
+          vat_total?: number
           tracking_number?: string | null
           updated_at?: string
           user_id?: string
