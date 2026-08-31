@@ -128,6 +128,55 @@ Step 8 (E2E tests) are done.
   "deactivate, never delete" rule in the Admin section — that rule is about products and
   categories, which have order history hanging off them. A price tier is a rule, not a record.
 
+## Product tour
+
+- `/` auto-starts a guided buyer walkthrough once per visitor
+  (`src/modules/optional/product-tour/`, flag `productTour`, mounted in
+  `SiteLayout` behind `<Feature>` + `lazy()`). Restart it any time from the
+  header's "ดูวิธีสั่งซื้อ".
+- **The constraint that shapes the whole module: the tour must run without a
+  login.** `/checkout` cannot — orders carry a `user_id` and RLS scopes reads to
+  the owner — so the checkout step is dropped from the plan entirely for a
+  logged-out visitor rather than shown and skipped. `planSteps()` is computed
+  **once at start**, so a session appearing mid-tour cannot renumber the steps
+  under the visitor. A logged-out visitor sees "ขั้นที่ 1 จาก 7", never "จาก 8".
+- **Steps anchor on `data-tour="…"` attributes in core components.** That is an
+  inert HTML attribute, not an import, so `check-core-boundary.mjs` is unaffected
+  — the boundary only forbids imports, and only under `src/core` (which is why
+  `SiteLayout`, in `src/components`, may import the module at all).
+  `scripts/check-tour-anchors.mjs` (wired into `npm run lint`) fails if a step
+  points at an anchor no longer present in `src/`. It exists because a renamed
+  anchor otherwise fails **silently** — the step just skips — or as an
+  unexplained 60-second Playwright timeout. It is a `scripts/*.mjs` check rather
+  than a vitest file because it needs node's `fs`, and `tsconfig.app.json`
+  deliberately gives `src/` no node types.
+- **The tour never operates a control that changes data.** It highlights and
+  navigates. The add-to-cart step *waits*, and it detects completion by watching
+  `useCartTotalItems()` rise — not by hooking the button, and never by writing to
+  the cart store itself (which would silently modify the visitor's real cart).
+- **The dim is four bands around the target, not one sheet with a `box-shadow`
+  spread, and the root container is `pointer-events-none`.** Both are required
+  for the hole to pass clicks through; without either, the one step the tour is
+  built around cannot be completed. Found by E2E, not by eye.
+- **Measure the target on the next animation frame after `scrollIntoView`.**
+  `getBoundingClientRect()` in the same tick returns the pre-scroll position, so
+  the hole — and the tooltip placement derived from it — lands where the target
+  is not.
+- **The waiting step is deliberately non-modal** (no `aria-modal`, no Tab trap):
+  trapping focus would put the add-to-cart button out of a keyboard user's reach,
+  which is the one thing that step exists to have them do. Every other step is
+  modal.
+- **A step degrades rather than stranding the visitor.** If its anchor never
+  appears it is skipped (never waited on — a slow query must not freeze the
+  tour); if the ideal target is missing — no tiered product in the catalogue, or
+  an add-to-cart button disabled behind a variant choice — the step shows
+  `altBody` and advances on a button. The tier step falls back to *any* product
+  card, because reaching the product page at all depends on it having a link to
+  follow.
+- `--z-tour: 70` sits above the whole existing stacking scale in `index.css`
+  (`--z-tooltip` already holds 60). It must clear `--z-sticky`, or the sticky
+  header stays lit and clickable inside a dimmed page.
+
 ## Product CSV import
 
 - `/admin/products/import` (`AdminProductImportPage`) parses client-side and writes nothing until
