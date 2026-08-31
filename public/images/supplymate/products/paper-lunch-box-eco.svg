@@ -6,7 +6,7 @@
     <path d="M 138 302 L 138 256 L 502 256 L 502 302"/>
     <path d="M 138 302 L 502 302"/>
     <path d="M 152 396 L 488 396" stroke="#c9c9d3" stroke-width="5"/>
-    <path d="M 286 234 L 354 234" stroke="#4a63c8" stroke-width="7"/>
+    <path d="M 286 278 L 354 278" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">1 compartment</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">1 compartment</text>
 </svg>

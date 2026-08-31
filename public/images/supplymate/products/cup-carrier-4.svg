@@ -10,5 +10,5 @@
     <ellipse cx="356" cy="368" rx="30" ry="13" stroke="#c9c9d3" stroke-width="5"/>
     <ellipse cx="426" cy="368" rx="30" ry="13" stroke="#c9c9d3" stroke-width="5"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">4 cups</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">4 cups</text>
 </svg>

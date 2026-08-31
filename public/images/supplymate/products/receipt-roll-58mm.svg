@@ -8,5 +8,5 @@
     <ellipse cx="320" cy="260" rx="28.8" ry="18" stroke="#c9c9d3" stroke-width="5"/>
     <path d="M 395 374 L 467 408 L 467 444 L 395 410" stroke="#c9c9d3" stroke-width="5"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">58 mm</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">58 mm</text>
 </svg>

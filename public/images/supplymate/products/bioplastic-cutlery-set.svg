@@ -10,5 +10,5 @@
     <path d="M 382 410 L 382 298" stroke-width="12"/>
     <ellipse cx="382" cy="266" rx="32" ry="40"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">fork · spoon</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">fork · spoon</text>
 </svg>

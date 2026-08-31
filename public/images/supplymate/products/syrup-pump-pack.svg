@@ -6,8 +6,8 @@
     <path d="M 236 314 L 404 314" stroke="#c9c9d3" stroke-width="5"/>
     <path d="M 294 260 L 294 208 L 346 208 L 346 260"/>
     <path d="M 294 208 L 234 186 L 234 164"/>
-    <path d="M 346 164 L 406 164" stroke="#4a63c8" stroke-width="7"/>
+    <path d="M 204 164 L 264 164" stroke="#4a63c8" stroke-width="7"/>
     <path d="M 320 280 L 320 446" stroke="#c9c9d3" stroke-width="5"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">10 ml / press</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">10 ml / press</text>
 </svg>

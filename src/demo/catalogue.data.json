@@ -336,7 +336,7 @@
       "packageUnit": "carton",
       "unitsPerPackage": 1000,
       "minOrderQuantity": 1,
-      "art": { "shape": "bag", "caption": "flat base", "options": { "handle": true, "flatBase": true, "width": 232, "height": 250 } }
+      "art": { "shape": "bag", "caption": "flat base", "options": { "handle": true, "flatBase": true, "width": 286, "height": 210 } }
     },
     {
       "id": "b1000000-0000-0000-0000-000000000010",
@@ -384,7 +384,7 @@
       "packageUnit": "roll",
       "unitsPerPackage": 500,
       "minOrderQuantity": 4,
-      "art": { "shape": "roll", "caption": "Ø 40 mm", "options": { "width": 210, "label": "round" } }
+      "art": { "shape": "roll", "caption": "Ø 40 mm", "options": { "width": 178, "label": "round" } }
     },
     {
       "id": "b1000000-0000-0000-0000-000000000029",
@@ -400,7 +400,7 @@
       "packageUnit": "roll",
       "unitsPerPackage": 500,
       "minOrderQuantity": 3,
-      "art": { "shape": "roll", "caption": "fragile", "options": { "width": 200, "label": "round" } }
+      "art": { "shape": "roll", "caption": "fragile", "options": { "width": 258, "label": "warning" } }
     },
     {
       "id": "b1000000-0000-0000-0000-000000000012",

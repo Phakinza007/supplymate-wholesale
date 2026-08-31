@@ -7,5 +7,5 @@
     <path d="M 110 322 Q 320 426 530 322"/>
     <path d="M 134 404 Q 320 476 506 404" stroke="#c9c9d3" stroke-width="5"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">9 in</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">9 in</text>
 </svg>

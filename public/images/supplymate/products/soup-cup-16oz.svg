@@ -10,5 +10,5 @@
     <ellipse cx="320" cy="220" rx="99" ry="15"/>
     <path d="M 302 216 L 338 216" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">16 oz · soup</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">16 oz · soup</text>
 </svg>

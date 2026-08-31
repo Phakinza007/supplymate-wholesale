@@ -11,6 +11,12 @@ export const ACCENT = '#4a63c8'
 
 const CX = 320
 const BASE = 470
+// The product card crops this square to 4/3 with object-fit: cover, which
+// throws away the top and bottom 80 units of the 640 viewBox. Everything that
+// has to survive at card size -- every drawing, and the caption's descenders
+// -- must therefore stay inside y 80..560, not merely inside the viewBox.
+// That is why the caption baseline sits at 534 rather than hard against the
+// bottom edge: at 558 the descenders of "greaseproof" were sliced off.
 const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"
 
 const n = (value) => Math.round(value * 10) / 10
@@ -163,11 +169,20 @@ function bag({ handle = true, width = 200, height = 250, window: hasWindow = fal
   }
 
   if (hasWindow) {
+    // Centred on the front face, not on the bag: the gusset fold at
+    // CX + half - 34 puts the front face's midline at CX - 17.
     parts.push(box(CX - half + 40, top + 62, width - 114, height - 132, 12, soft))
   }
 
+  // A full-width base panel with folded corners, in ink rather than hairline:
+  // the flat-base bag has to read as a different bag from the plain S/M/L
+  // ones at card size, and a single faint line near the hem did not.
   if (flatBase) {
-    parts.push(seg(CX - half + 12, BASE - 26, CX + half - 46, BASE - 26, soft))
+    parts.push(
+      seg(CX - half, BASE - 52, CX + half, BASE - 52),
+      seg(CX - half, BASE - 52, CX - half + 36, BASE),
+      seg(CX + half, BASE - 52, CX + half - 36, BASE),
+    )
   }
 
   return parts
@@ -193,6 +208,18 @@ function roll({ width = 210, label = 'wide' }) {
       draw(`M ${n(CX + half)} ${BASE - 108} L ${n(CX + half + 96)} ${BASE - 74} L ${n(CX + half + 96)} ${BASE - 6} L ${n(CX + half)} ${BASE - 40} Z`),
       oval(CX + half + 48, BASE - 56, 22, 20, mark),
     )
+  } else if (label === 'warning') {
+    // Same unwound tongue as the round roll, carrying a warning triangle
+    // instead of a dot: two sticker rolls in one category have to be told
+    // apart by their mark, not only by a few pixels of barrel width.
+    parts.push(
+      draw(`M ${n(CX + half)} ${BASE - 108} L ${n(CX + half + 96)} ${BASE - 74} L ${n(CX + half + 96)} ${BASE - 6} L ${n(CX + half)} ${BASE - 40} Z`),
+      draw(
+        `M ${n(CX + half + 48)} ${BASE - 80} L ${n(CX + half + 74)} ${BASE - 34}` +
+          ` L ${n(CX + half + 22)} ${BASE - 34} Z`,
+        mark,
+      ),
+    )
   } else {
     parts.push(draw(`M ${n(CX + half)} ${BASE - 96} L ${n(CX + half + 72)} ${BASE - 62} L ${n(CX + half + 72)} ${BASE - 26} L ${n(CX + half)} ${BASE - 60}`, soft))
   }
@@ -217,7 +244,9 @@ function tool({ head = 'spoon', twist = false }) {
   const topX = CX - 74
   const topY = BASE - 320
   const tipX = CX + 42
-  const tipY = BASE - 70
+  // Far enough down that the spoon bowl lands on the ground line instead of
+  // hovering ~25 units above it; the scoop already reached the ground.
+  const tipY = BASE - 46
   const parts = [seg(topX, topY, tipX, tipY)]
 
   parts.push(
@@ -271,21 +300,25 @@ function pump() {
     seg(CX - 84, top + 54, CX + 84, top + 54, soft),
     draw(`M ${CX - 26} ${top} L ${CX - 26} ${top - 52} L ${CX + 26} ${top - 52} L ${CX + 26} ${top}`),
     draw(`M ${CX - 26} ${top - 52} L ${CX - 86} ${top - 74} L ${CX - 86} ${top - 96}`),
-    seg(CX + 26, top - 96, CX + 86, top - 96, mark),
+    // The press pad caps the plunger arm. It used to be drawn on the opposite
+    // side of the bottle, so it read as a stray blue dash floating in space.
+    seg(CX - 116, top - 96, CX - 56, top - 96, mark),
     seg(CX, top + 20, CX, top + 186, soft),
   ]
 }
 
 function stick({ tip = 'round' }) {
+  // Both sticks reach the ground line -- a leaning stick whose tip stops
+  // 30 units short of it reads as floating rather than propped.
   const parts = [
-    draw(`M ${CX - 66} ${BASE - 300} L ${CX + 14} ${BASE - 40}`, `stroke-width="22"`),
-    draw(`M ${CX + 40} ${BASE - 286} L ${CX + 104} ${BASE - 56}`, `stroke="${HAIRLINE}" stroke-width="16"`),
+    draw(`M ${CX - 66} ${BASE - 292} L ${CX + 14} ${BASE - 18}`, `stroke-width="22"`),
+    draw(`M ${CX + 40} ${BASE - 278} L ${CX + 104} ${BASE - 24}`, `stroke="${HAIRLINE}" stroke-width="16"`),
   ]
 
   parts.push(
     tip === 'flat'
-      ? draw(`M ${CX - 4} ${BASE - 86} L ${CX + 44} ${BASE - 72} L ${CX + 32} ${BASE - 26} L ${CX - 18} ${BASE - 40} Z`)
-      : oval(CX + 14, BASE - 40, 20, 20),
+      ? draw(`M ${CX - 6} ${BASE - 68} L ${CX + 42} ${BASE - 54} L ${CX + 30} ${BASE - 6} L ${CX - 20} ${BASE - 20} Z`)
+      : oval(CX + 14, BASE - 18, 20, 20),
   )
 
   return parts
@@ -355,9 +388,11 @@ function boxShape({ style = 'lunch' }) {
   if (style === 'clamshell') {
     return [
       box(CX - 176, BASE - 78, 352, 78, 12),
-      box(CX - 176, BASE - 154, 352, 76, 12),
-      oval(CX - 176, BASE - 116, 12, 12, soft),
-      seg(CX + 152, BASE - 100, CX + 200, BASE - 100, mark),
+      // The lid is inset so the two halves do not read as one repeated bar.
+      box(CX - 164, BASE - 150, 328, 72, 12),
+      oval(CX - 176, BASE - 114, 12, 12, soft),
+      // Latch on the front face of the base, not straddling its right edge.
+      seg(CX + 88, BASE - 40, CX + 146, BASE - 40, mark),
     ]
   }
 
@@ -365,9 +400,11 @@ function boxShape({ style = 'lunch' }) {
     return [
       box(CX - 186, BASE - 110, 372, 110, 14),
       seg(CX, BASE - 110, CX, BASE, soft),
-      draw(`M ${CX - 196} ${BASE - 142} L ${CX - 196} ${BASE - 176} L ${CX + 196} ${BASE - 176} L ${CX + 196} ${BASE - 142}`),
-      seg(CX - 196, BASE - 142, CX + 196, BASE - 142),
-      seg(CX - 30, BASE - 196, CX + 30, BASE - 196, mark),
+      // The lid rests on the tray rim. It used to float 32px above it, with
+      // the accent line floating again above the lid.
+      draw(`M ${CX - 196} ${BASE - 110} L ${CX - 196} ${BASE - 148} L ${CX + 196} ${BASE - 148} L ${CX + 196} ${BASE - 110}`),
+      seg(CX - 196, BASE - 110, CX + 196, BASE - 110),
+      seg(CX - 30, BASE - 130, CX + 30, BASE - 130, mark),
     ]
   }
 
@@ -376,7 +413,8 @@ function boxShape({ style = 'lunch' }) {
     draw(`M ${CX - 182} ${BASE - 168} L ${CX - 182} ${BASE - 214} L ${CX + 182} ${BASE - 214} L ${CX + 182} ${BASE - 168}`),
     seg(CX - 182, BASE - 168, CX + 182, BASE - 168),
     seg(CX - 168, BASE - 74, CX + 168, BASE - 74, soft),
-    seg(CX - 34, BASE - 236, CX + 34, BASE - 236, mark),
+    // On the lid face, not hovering above its top edge.
+    seg(CX - 34, BASE - 192, CX + 34, BASE - 192, mark),
   ]
 }
 
@@ -392,7 +430,7 @@ export function renderProductArt({ shape, caption, label, options = {} }) {
   <g fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
 ${drawShape(options).join('\n')}
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="${CAPTION}" font-family="${FONT}" font-size="34">${escapeXml(caption)}</text>
+  <text x="320" y="534" text-anchor="middle" fill="${CAPTION}" font-family="${FONT}" font-size="34">${escapeXml(caption)}</text>
 </svg>
 `
 }

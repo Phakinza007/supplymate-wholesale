@@ -9,5 +9,5 @@
     <ellipse cx="320" cy="320" rx="79" ry="15"/>
     <path d="M 302 316 L 338 316" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">2 oz</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">2 oz</text>
 </svg>

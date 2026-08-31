@@ -9,5 +9,5 @@
     <path d="M 415 362 L 511 396 L 511 464 L 415 430 Z"/>
     <path d="M 433 396 L 497 418" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">40 × 25 mm</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">40 × 25 mm</text>
 </svg>

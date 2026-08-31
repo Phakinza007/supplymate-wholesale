@@ -11,5 +11,5 @@
     <rect x="330" y="380" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
     <path d="M 214 230 L 298 230" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">date labels</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">date labels</text>
 </svg>

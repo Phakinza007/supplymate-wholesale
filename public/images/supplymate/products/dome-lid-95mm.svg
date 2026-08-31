@@ -7,5 +7,5 @@
     <path d="M 182 398 A 138 116 0 0 1 458 398"/>
     <path d="M 320 288 L 320 322" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">Ø 95 mm · dome</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">Ø 95 mm · dome</text>
 </svg>

@@ -2,12 +2,12 @@
   <rect width="640" height="640" fill="#f1f1f5"/>
   <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
   <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M 215 260 L 215 410 L 425 410 L 425 260"/>
-    <ellipse cx="320" cy="260" rx="105" ry="46"/>
-    <ellipse cx="320" cy="410" rx="105" ry="46"/>
-    <ellipse cx="320" cy="260" rx="40.4" ry="18" stroke="#c9c9d3" stroke-width="5"/>
-    <path d="M 425 362 L 521 396 L 521 464 L 425 430 Z"/>
-    <ellipse cx="473" cy="414" rx="22" ry="20" stroke="#4a63c8" stroke-width="7"/>
+    <path d="M 231 260 L 231 410 L 409 410 L 409 260"/>
+    <ellipse cx="320" cy="260" rx="89" ry="46"/>
+    <ellipse cx="320" cy="410" rx="89" ry="46"/>
+    <ellipse cx="320" cy="260" rx="34.2" ry="18" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 409 362 L 505 396 L 505 464 L 409 430 Z"/>
+    <ellipse cx="457" cy="414" rx="22" ry="20" stroke="#4a63c8" stroke-width="7"/>
   </g>
-  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">Ø 40 mm</text>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">Ø 40 mm</text>
 </svg>
