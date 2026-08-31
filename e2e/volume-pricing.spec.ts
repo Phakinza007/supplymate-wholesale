@@ -16,11 +16,19 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await adminPage.goto('/admin/products')
   await adminPage.getByRole('button', { name: 'New product' }).click()
   await adminPage.locator('#name').fill(name)
+  // Let the form's blur-driven auto-slug fire and settle BEFORE writing the
+  // slug, then overwrite it. Filling #slug directly after #name races that
+  // handler and lands a doubled slug.
+  await adminPage.locator('#name').blur()
   await adminPage.locator('#slug').fill(slug)
+  await expect(adminPage.locator('#slug')).toHaveValue(slug)
   await adminPage.locator('#price').fill('1000')
   await adminPage.locator('#min_order_quantity').fill('2')
   await adminPage.locator('#stock_quantity').fill('500')
   await adminPage.locator('#status').selectOption('active')
+  // Keep probe products at the end of /shop so they never become the
+  // "first product" other specs buy.
+  await adminPage.locator('#sort_order').fill('9000')
   await adminPage.getByRole('button', { name: 'Save product' }).click()
   await expect(adminPage.getByRole('heading', { name: 'Edit product' })).toBeVisible()
 

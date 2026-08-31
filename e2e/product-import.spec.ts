@@ -12,11 +12,14 @@ test('CSV import inserts new products as drafts and updates existing ones withou
   await logIn(page, { email: 'admin@example.com', password: 'password123' })
 
   // First import: two new products, plus one deliberately invalid row.
+  // sort_order/stock_quantity are set high and non-zero on purpose: a probe
+  // product left at sort_order 0 with no stock would sit at the top of /shop
+  // as "Out of stock" and break every later spec that buys the first product.
   const firstCsv = [
-    'name,slug,price,min_order_quantity,supplier_note',
-    `Import A ${suffix},${slugA},1000,2,ignored column`,
-    `Import B ${suffix},${slugB},2000,1,ignored column`,
-    `Broken ${suffix},BAD SLUG,not-a-price,1,ignored column`,
+    'name,slug,price,min_order_quantity,sort_order,stock_quantity,supplier_note',
+    `Import A ${suffix},${slugA},1000,2,9000,500,ignored column`,
+    `Import B ${suffix},${slugB},2000,1,9000,500,ignored column`,
+    `Broken ${suffix},BAD SLUG,not-a-price,1,9000,500,ignored column`,
   ].join('\n')
   const firstPath = testInfo.outputPath('first.csv')
   await writeFile(firstPath, firstCsv, 'utf8')

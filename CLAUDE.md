@@ -323,6 +323,16 @@ Two smaller invariants worth not rediscovering:
   hitting `/admin` gets redirected to `/`, and Customer B cannot read Customer A's payment slip
   (checked at the API layer via a signed-URL request with Customer B's own session, since the UI
   never exposes another user's slip path to attempt this through).
+- **A spec that creates a product must set `sort_order` high (9000) and give it stock.** The suite
+  shares one database and several specs buy "the first product on `/shop`", which sorts by
+  `sort_order asc`. Seeded products start at 1, so a probe product left at the default `0` becomes
+  that first product — and if it also has `stock_quantity = 0` the detail page renders a disabled
+  "Out of stock" button, breaking every later spec with an error that points nowhere near the spec
+  that caused it. `product-import`/`volume-pricing`/`product-status-duplicate` all do this.
+- **Filling the admin product form: `#name`, then `blur()`, then `#slug`.** `AdminProductForm`
+  auto-generates the slug on the name field's blur, and filling `#slug` immediately after `#name`
+  races that handler and lands a doubled slug (`foofoo`), which then 404s on `/products/{slug}`.
+  Assert `toHaveValue(slug)` afterwards so the race can never fail silently again.
 - `e2e/**` is intentionally outside `tsconfig.app.json`'s `include`, so it doesn't affect
   `npm run typecheck`/`npm run build`.
 

@@ -12,9 +12,17 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
   await page.goto('/admin/products')
   await page.getByRole('button', { name: 'New product' }).click()
   await page.locator('#name').fill(name)
+  // Let the form's blur-driven auto-slug fire and settle BEFORE writing the
+  // slug, then overwrite it. Filling #slug directly after #name races that
+  // handler and lands a doubled slug.
+  await page.locator('#name').blur()
   await page.locator('#slug').fill(slug)
+  await expect(page.locator('#slug')).toHaveValue(slug)
   await page.locator('#price').fill('1290')
   await page.locator('#status').selectOption('draft')
+  // Keep probe products at the end of /shop so they never become the
+  // "first product" other specs buy.
+  await page.locator('#sort_order').fill('9000')
   await page.getByRole('button', { name: 'Save product' }).click()
   await expect(page.getByRole('heading', { name: 'Edit product' })).toBeVisible()
 
