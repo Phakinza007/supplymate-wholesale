@@ -6,6 +6,7 @@ import { useProductReviews } from '@/modules/optional/reviews/useProductReviews'
 import { useReviewEligibility } from '@/modules/optional/reviews/useReviewEligibility'
 import { useReviewMutations } from '@/modules/optional/reviews/useReviewMutations'
 import { getErrorMessage } from '@/lib/getErrorMessage'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 export default function Reviews({ productId }: { productId: string }) {
@@ -40,7 +41,7 @@ export default function Reviews({ productId }: { productId: string }) {
   )
 
   if (isLoading) return null
-  if (isError) return <p className="text-sm text-destructive">Failed to load reviews.</p>
+  if (isError) return <p className="text-sm text-destructive">โหลดรีวิวไม่สำเร็จ</p>
 
   const activeReviews = (reviews ?? []).filter((r) => r.is_active)
   const average =
@@ -51,14 +52,13 @@ export default function Reviews({ productId }: { productId: string }) {
 
   return (
     <div className="flex flex-col gap-4 border-t pt-6">
-      <h2 className="text-lg font-medium">Reviews</h2>
+      <h2 className="text-[length:var(--text-app-section)] font-bold tracking-tight">รีวิว</h2>
       {average !== null ? (
-        <p className="text-sm text-muted-foreground">
-          {average.toFixed(1)} ★ ({activeReviews.length} review
-          {activeReviews.length === 1 ? '' : 's'})
+        <p className="text-sm tabular-nums text-muted-foreground">
+          {average.toFixed(1)} ★ · {activeReviews.length} รีวิว
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">No reviews yet.</p>
+        <p className="text-sm text-muted-foreground">ยังไม่มีรีวิว</p>
       )}
 
       <ul className="flex flex-col gap-3">
@@ -67,8 +67,8 @@ export default function Reviews({ productId }: { productId: string }) {
             <div className="flex items-center justify-between">
               <span>{'★'.repeat(r.rating) + '☆'.repeat(5 - r.rating)}</span>
               <span className="text-muted-foreground">
-                {new Date(r.created_at).toLocaleDateString()}
-                {!r.is_active && ' (hidden)'}
+                {new Date(r.created_at).toLocaleDateString('th-TH')}
+                {!r.is_active && ' · ซ่อนอยู่'}
               </span>
             </div>
             {r.comment && <p className="mt-1">{r.comment}</p>}
@@ -91,13 +91,13 @@ export default function Reviews({ productId }: { productId: string }) {
                         onError: (err) =>
                           setHideErrors((prev) => ({
                             ...prev,
-                            [r.id]: getErrorMessage(err, 'Failed to update review visibility.'),
+                            [r.id]: getErrorMessage(err, 'ลองใหม่อีกครั้ง'),
                           })),
                       },
                     )
                   }}
                 >
-                  {r.is_active ? 'Hide' : 'Unhide'}
+                  {r.is_active ? 'ซ่อน' : 'แสดง'}
                 </Button>
                 {hideErrors[r.id] && (
                   <p className="mt-1 text-sm text-destructive">{hideErrors[r.id]}</p>
@@ -110,13 +110,13 @@ export default function Reviews({ productId }: { productId: string }) {
 
       {canShowForm && (
         <div ref={formRef} className="flex flex-col gap-3 rounded-md border p-4">
-          <h3 className="font-medium">{ownReview ? 'Edit your review' : 'Write a review'}</h3>
+          <h3 className="text-sm font-semibold">{ownReview ? 'แก้ไขรีวิวของคุณ' : 'เขียนรีวิว'}</h3>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"
-                aria-label={`Rate ${n} star${n === 1 ? '' : 's'}`}
+                aria-label={`ให้ ${n} ดาว`}
                 onClick={() => setRating(n)}
                 className="text-xl"
               >
@@ -127,10 +127,11 @@ export default function Reviews({ productId }: { productId: string }) {
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Optional comment"
-            className="min-h-20 rounded-md border p-2 text-sm"
+            placeholder="ความเห็นเพิ่มเติม (ไม่บังคับ)"
+            aria-label="ความเห็นเพิ่มเติม"
+            className="min-h-20 rounded-md border border-input bg-card px-3 py-2 text-sm outline-none"
           />
-          {formError && <p className="text-sm text-destructive">{formError}</p>}
+          {formError && <Alert tone="error" title="ส่งรีวิวไม่สำเร็จ">{formError}</Alert>}
           <Button
             disabled={rating === 0 || submitReview.isPending}
             onClick={async () => {
@@ -138,11 +139,11 @@ export default function Reviews({ productId }: { productId: string }) {
               try {
                 await submitReview.mutateAsync({ rating, comment })
               } catch (err) {
-                setFormError(getErrorMessage(err, 'Failed to submit review.'))
+                setFormError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
               }
             }}
           >
-            {submitReview.isPending ? 'Submitting…' : ownReview ? 'Update review' : 'Submit review'}
+            {submitReview.isPending ? 'กำลังส่ง' : ownReview ? 'อัปเดตรีวิว' : 'ส่งรีวิว'}
           </Button>
         </div>
       )}

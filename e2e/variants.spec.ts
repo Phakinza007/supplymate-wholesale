@@ -14,16 +14,16 @@ test('variants module: admin creates variants, customer must select one, cart/ch
   await adminPage.getByRole('button', { name: 'แก้ไข' }).first().click()
   const productSlug = await adminPage.locator('#slug').inputValue()
 
-  await adminPage.getByRole('button', { name: 'Add variant' }).click()
+  await adminPage.getByRole('button', { name: 'เพิ่มตัวเลือก' }).click()
   await adminPage.locator('#variant-name').fill('Small')
   await adminPage.locator('#variant-stock').fill('5')
-  await adminPage.getByRole('button', { name: 'Save variant' }).click()
+  await adminPage.getByRole('button', { name: 'บันทึกตัวเลือก' }).click()
   await expect(adminPage.getByText('Small', { exact: true })).toBeVisible()
 
-  await adminPage.getByRole('button', { name: 'Add variant' }).click()
+  await adminPage.getByRole('button', { name: 'เพิ่มตัวเลือก' }).click()
   await adminPage.locator('#variant-name').fill('Large (out of stock)')
   await adminPage.locator('#variant-stock').fill('0')
-  await adminPage.getByRole('button', { name: 'Save variant' }).click()
+  await adminPage.getByRole('button', { name: 'บันทึกตัวเลือก' }).click()
   await expect(adminPage.getByText('Large (out of stock)', { exact: true })).toBeVisible()
 
   const customerContext = await browser.newContext()
@@ -104,12 +104,12 @@ test('variants module: deactivating a variant after it is in the customer cart f
     .locator('li', { hasText: 'Small' })
     // VariantsPanel's own row button is still "Edit" — only the admin product
     // list was renamed to แก้ไข.
-    .getByRole('button', { name: 'Edit' })
+    .getByRole('button', { name: 'แก้ไข' })
     .click()
   await adminPage.locator('#variant-name').waitFor()
-  await adminPage.getByLabel('Active', { exact: true }).uncheck()
-  await adminPage.getByRole('button', { name: 'Save variant' }).click()
-  await expect(adminPage.locator('li', { hasText: 'Small' })).toContainText('(inactive)')
+  await adminPage.getByLabel('เปิดให้สั่งซื้อ', { exact: true }).uncheck()
+  await adminPage.getByRole('button', { name: 'บันทึกตัวเลือก' }).click()
+  await expect(adminPage.locator('li', { hasText: 'Small' })).toContainText('ปิดใช้งาน')
 
   await customerPage.goto('/cart')
   await customerPage.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()

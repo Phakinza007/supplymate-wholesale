@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getErrorMessage } from '@/lib/getErrorMessage'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -37,7 +39,9 @@ export default function PromoCodeField({
       if (error) throw error
       const result = data?.[0]
       if (!result || !result.valid) {
-        setError(result?.reason ?? 'Invalid promo code.')
+        // `reason` comes back from validate_promo_code and is already the
+        // specific explanation; only the fallback is ours to word.
+        setError(result?.reason ?? 'ใช้โค้ดนี้ไม่ได้')
         return
       }
       onApply({
@@ -48,7 +52,7 @@ export default function PromoCodeField({
       })
       setCode('')
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to check promo code.'))
+      setError(getErrorMessage(err, 'ตรวจสอบโค้ดไม่สำเร็จ ลองใหม่อีกครั้ง'))
     } finally {
       setChecking(false)
     }
@@ -56,12 +60,12 @@ export default function PromoCodeField({
 
   if (applied) {
     return (
-      <div className="flex items-center justify-between text-sm">
-        <span>
-          Code <span className="font-medium">{applied.code}</span> applied
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span className="flex flex-wrap items-center gap-2">
+          ใช้โค้ด <Badge tone="verified">{applied.code}</Badge> แล้ว
         </span>
-        <Button size="sm" variant="outline" onClick={onRemove}>
-          Remove
+        <Button size="sm" variant="ghost" className="min-h-11 sm:min-h-9" onClick={onRemove}>
+          นำออก
         </Button>
       </div>
     )
@@ -71,16 +75,17 @@ export default function PromoCodeField({
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         <Input
-          placeholder="Promo code"
+          aria-label="โค้ดส่วนลด"
+          placeholder="โค้ดส่วนลด"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           className="flex-1"
         />
-        <Button type="button" variant="outline" disabled={!code || checking} onClick={handleApply}>
-          {checking ? 'Checking…' : 'Apply'}
+        <Button type="button" variant="outline" disabled={!code} loading={checking} onClick={handleApply}>
+          {checking ? 'กำลังตรวจสอบ' : 'ใช้โค้ด'}
         </Button>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <Alert tone="error" title="ใช้โค้ดไม่ได้">{error}</Alert>}
     </div>
   )
 }

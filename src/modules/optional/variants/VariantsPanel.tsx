@@ -2,9 +2,13 @@ import { useState, type FormEvent } from 'react'
 import { useProductVariants } from '@/modules/optional/variants/useProductVariants'
 import { useVariantMutations } from '@/modules/optional/variants/useVariantMutations'
 import { getErrorMessage } from '@/lib/getErrorMessage'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { formatPrice } from '@/lib/formatPrice'
 import type { Database } from '@/lib/database.types'
 
@@ -52,48 +56,63 @@ export default function VariantsPanel({ productId }: { productId: string }) {
       }
       setEditing(null)
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to save variant.'))
+      setError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
     }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-medium">Variants</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold">ตัวเลือกสินค้า</h2>
         {!editing && (
-          <Button size="sm" variant="outline" onClick={() => startEdit('new')}>
-            Add variant
+          <Button
+            size="sm"
+            variant="outline"
+            className="min-h-11 sm:min-h-9"
+            onClick={() => startEdit('new')}
+          >
+            เพิ่มตัวเลือก
           </Button>
         )}
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {isError && <p className="text-sm text-destructive">Failed to load variants.</p>}
 
-      {!editing && variants?.length === 0 && (
-        <p className="text-sm text-muted-foreground">No variants yet.</p>
+      {isLoading && <Skeleton className="h-20 w-full" />}
+
+      {/* Not the same as "no variants yet": an owner reading a failed load as
+          empty would add a duplicate option. */}
+      {isError && (
+        <Alert tone="error" title="โหลดตัวเลือกไม่สำเร็จ">
+          ลองรีเฟรชก่อน อย่าเพิ่งเพิ่มใหม่ — ตัวเลือกเดิมอาจยังอยู่
+        </Alert>
       )}
 
-      {!editing && (
-        <ul className="flex flex-col gap-2">
-          {variants?.map((v) => (
-            <li
-              key={v.id}
-              className="flex items-center justify-between rounded-md border p-3 text-sm"
-            >
-              <div>
-                <p className="font-medium">
+      {!editing && !isLoading && !isError && variants?.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          ยังไม่มีตัวเลือก — ลูกค้าจะสั่งสินค้านี้ได้ตรง ๆ โดยไม่ต้องเลือกอะไร
+        </p>
+      )}
+
+      {!editing && variants && variants.length > 0 && (
+        <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
+          {variants.map((v) => (
+            <li key={v.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
+              <div className="min-w-0 text-sm">
+                <p className="flex flex-wrap items-center gap-2 font-semibold">
                   {v.name}
-                  {!v.is_active && (
-                    <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>
-                  )}
+                  {!v.is_active && <Badge>ปิดใช้งาน</Badge>}
                 </p>
-                <p className="text-muted-foreground">
-                  {v.price_override != null ? formatPrice(v.price_override) : 'Base price'} ·
-                  Stock: {v.stock_quantity}
+                <p className="mt-0.5 tabular-nums text-muted-foreground">
+                  {v.price_override != null ? formatPrice(v.price_override) : 'ใช้ราคาหลัก'} ·
+                  คงเหลือ {v.stock_quantity}
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => startEdit(v)}>
-                Edit
+              <Button
+                size="sm"
+                variant="outline"
+                className="min-h-11 sm:min-h-9"
+                onClick={() => startEdit(v)}
+              >
+                แก้ไข
               </Button>
             </li>
           ))}
@@ -101,28 +120,28 @@ export default function VariantsPanel({ productId }: { productId: string }) {
       )}
 
       {editing && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-md border p-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="variant-name">Name</Label>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 rounded-md border border-border bg-card p-4"
+        >
+          <Field label="ชื่อตัวเลือก" hint="เช่น ขนาด สี หรือความหนา" required>
             <Input
               id="variant-name"
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Black / M"
+              placeholder="เช่น 16 ออนซ์"
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="variant-sku">SKU</Label>
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="รหัสสินค้า (SKU)">
               <Input
                 id="variant-sku"
                 value={form.sku ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value || null }))}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="variant-price">Price override (THB)</Label>
+            </Field>
+            <Field label="ราคาเฉพาะตัวเลือกนี้" hint="เว้นว่าง = ใช้ราคาหลักของสินค้า">
               <Input
                 id="variant-price"
                 type="number"
@@ -136,10 +155,9 @@ export default function VariantsPanel({ productId }: { productId: string }) {
                   }))
                 }
               />
-            </div>
+            </Field>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="variant-stock">Stock quantity</Label>
+          <Field label="จำนวนคงเหลือ">
             <Input
               id="variant-stock"
               type="number"
@@ -149,22 +167,20 @@ export default function VariantsPanel({ productId }: { productId: string }) {
                 setForm((f) => ({ ...f, stock_quantity: Number(e.target.value) || 0 }))
               }
             />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.is_active}
-              onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-            />
-            Active
-          </label>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" disabled={createVariant.isPending || updateVariant.isPending}>
-              {createVariant.isPending || updateVariant.isPending ? 'Saving…' : 'Save variant'}
+          </Field>
+          <Checkbox
+            checked={form.is_active}
+            onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+          >
+            เปิดให้สั่งซื้อ
+          </Checkbox>
+          {error && <Alert tone="error" title="บันทึกตัวเลือกไม่สำเร็จ">{error}</Alert>}
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" loading={createVariant.isPending || updateVariant.isPending}>
+              {createVariant.isPending || updateVariant.isPending ? 'กำลังบันทึก' : 'บันทึกตัวเลือก'}
             </Button>
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-              Cancel
+              ยกเลิก
             </Button>
           </div>
         </form>

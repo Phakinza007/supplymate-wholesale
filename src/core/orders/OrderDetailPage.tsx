@@ -182,7 +182,7 @@ export function OrderDetailPage() {
                       to={`/products/${item.product_slug}?review=1`}
                       className="font-semibold text-signal underline-offset-4 hover:underline"
                     >
-                      Write a review
+                      เขียนรีวิว
                     </Link>
                   </Feature>
                 )}

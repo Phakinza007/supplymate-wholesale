@@ -39,14 +39,14 @@ test('reviews module: eligible customer can review, ineligible cannot, admin can
   await expect(adminPage.getByText('คำสั่งซื้อเสร็จสมบูรณ์', { exact: true })).toBeVisible()
 
   await customerPage.goto(orderUrl)
-  const reviewLink = customerPage.getByRole('link', { name: 'Write a review' })
+  const reviewLink = customerPage.getByRole('link', { name: 'เขียนรีวิว' })
   await expect(reviewLink).toBeVisible()
   const reviewHref = await reviewLink.getAttribute('href')
   await customerPage.goto(reviewHref!)
 
-  await customerPage.getByRole('button', { name: 'Rate 5 stars' }).click()
+  await customerPage.getByRole('button', { name: 'ให้ 5 ดาว' }).click()
   await customerPage.getByPlaceholder('Optional comment').fill('Excellent product')
-  await customerPage.getByRole('button', { name: 'Submit review' }).click()
+  await customerPage.getByRole('button', { name: 'ส่งรีวิว' }).click()
   await expect(customerPage.getByText('Excellent product')).toBeVisible()
   await expect(customerPage.getByText('5.0 ★ (1 review)')).toBeVisible()
 
@@ -59,10 +59,10 @@ test('reviews module: eligible customer can review, ineligible cannot, admin can
   })
   await strangerPage.goto(reviewHref!.split('?')[0])
   await expect(strangerPage.getByText('Excellent product')).toBeVisible()
-  await expect(strangerPage.getByRole('button', { name: 'Submit review' })).toHaveCount(0)
+  await expect(strangerPage.getByRole('button', { name: 'ส่งรีวิว' })).toHaveCount(0)
 
   await adminPage.goto(reviewHref!.split('?')[0])
-  await adminPage.getByRole('button', { name: 'Hide' }).click()
+  await adminPage.getByRole('button', { name: 'ซ่อน' }).click()
   await strangerPage.reload()
   await expect(strangerPage.getByText('Excellent product')).toHaveCount(0)
 

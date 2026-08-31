@@ -3,9 +3,16 @@ import { useAdminPromotions } from '@/modules/optional/promotions/useAdminPromot
 import { useAdminPromotionMutations } from '@/modules/optional/promotions/useAdminPromotionMutations'
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import type { Database } from '@/lib/database.types'
 
 type Promotion = Database['public']['Tables']['promotions']['Row']
@@ -60,49 +67,63 @@ export default function PromotionsAdminPage() {
       }
       setEditing(null)
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to save promotion.'))
+      setError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
     }
   }
 
-  if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
-  if (isError) return <p className="p-8 text-destructive">Failed to load promotions.</p>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 px-4 pb-8 md:px-0">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    )
+  }
+
+  // Distinct from "no promotions yet": an owner reading a failed load as empty
+  // would re-create a code that already exists and hit a unique violation.
+  if (isError) {
+    return (
+      <div className="px-4 pb-8 md:px-0">
+        <Alert tone="error" title="โหลดโปรโมชันไม่สำเร็จ">
+          ลองรีเฟรชอีกครั้ง อย่าเพิ่งสร้างโค้ดใหม่ — ของเดิมอาจยังอยู่
+        </Alert>
+      </div>
+    )
+  }
 
   if (editing) {
     return (
-      <div className="mx-auto max-w-lg px-4 pb-8">
-        <h1 className="mb-6 text-2xl font-semibold">
-          {editing === 'new' ? 'New promotion' : 'Edit promotion'}
-        </h1>
-        {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <div className="flex max-w-lg flex-col gap-6 px-4 pb-8 md:px-0">
+        <PageHeader title={editing === 'new' ? 'เพิ่มโปรโมชัน' : 'แก้ไขโปรโมชัน'} />
+        {error && <Alert tone="error" title="บันทึกโปรโมชันไม่สำเร็จ">{error}</Alert>}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="promo-code">Code</Label>
+          <Field label="โค้ด" hint="ลูกค้าพิมพ์โค้ดนี้ตอนชำระเงิน" required>
             <Input
               id="promo-code"
               required
+              className="font-mono"
               value={form.code}
               onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="promo-type">Type</Label>
-              <select
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="รูปแบบส่วนลด">
+              <Select
                 id="promo-type"
                 value={form.discount_type}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, discount_type: e.target.value as 'percent' | 'fixed' }))
                 }
-                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
               >
-                <option value="percent">Percent off</option>
-                <option value="fixed">Fixed amount off</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="promo-value">
-                {form.discount_type === 'percent' ? 'Percent off' : 'Amount off (THB)'}
-              </Label>
+                <option value="percent">ลดเป็นเปอร์เซ็นต์</option>
+                <option value="fixed">ลดเป็นจำนวนเงิน</option>
+              </Select>
+            </Field>
+            <Field
+              label={form.discount_type === 'percent' ? 'ลดกี่เปอร์เซ็นต์' : 'ลดกี่บาท'}
+              required
+            >
               <Input
                 id="promo-value"
                 type="number"
@@ -115,11 +136,10 @@ export default function PromotionsAdminPage() {
                   setForm((f) => ({ ...f, discount_value: Number(e.target.value) || 0 }))
                 }
               />
-            </div>
+            </Field>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="promo-min-subtotal">Minimum subtotal (THB, optional)</Label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="ยอดขั้นต่ำ" hint="เว้นว่างได้">
               <Input
                 id="promo-min-subtotal"
                 type="number"
@@ -133,9 +153,8 @@ export default function PromotionsAdminPage() {
                   }))
                 }
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="promo-max-uses">Max uses (optional)</Label>
+            </Field>
+            <Field label="ใช้ได้สูงสุดกี่ครั้ง" hint="เว้นว่าง = ไม่จำกัด">
               <Input
                 id="promo-max-uses"
                 type="number"
@@ -148,33 +167,30 @@ export default function PromotionsAdminPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="promo-expires">Expires at end of this day (optional)</Label>
+          <Field label="ใช้ได้ถึงสิ้นวันที่" hint="เว้นว่าง = ไม่มีวันหมดอายุ">
             <Input
               id="promo-expires"
               type="date"
               value={form.expires_at ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value || null }))}
             />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.is_active}
-              onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-            />
-            Active
-          </label>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={createPromotion.isPending || updatePromotion.isPending}>
+          </Field>
+          <Checkbox
+            checked={form.is_active}
+            onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+          >
+            เปิดใช้งาน
+          </Checkbox>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" loading={createPromotion.isPending || updatePromotion.isPending}>
               {createPromotion.isPending || updatePromotion.isPending
-                ? 'Saving…'
-                : 'Save promotion'}
+                ? 'กำลังบันทึก'
+                : 'บันทึกโปรโมชัน'}
             </Button>
             <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-              Cancel
+              ยกเลิก
             </Button>
           </div>
         </form>
@@ -183,44 +199,58 @@ export default function PromotionsAdminPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Promotions</h1>
-        <Button size="sm" onClick={() => startEdit('new')}>
-          New promotion
-        </Button>
-      </div>
-      <ul className="flex flex-col gap-2">
-        {promotions?.length === 0 && (
-          <p className="text-sm text-muted-foreground">No promotions yet.</p>
-        )}
-        {promotions?.map((p) => (
-          <li
-            key={p.id}
-            className="flex items-center justify-between rounded-md border p-3 text-sm"
-          >
-            <div>
-              <p className="font-medium">
-                {p.code}
-                {!p.is_active && (
-                  <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>
-                )}
-              </p>
-              <p className="text-muted-foreground">
-                {p.discount_type === 'percent'
-                  ? `${p.discount_value}% off`
-                  : `${formatPrice(p.discount_value)} off`}
-                {' · '}Used {p.uses_count}
-                {p.max_uses ? `/${p.max_uses}` : ''} times
-                {p.expires_at && ` · Expires ${new Date(p.expires_at).toLocaleDateString()}`}
-              </p>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => startEdit(p)}>
-              Edit
-            </Button>
-          </li>
-        ))}
-      </ul>
+    <div className="flex max-w-3xl flex-col gap-6 px-4 pb-8 md:px-0">
+      <PageHeader
+        title="โปรโมชัน"
+        description="โค้ดส่วนลดที่ลูกค้าใช้ได้ตอนชำระเงิน"
+        // Hidden while empty: the empty state carries the same action, under
+        // the same label, so nothing is ambiguous either way.
+        action={
+          promotions && promotions.length > 0 ? (
+            <Button onClick={() => startEdit('new')}>เพิ่มโปรโมชัน</Button>
+          ) : undefined
+        }
+      />
+
+      {promotions?.length === 0 && (
+        <EmptyState
+          title="ยังไม่มีโปรโมชัน"
+          description="สร้างโค้ดส่วนลดให้ลูกค้ากรอกตอนชำระเงิน กำหนดยอดขั้นต่ำและจำนวนครั้งที่ใช้ได้"
+          action={<Button onClick={() => startEdit('new')}>เพิ่มโปรโมชัน</Button>}
+        />
+      )}
+
+      {promotions && promotions.length > 0 && (
+        <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
+          {promotions.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0 text-sm">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono font-semibold">{p.code}</span>
+                  {!p.is_active && <Badge>ปิดใช้งาน</Badge>}
+                </p>
+                <p className="mt-0.5 tabular-nums text-muted-foreground">
+                  {p.discount_type === 'percent'
+                    ? `ลด ${p.discount_value}%`
+                    : `ลด ${formatPrice(p.discount_value)}`}
+                  {' · '}ใช้ไปแล้ว {p.uses_count}
+                  {p.max_uses ? `/${p.max_uses}` : ''} ครั้ง
+                  {p.expires_at &&
+                    ` · ถึง ${new Date(p.expires_at).toLocaleDateString('th-TH')}`}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="min-h-11 sm:min-h-9"
+                onClick={() => startEdit(p)}
+              >
+                แก้ไข
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

@@ -20,10 +20,10 @@ test('promotions module: admin creates a code, customer applies it, discount flo
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
 
   await adminPage.goto('/admin/promotions')
-  await adminPage.getByRole('button', { name: 'New promotion' }).click()
+  await adminPage.getByRole('button', { name: 'เพิ่มโปรโมชัน' }).click()
   await adminPage.locator('#promo-code').fill('TESTSAVE10')
   await adminPage.locator('#promo-value').fill('10')
-  await adminPage.getByRole('button', { name: 'Save promotion' }).click()
+  await adminPage.getByRole('button', { name: 'บันทึกโปรโมชัน' }).click()
   await expect(adminPage.getByText('TESTSAVE10')).toBeVisible()
 
   const customerContext = await browser.newContext()
@@ -42,9 +42,9 @@ test('promotions module: admin creates a code, customer applies it, discount flo
   })
   await addFirstProductToCartAndReachCheckout(customerPage)
 
-  await customerPage.getByPlaceholder('Promo code').fill('testsave10')
-  await customerPage.getByRole('button', { name: 'Apply' }).click()
-  await expect(customerPage.getByText('Code TESTSAVE10 applied')).toBeVisible()
+  await customerPage.getByPlaceholder('โค้ดส่วนลด').fill('testsave10')
+  await customerPage.getByRole('button', { name: 'ใช้โค้ด' }).click()
+  await expect(customerPage.getByText('ใช้โค้ด TESTSAVE10 แล้ว')).toBeVisible()
   await expect(customerPage.getByText('ส่วนลด')).toBeVisible()
 
   await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
@@ -70,8 +70,8 @@ test('promotions module: an invalid code is rejected with a clear message', asyn
   })
   await addFirstProductToCartAndReachCheckout(page)
 
-  await page.getByPlaceholder('Promo code').fill('NOSUCHCODE')
-  await page.getByRole('button', { name: 'Apply' }).click()
+  await page.getByPlaceholder('โค้ดส่วนลด').fill('NOSUCHCODE')
+  await page.getByRole('button', { name: 'ใช้โค้ด' }).click()
   await expect(page.getByText('code not found')).toBeVisible()
 })
 
@@ -80,10 +80,10 @@ test('promotions module: a code deactivated after validation fails checkout inst
   const adminPage = await adminContext.newPage()
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
   await adminPage.goto('/admin/promotions')
-  await adminPage.getByRole('button', { name: 'New promotion' }).click()
+  await adminPage.getByRole('button', { name: 'เพิ่มโปรโมชัน' }).click()
   await adminPage.locator('#promo-code').fill('RACETEST')
   await adminPage.locator('#promo-value').fill('20')
-  await adminPage.getByRole('button', { name: 'Save promotion' }).click()
+  await adminPage.getByRole('button', { name: 'บันทึกโปรโมชัน' }).click()
 
   const customerContext = await browser.newContext()
   const customerPage = await customerContext.newPage()
@@ -100,16 +100,16 @@ test('promotions module: a code deactivated after validation fails checkout inst
     postalCode: '10110',
   })
   await addFirstProductToCartAndReachCheckout(customerPage)
-  await customerPage.getByPlaceholder('Promo code').fill('RACETEST')
-  await customerPage.getByRole('button', { name: 'Apply' }).click()
-  await expect(customerPage.getByText('Code RACETEST applied')).toBeVisible()
+  await customerPage.getByPlaceholder('โค้ดส่วนลด').fill('RACETEST')
+  await customerPage.getByRole('button', { name: 'ใช้โค้ด' }).click()
+  await expect(customerPage.getByText('ใช้โค้ด RACETEST แล้ว')).toBeVisible()
 
   // Admin deactivates the code after the customer already validated it --
   // mirrors the exact deactivation-race class the Variants module's final
   // review found and fixed for variant selection.
-  await adminPage.locator('li', { hasText: 'RACETEST' }).getByRole('button', { name: 'Edit' }).click()
-  await adminPage.getByLabel('Active').uncheck()
-  await adminPage.getByRole('button', { name: 'Save promotion' }).click()
+  await adminPage.locator('li', { hasText: 'RACETEST' }).getByRole('button', { name: 'แก้ไข' }).click()
+  await adminPage.getByLabel('เปิดใช้งาน').uncheck()
+  await adminPage.getByRole('button', { name: 'บันทึกโปรโมชัน' }).click()
 
   await customerPage.getByRole('button', { name: 'สั่งซื้อ' }).click()
   await expect(
