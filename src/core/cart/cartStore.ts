@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { PackageUnit } from '@/lib/wholesale'
 import { clampToMinimum } from '@/demo/catalogue'
 
@@ -39,7 +40,21 @@ function sameLine(a: CartLine, b: CartLine) {
   return a.productId === b.productId && a.variantId === b.variantId
 }
 
-export const useCartStore = create<CartState>()((set) => ({
+// Unit tests run in plain Node with no localStorage. Returning undefined from
+// the storage getter is not enough -- zustand still calls setItem on it -- so
+// fall back to a no-op store that keeps the cart purely in memory.
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+}
+
+// Persisted so the cart survives a full page load -- every route change that
+// reloads the document (and every E2E `page.goto('/cart')`) would otherwise
+// hand the customer an empty cart. The key is `ecom-cart`, as documented.
+export const useCartStore = create<CartState>()(
+  persist<CartState>(
+    (set) => ({
   items: [],
   addItem: (item, quantity = 1) =>
     set((state) => {
@@ -92,8 +107,16 @@ export const useCartStore = create<CartState>()((set) => ({
         sameLine(item, { productId, variantId }) ? { ...item, unitPrice } : item,
       ),
     })),
-  clear: () => set({ items: [] }),
-}))
+      clear: () => set({ items: [] }),
+    }),
+    {
+      name: 'ecom-cart',
+      storage: createJSONStorage(() =>
+        typeof globalThis.localStorage === 'undefined' ? noopStorage : globalThis.localStorage,
+      ),
+    },
+  ),
+)
 
 export function useCartTotalItems() {
   return useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0))
