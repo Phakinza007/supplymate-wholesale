@@ -26,6 +26,14 @@ export interface TourStep {
   body: string
   /** `action` waits for the visitor to do the thing themselves. */
   advance: 'button' | 'action'
+  /**
+   * Shown instead of `body` when the step found its target but not the ideal
+   * one — a catalogue with no tiered product, or an add-to-cart button that is
+   * disabled behind a variant choice. Without it the tour would describe
+   * something the visitor is not looking at, or ask them to press a button
+   * that cannot be pressed.
+   */
+  altBody?: string
   /** Steps behind ProtectedRoute. Dropped entirely for a logged-out visitor. */
   requiresSession?: true
 }
@@ -53,6 +61,8 @@ export const tourSteps: readonly TourStep[] = [
     anchor: 'catalogue-tiers',
     title: 'สั่งมากขึ้น ราคาต่อหน่วยถูกลง',
     body: 'สินค้าที่มีป้ายนี้ตั้งราคาไว้เป็นขั้นตามจำนวน กดถัดไปเพื่อเข้าไปดูขั้นราคาทั้งหมด',
+    altBody:
+      'ตอนนี้ยังไม่มีสินค้าที่ตั้งราคาเป็นขั้นในแคตตาล็อก กดถัดไปเพื่อดูหน้าสินค้าและวิธีสั่งเป็นลัง',
     advance: 'button',
   },
   {
@@ -77,6 +87,8 @@ export const tourSteps: readonly TourStep[] = [
     anchor: 'add-to-cart',
     title: 'ลองกดเพิ่มลงตะกร้าดู',
     body: 'กดปุ่มนี้เองได้เลย ทัวร์รอตรงนี้ก่อน — จะได้เห็นว่าตะกร้าคิดราคาขั้นบันไดให้จริง',
+    altBody:
+      'สินค้าตัวนี้ยังกดสั่งไม่ได้ ต้องเลือกตัวเลือกที่มีของก่อน เลือกแล้วกดเพิ่มลงตะกร้าได้เลย หรือกดถัดไปเพื่อดูทัวร์ต่อ',
     advance: 'action',
   },
   {

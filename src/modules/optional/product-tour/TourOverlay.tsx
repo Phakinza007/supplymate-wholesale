@@ -13,9 +13,15 @@ const GAP = 12
  * is built around would be impossible to complete.
  */
 function Backdrop({ rect, onDismiss }: { rect: Rect | null; onDismiss: () => void }) {
-  const band = 'absolute bg-black/55'
+  const band = 'pointer-events-auto absolute bg-black/55'
   if (!rect) {
-    return <div aria-hidden="true" className="absolute inset-0 bg-black/55" onClick={onDismiss} />
+    return (
+      <div
+        aria-hidden="true"
+        className="pointer-events-auto absolute inset-0 bg-black/55"
+        onClick={onDismiss}
+      />
+    )
   }
   const right = rect.left + rect.width
   const bottom = rect.top + rect.height
@@ -116,7 +122,7 @@ export function TourOverlay({
   }, [onClose, waitingForAction])
 
   return (
-    <div className="fixed inset-0 z-[var(--z-tour)]" data-tour-overlay>
+    <div className="pointer-events-none fixed inset-0 z-[var(--z-tour)]" data-tour-overlay>
       <Backdrop rect={targetRect} onDismiss={onClose} />
 
       <div
@@ -125,7 +131,7 @@ export function TourOverlay({
         aria-modal={waitingForAction ? undefined : true}
         aria-labelledby="tour-title"
         tabIndex={-1}
-        className="absolute w-[min(20rem,calc(100vw-1.5rem))] rounded-md border border-border bg-card p-4 shadow-lg outline-none max-sm:w-full max-sm:rounded-b-none motion-reduce:transition-none"
+        className="pointer-events-auto absolute w-[min(20rem,calc(100vw-1.5rem))] rounded-md border border-border bg-card p-4 shadow-lg outline-none max-sm:w-full max-sm:rounded-b-none motion-reduce:transition-none"
         style={position ? { top: position.top, left: position.left } : { visibility: 'hidden' }}
       >
         <p aria-live="polite" className="text-xs font-semibold text-muted-foreground">

@@ -27,14 +27,27 @@ function recalls(key: string): boolean {
   }
 }
 
-function anchorNode(step: TourStep): HTMLElement | null {
-  // The tier step wants a product that genuinely has a ladder. If the catalogue
-  // has none, this resolves to nothing and the step skips itself — and so does
-  // the ladder step that follows it. No special case needed.
+/**
+ * Resolve a step's target, and say whether it is the ideal one.
+ *
+ * The tier step wants a product that genuinely has a ladder, but it must fall
+ * back to any product card: reaching the product page at all depends on this
+ * step having a link to follow, so skipping it in a catalogue with no tiers
+ * would strand the tour on /shop and drop the four steps after it too. The
+ * ladder step that follows then skips on its own, because a product without
+ * tiers renders no ladder.
+ */
+function anchorNode(step: TourStep): { node: HTMLElement; ideal: boolean } | null {
   if (step.id === 'catalogue-tiers') {
-    return document.querySelector<HTMLElement>('[data-tour-tiers]')
+    const tiered = document.querySelector<HTMLElement>('[data-tour-tiers]')
+    if (tiered) return { node: tiered, ideal: true }
+    const any = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
+    return any ? { node: any, ideal: false } : null
   }
-  return document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
+  const node = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
+  if (!node) return null
+  // An action step's target is only ideal if it can actually be operated.
+  return { node, ideal: !(node as HTMLButtonElement).disabled }
 }
 
 function toRect(node: HTMLElement): Rect {
@@ -51,6 +64,7 @@ export default function ProductTour() {
   const [plan, setPlan] = useState<TourStep[] | null>(null)
   const [index, setIndex] = useState(0)
   const [rect, setRect] = useState<Rect | null>(null)
+  const [targetIdeal, setTargetIdeal] = useState(true)
   const nodeRef = useRef<HTMLElement | null>(null)
   const cartOnEntry = useRef(0)
 
@@ -87,17 +101,23 @@ export default function ProductTour() {
 
     if (step.route && step.route !== location.pathname) navigate(step.route)
 
-    void waitFor(() => anchorNode(step)).then((node) => {
+    void waitFor(() => anchorNode(step)).then((found) => {
       if (cancelled) return
-      if (!node) {
+      if (!found) {
         if (index + 1 < plan.length) setIndex(index + 1)
         else stop()
         return
       }
-      nodeRef.current = node
-      node.scrollIntoView({ block: 'center', behavior: 'auto' })
+      nodeRef.current = found.node
+      found.node.scrollIntoView({ block: 'center', behavior: 'auto' })
       cartOnEntry.current = cartCount
-      setRect(toRect(node))
+      setTargetIdeal(found.ideal)
+      // Measure on the next frame: getBoundingClientRect in the same tick as
+      // scrollIntoView returns the pre-scroll position, which puts the hole --
+      // and therefore the clickable gap -- somewhere the target is not.
+      requestAnimationFrame(() => {
+        if (!cancelled && nodeRef.current) setRect(toRect(nodeRef.current))
+      })
     })
 
     return () => {
@@ -134,12 +154,14 @@ export default function ProductTour() {
     else stop()
   }, [plan, step, index, navigate, stop])
 
-  // The waiting step advances when the cart actually grows — observed, never
-  // intercepted. The tour does not press controls that change data.
-  const waitingForAction = step?.advance === 'action'
+  // A step only waits if the thing it is waiting for can actually happen. A
+  // product that needs a variant choice, or is out of stock, renders a disabled
+  // button — telling the visitor to press it would strand them with nothing but
+  // "ข้าม". Such a step falls back to being read and moved past.
+  const waitingForAction = step?.advance === 'action' && targetIdeal
   useEffect(() => {
-    if (waitingForAction && cartCount > cartOnEntry.current) advance()
-  }, [waitingForAction, cartCount, advance])
+    if (step?.advance === 'action' && cartCount > cartOnEntry.current) advance()
+  }, [step, cartCount, advance])
 
   return (
     <>
@@ -147,7 +169,7 @@ export default function ProductTour() {
       {plan && step && (
         <TourOverlay
           title={step.title}
-          body={step.body}
+          body={!targetIdeal && step.altBody ? step.altBody : step.body}
           targetRect={rect}
           index={index}
           total={plan.length}
