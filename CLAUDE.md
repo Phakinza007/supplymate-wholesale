@@ -157,6 +157,52 @@ Step 8 (E2E tests) are done.
   its own rows rather than importing them uncategorised. A failed insert chunk reports every slug
   in the chunk, since Postgres does not say which row it objected to.
 
+## Catalogue data
+
+- **`src/demo/catalogue.data.json` is the single source of truth for categories and products** —
+  6 categories × 6 products. The static showcase reads it through `src/demo/catalogue.ts`, and
+  `supabase/seed.sql`'s catalogue block is generated from it. Editing either consumer by hand is
+  the mistake: edit the JSON and run `npm run generate:catalogue`.
+- **Two generators, both with a `--check` mode wired into `npm run lint`:**
+  `scripts/generate-product-art.mjs` writes `public/images/supplymate/products/{slug}.svg` (one per
+  product, from that product's `art` spec, via the pure renderer in `scripts/productArt.mjs`), and
+  `scripts/generate-seed-catalogue.mjs` rewrites only the block between
+  `-- BEGIN generated catalogue` and `-- END generated catalogue` in `supabase/seed.sql`. Variants,
+  addresses and the sample orders below that block stay hand-written and reference the fixed
+  product ids, so **a product's `id` in the JSON is not free to change** —
+  `b1000000-…-0001/0005/0010/0018` are named by the seeded orders.
+- **A product's image path is derived, never stored:** `/images/supplymate/products/{slug}.svg`.
+  Renaming a slug renames its art; the orphan file must be deleted by hand (the generator reports
+  orphans in both modes and deletes in neither).
+- **The six photographic PNGs are category tiles and the hero only.** Product cards use the
+  generated line art — thirty-six cards sharing six photos is what made the catalogue read as a
+  demo. The SVGs carry literal hex colours and a `system-ui` font stack with Latin-only captions,
+  because an `<img>`-loaded SVG cannot reach the page's tokens or a webfont.
+- **The drawing's safe area is y 80..560, not the full 640 viewBox.** `.wholesale-product-card img`
+  is `aspect-ratio: 4/3` with `object-fit: cover`, so a card throws away the top and bottom eighth
+  of the square. That is why the caption baseline sits at 534 — at 558 the descenders of
+  "greaseproof" were sliced off on every card — and why a new shape must not reach above y 80.
+  The detail page is `aspect-square`, so it will not show you this; judge new art on `/#/shop`.
+- **Generated SQL writes `products.status`, never `is_active`** (`trg_products_sync_is_active`
+  derives it), and every product carries a distinct non-empty `sku` — `products.sku` is `unique`,
+  so a blank one breaks on the second row.
+- Two showcase E2E specs are pinned to catalogue values: `static-showcase.spec.ts` uses
+  `clear-cup-16oz`'s exact name and `thermal-label-50x30`'s MOQ of 6. `clear-cup-16oz` must also
+  keep `sort_order = 1` — several Supabase specs buy "the first product on `/shop`".
+- **The art-coverage test is `scripts/catalogueArt.test.mjs`, not `src/demo/catalogueArt.test.ts`,
+  and moving it back into `src/` breaks the build.** `tsconfig.app.json` keeps
+  `types: ["vite/client"]` with no `node` entry, so a `node:fs` import from inside `src/` fails
+  `npm run typecheck`. Plain ESM under `scripts/` is picked up by vitest's default include glob
+  and stays outside the app's TypeScript program.
+- `scripts/productArt.test.mjs` renders all 36 products and asserts that no element repeats an
+  attribute name. That is not redundant with the other assertions: a duplicate `stroke-width`
+  (from combining a shared `soft`/`mark` constant with an explicit override) once shipped and made
+  two SVGs fail to load as `<img>` — XML well-formedness is the invariant being protected.
+- `ShowcaseProductCard`'s image `<Link>` is `aria-hidden` + `tabIndex={-1}` **on purpose**: it
+  duplicates the title link's destination and accessible name directly below it, and the standard
+  fix for a redundant adjacent link is to keep exactly one of the pair in the accessibility tree.
+  Do not "restore" it.
+
 ## Cart, checkout, payment slip
 
 - Cart is client-only: a Zustand store (`src/core/cart/cartStore.ts`) persisted to `localStorage`
