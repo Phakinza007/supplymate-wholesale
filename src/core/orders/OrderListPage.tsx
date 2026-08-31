@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import { PackageOpen } from 'lucide-react'
+import { useState } from 'react'
 import { useOrders } from '@/core/orders/useOrders'
+import { useReorder } from '@/core/orders/useReorder'
+import { getErrorMessage } from '@/lib/getErrorMessage'
+import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatPrice'
 import { orderStatusLabel, orderStatusTone } from '@/lib/orderStatus'
 import { Alert } from '@/components/ui/alert'
@@ -26,8 +30,54 @@ function OrderListSkeleton() {
   )
 }
 
+// 'open' leads: orders still waiting on the buyer or the shop. Done and
+// cancelled ones are history and only pad the list.
+type OrderFilter = 'open' | 'all' | 'pending' | 'shipped'
+
+const FILTERS: { key: OrderFilter; label: string; match: (status: string) => boolean }[] = [
+  { key: 'open', label: 'กำลังดำเนินการ', match: (s) => s !== 'done' && s !== 'cancelled' },
+  { key: 'all', label: 'ทั้งหมด', match: () => true },
+  { key: 'pending', label: 'รอชำระ', match: (s) => s === 'pending' },
+  { key: 'shipped', label: 'กำลังส่ง', match: (s) => s === 'shipped' },
+]
+
+const FILTER_CHIP = 'rounded-md border px-3 py-2 text-xs font-medium tabular-nums transition-colors'
+
 export function OrderListPage() {
   const { data: orders, isLoading, isError } = useOrders()
+  const reorder = useReorder()
+  const [filter, setFilter] = useState<OrderFilter>('open')
+  const [notice, setNotice] = useState<string | null>(null)
+  const [reorderError, setReorderError] = useState<string | null>(null)
+  const [reorderingId, setReorderingId] = useState<string | null>(null)
+
+  const matcher = FILTERS.find((f) => f.key === filter)!.match
+  const visible = (orders ?? []).filter((order) => matcher(order.status))
+  const lifetimeTotal = (orders ?? []).reduce((sum, order) => sum + Number(order.total), 0)
+
+  async function handleReorder(orderId: string) {
+    setNotice(null)
+    setReorderError(null)
+    setReorderingId(orderId)
+    try {
+      const result = await reorder.mutateAsync(orderId)
+      if (result.added === 0) {
+        setReorderError('ไม่มีรายการใดในบิลนี้ที่สั่งซ้ำได้')
+        return
+      }
+      const skipped =
+        result.skipped.length > 0
+          ? ` ข้าม ${result.skipped.length} รายการ: ${result.skipped
+              .map((line) => `${line.name} (${line.reason})`)
+              .join(', ')}`
+          : ''
+      setNotice(`เพิ่มลงตะกร้าแล้ว ${result.added} รายการ.${skipped}`)
+    } catch (err) {
+      setReorderError(getErrorMessage(err, 'สั่งซ้ำไม่สำเร็จ'))
+    } finally {
+      setReorderingId(null)
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
@@ -35,6 +85,46 @@ export function OrderListPage() {
         title="คำสั่งซื้อของคุณ"
         description="ดูสถานะ แนบสลิป และติดตามเลขพัสดุของแต่ละคำสั่งซื้อ"
       />
+
+      {orders && orders.length > 0 && (
+        <>
+          <p className="-mt-2 text-sm text-muted-foreground tabular-nums">
+            {orders.length} บิล · ยอดรวม {formatPrice(lifetimeTotal)}
+          </p>
+          <div role="group" aria-label="กรองคำสั่งซื้อ" className="flex flex-wrap gap-2">
+            {FILTERS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                aria-pressed={filter === option.key}
+                onClick={() => setFilter(option.key)}
+                className={cn(
+                  FILTER_CHIP,
+                  filter === option.key
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+              >
+                {option.label} {orders.filter((order) => option.match(order.status)).length}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {notice && (
+        <Alert tone="success" title="สั่งซ้ำแล้ว">
+          {notice}{' '}
+          <Link to="/cart" className="font-semibold underline">
+            ไปที่ตะกร้า
+          </Link>
+        </Alert>
+      )}
+      {reorderError && (
+        <Alert tone="error" title="สั่งซ้ำไม่สำเร็จ">
+          {reorderError}
+        </Alert>
+      )}
 
       {isLoading && <OrderListSkeleton />}
 
@@ -61,29 +151,42 @@ export function OrderListPage() {
 
       {!isLoading && !isError && orders && orders.length > 0 && (
         <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
-          {orders.map((order) => (
-            <li key={order.id}>
-              <Link
-                to={`/orders/${order.id}`}
-                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3.5 transition-colors hover:bg-accent"
-              >
-                <div className="min-w-0">
-                  <p className="font-mono text-xs text-muted-foreground">#{order.order_number}</p>
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
-                    <Badge tone={orderStatusTone(order.status)}>
-                      {orderStatusLabel(order.status, 'short')}
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      {new Date(order.created_at).toLocaleDateString('th-TH', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </p>
-                </div>
-                <span className="font-semibold tabular-nums">{formatPrice(order.total)}</span>
+          {visible.map((order) => (
+            <li
+              key={order.id}
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3.5"
+            >
+              {/* The row's link and its reorder button are siblings: a button
+                  nested in an anchor is invalid and unreachable by keyboard. */}
+              <Link to={`/orders/${order.id}`} className="min-w-0 flex-1 rounded-sm hover:underline">
+                <p className="font-mono text-xs text-muted-foreground">#{order.order_number}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                  <Badge tone={orderStatusTone(order.status)}>
+                    {orderStatusLabel(order.status, 'short')}
+                  </Badge>
+                  <span className="text-muted-foreground">
+                    {new Date(order.created_at).toLocaleDateString('th-TH', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    · {order.order_items?.[0]?.count ?? 0} รายการ
+                  </span>
+                </p>
               </Link>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold tabular-nums">{formatPrice(order.total)}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={reorder.isPending}
+                  onClick={() => handleReorder(order.id)}
+                >
+                  {reorderingId === order.id ? 'กำลังเพิ่ม…' : 'สั่งซ้ำทั้งบิล'}
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
