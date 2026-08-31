@@ -129,6 +129,35 @@ Step 8 (E2E tests) are done.
   "deactivate, never delete" rule in the Admin section — that rule is about products and
   categories, which have order history hanging off them. A price tier is a rule, not a record.
 
+## Product CSV import
+
+- `/admin/products/import` (`AdminProductImportPage`) parses client-side and writes nothing until
+  the admin confirms the preview. Two pure modules do the risky work and carry the unit tests:
+  `src/lib/csv.ts` (`parseCsv`) and `src/core/admin/productCsv.ts` (`parseProductRows`).
+- **No CSV dependency was added on purpose.** This kit is cloned per client, so a parser package
+  would ship to every clone for one admin screen. `parseCsv` covers quoted fields, doubled `""`
+  escapes, commas and newlines inside quotes, LF/CRLF, and the UTF-8 BOM Excel writes. It does not
+  support a bare-CR line terminator or a non-comma delimiter.
+- **Unknown columns are ignored, never an error** — supplier price lists carry extra columns, and
+  rejecting the file over them would make the feature unusable.
+- Rows are matched to existing products **by `slug`** (`not null unique`, always present in a valid
+  row), never by `sku` (nullable).
+- **The insert/update split is a correctness requirement, not an optimisation.** A batched
+  `upsert` would rewrite `status` on every row, so a routine monthly price-list refresh would
+  silently unpublish the entire live catalogue. Instead: unknown slug -> INSERT with
+  `status = 'draft'`; known slug -> per-row UPDATE that **omits `status`** unless the file supplied
+  one. Updates stay per-row for exactly this reason; do not "optimise" them into an upsert.
+- **An UPDATE writes only the columns the file actually supplied**, which is why
+  `parseProductRows` returns `columns` and `useProductImport` takes it. An INSERT uses the full
+  payload (a new product needs every field), but pushing that same full payload into an UPDATE
+  would write the parser's *defaults* into every omitted column — a two-column
+  `name,slug,price` refresh would reset `min_order_quantity`, `units_per_package`,
+  `stock_quantity` and `category_id` across the whole catalogue. Same failure class as the
+  `status` trap, one column further out.
+- `useProductImport` resolves `category_slug` -> `category_id` up front; an unknown category fails
+  its own rows rather than importing them uncategorised. A failed insert chunk reports every slug
+  in the chunk, since Postgres does not say which row it objected to.
+
 ## Cart, checkout, payment slip
 
 - Cart is client-only: a Zustand store (`src/core/cart/cartStore.ts`) persisted to `localStorage`
@@ -212,6 +241,43 @@ Step 8 (E2E tests) are done.
 - A Supabase query expecting exactly one row (e.g. product-by-slug) should use `.maybeSingle()` with
   `retry: false`, not `.single()` — `.single()` throws on zero rows, and TanStack Query's default
   3-retry backoff turns a "not found" into a multi-second hang before the UI catches up.
+
+## Showcase design system
+
+The static showcase (`src/showcase/`, mounted by `src/main.tsx`) carries two rules that were
+established by re-deriving them the hard way — both regress silently, neither is caught by a test
+unless you know to look.
+
+- **One standing demo disclosure per page, not four.** `<ShowcaseNotice id="showcase-demo-notice" />`
+  renders exactly once, in `ShowcaseApp`'s `<main>`, and it is the only `role="note"` on any page —
+  the header's `วิธีสั่งซื้อ (เดโม)` link routes home, where that notice is what the buyer lands on,
+  and `e2e/task-3-shell.spec.ts` asserts both the id's uniqueness and a note count of 1. A page at a point of commit (cart, checkout)
+  restates only the part that applies to the button in front of the buyer, via
+  `.showcase-commit-caption` — a short caption, **not** a second `ShowcaseNotice`. The utility strip
+  at the top of the header carries the disclosure on every viewport, mobile included; do not hide
+  either of its spans behind a media query (an earlier `display: none` below 48rem dropped the
+  local-data-only line exactly where the page was hardest to read, against PRODUCT.md's principle 3).
+  Repeating the same sentence four times does not make the demo boundary clearer — it trains buyers
+  to skip it.
+- **Showcase typography goes through the tokens in `src/index.css`, never Tailwind size/weight
+  utilities.** `--text-page-title` / `--text-section-title` / `--text-card-title` / `--text-eyebrow`
+  / `--text-meta` / `--text-fine` plus `--weight-title` (700) and `--weight-strong` (650) are the
+  single scale; the `.showcase-page-title`, `.showcase-section-title`, `.showcase-eyebrow` and
+  `.showcase-lede` classes in `showcase.css` are how TSX consumes them. Tailwind still handles
+  layout (grid, flex, gap, spacing) — that split is deliberate. Writing `text-3xl font-semibold` in
+  a showcase component reintroduces the exact drift this replaced: `font-semibold` is 600 while the
+  CSS side used 700/720/750, so headings at the same level rendered at different weights depending
+  on which file styled them.
+
+Two smaller invariants worth not rediscovering:
+
+- **`overflow-x: hidden` belongs on `html` only, never on `body` too.** Putting it on both makes
+  `body` its own scroll container, and every `position: sticky` descendant (the header, the
+  catalogue toolbar) then has a scrolling ancestor that never scrolls — they silently stop sticking
+  with no error and no failing test.
+- **`--showcase-header-height` (`showcase.css`, on `:root`) is what the sticky catalogue toolbar
+  offsets against.** It is a hand-measured constant; if the header gains or loses a row, update it
+  or the toolbar parks underneath the header.
 
 ## Auth
 
