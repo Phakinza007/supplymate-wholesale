@@ -128,6 +128,8 @@ export function OrderDetailPage() {
     )
   }
 
+  const isPromptPay = order.payment_method === 'promptpay'
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
       <PageHeader
@@ -205,30 +207,63 @@ export function OrderDetailPage() {
       </Section>
 
       {order.status === 'pending' && !order.payment_slip_path && (
-        <Section title="ชำระเงินด้วยการโอน">
+        <Section
+          title={isPromptPay ? 'ชำระเงินด้วยพร้อมเพย์' : 'ชำระเงินด้วยการโอน'}
+        >
           {order.payment_rejection_reason && (
             <Alert tone="warning" title="กรุณาแนบสลิปใหม่" className="mb-3.5">
               {order.payment_rejection_reason}
             </Alert>
           )}
-          <dl className="flex flex-col gap-1">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">ธนาคาร</dt>
-              <dd>{brandConfig.bankTransfer.bankName}</dd>
+          {isPromptPay ? (
+            <div className="flex flex-col items-center gap-3">
+              <img
+                src={brandConfig.promptPay.qrImageUrl}
+                alt="QR พร้อมเพย์ของร้าน"
+                width={200}
+                height={200}
+                className="rounded-md border border-border bg-white"
+              />
+              {/* The QR is static — it carries no amount — so the amount has to
+                  be stated beside it, and the buyer types it in themselves. */}
+              <dl className="flex w-full flex-col gap-1">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">ชื่อบัญชี</dt>
+                  <dd>{brandConfig.promptPay.accountName}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">พร้อมเพย์</dt>
+                  <dd className="font-mono">{brandConfig.promptPay.promptPayId}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-border pt-1.5 font-semibold">
+                  <dt>ยอดที่ต้องโอน</dt>
+                  <dd className="tabular-nums">{formatPrice(order.total)}</dd>
+                </div>
+              </dl>
+              <Alert tone="info" title="QR นี้ไม่ได้ผูกยอด" className="w-full">
+                กรุณากรอกยอด {formatPrice(order.total)} เองในแอปธนาคาร แล้วแนบสลิปด้านล่าง
+              </Alert>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">ชื่อบัญชี</dt>
-              <dd>{brandConfig.bankTransfer.accountName}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">เลขที่บัญชี</dt>
-              <dd className="font-mono">{brandConfig.bankTransfer.accountNumber}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-border pt-1.5 font-semibold">
-              <dt>ยอดที่ต้องโอน</dt>
-              <dd className="tabular-nums">{formatPrice(order.total)}</dd>
-            </div>
-          </dl>
+          ) : (
+            <dl className="flex flex-col gap-1">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">ธนาคาร</dt>
+                <dd>{brandConfig.bankTransfer.bankName}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">ชื่อบัญชี</dt>
+                <dd>{brandConfig.bankTransfer.accountName}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">เลขที่บัญชี</dt>
+                <dd className="font-mono">{brandConfig.bankTransfer.accountNumber}</dd>
+              </div>
+              <div className="flex justify-between gap-4 border-t border-border pt-1.5 font-semibold">
+                <dt>ยอดที่ต้องโอน</dt>
+                <dd className="tabular-nums">{formatPrice(order.total)}</dd>
+              </div>
+            </dl>
+          )}
           <div className="mt-4 flex flex-col gap-3">
             <input
               type="file"

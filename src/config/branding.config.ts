@@ -23,6 +23,21 @@ export interface BrandConfig {
     accountName: string
     accountNumber: string
   }
+  /**
+   * Static PromptPay: one fixed QR the shop shows for every order. The buyer
+   * scans it, types the amount themselves, and uploads a slip — the same
+   * verification path as a bank transfer.
+   *
+   * An empty `qrImageUrl` is the off switch: the method is simply not offered.
+   * Generate the QR once from the shop's PromptPay ID and drop the image in
+   * `public/`; it carries no amount, so it never needs regenerating.
+   */
+  promptPay: {
+    qrImageUrl: string
+    accountName: string
+    /** Shown under the QR so the buyer can check they scanned the right shop. */
+    promptPayId: string
+  }
   features: FeatureFlags
 }
 
@@ -48,6 +63,13 @@ export const brandConfig: BrandConfig = {
     bankName: 'Demo Bank (display only)',
     accountName: 'SupplyMate Demo Account',
     accountNumber: '000-000-0000 (demo only)',
+  },
+  // Demo placeholder. A real client drops their own QR image in `public/` and
+  // points this at it; leaving `qrImageUrl` empty hides PromptPay entirely.
+  promptPay: {
+    qrImageUrl: '/images/supplymate/promptpay-demo-qr.svg',
+    accountName: 'SupplyMate Demo Account',
+    promptPayId: '0-0000-00000-00-0 (demo only)',
   },
   features: {
     reviews: false,

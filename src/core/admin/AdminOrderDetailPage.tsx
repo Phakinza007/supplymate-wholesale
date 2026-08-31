@@ -6,6 +6,7 @@ import { useAdminOrderMutations } from '@/core/admin/useAdminOrderMutations'
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/formatPrice'
+import { paymentMethodLabel } from '@/lib/paymentMethod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -128,6 +129,12 @@ export function AdminOrderDetailPage() {
 
       <div className="flex flex-col gap-2">
         <h2 className="font-medium">Payment slip</h2>
+        {/* Which method the buyer chose. It does not change how the slip is
+            verified — both end in the same manual check — but it tells the
+            shop which account to reconcile the transfer against. */}
+        <p className="text-sm text-muted-foreground">
+          วิธีที่ผู้ซื้อเลือก: {paymentMethodLabel(order.payment_method)}
+        </p>
         {!order.payment_slip_path ? (
           <p className="text-sm text-muted-foreground">No payment slip uploaded yet.</p>
         ) : isSlipUrlError ? (

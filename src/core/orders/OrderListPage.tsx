@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useOrders } from '@/core/orders/useOrders'
 import { useReorder } from '@/core/orders/useReorder'
 import { getErrorMessage } from '@/lib/getErrorMessage'
+import { paymentMethodLabel } from '@/lib/paymentMethod'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@/lib/formatPrice'
 import { orderStatusLabel, orderStatusTone } from '@/lib/orderStatus'
@@ -172,7 +173,8 @@ export function OrderListPage() {
                     })}
                   </span>
                   <span className="tabular-nums text-muted-foreground">
-                    · {order.order_items?.[0]?.count ?? 0} รายการ
+                    · {order.order_items?.[0]?.count ?? 0} รายการ ·{' '}
+                    {paymentMethodLabel(order.payment_method)}
                   </span>
                 </p>
               </Link>

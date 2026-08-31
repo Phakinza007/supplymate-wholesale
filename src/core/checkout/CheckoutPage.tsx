@@ -12,6 +12,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { brandConfig } from '@/config/branding.config'
 import { Feature } from '@/lib/Feature'
 
 const PromoCodeField = lazy(() => import('@/modules/optional/promotions/PromoCodeField'))
@@ -53,6 +54,12 @@ export function CheckoutPage() {
 
   const effectiveAddressId = selectedAddressId ?? addresses?.[0]?.id
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null)
+  // An unset promptPay.qrImageUrl is the off switch — a shop without a QR is
+  // never offered the method, so there is nothing to choose between.
+  const promptPayAvailable = brandConfig.promptPay.qrImageUrl !== ''
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'promptpay'>(
+    'bank_transfer',
+  )
 
   const placeOrder = useMutation({
     mutationFn: async () => {
@@ -65,6 +72,7 @@ export function CheckoutPage() {
         p_address_id: effectiveAddressId,
         p_promo_code: appliedPromo?.code ?? undefined,
         p_business_details: businessDetails,
+        p_payment_method: paymentMethod,
       })
       if (error) throw error
       return data
@@ -163,6 +171,47 @@ export function CheckoutPage() {
           />
         </Field>
       </fieldset>
+
+      {promptPayAvailable && (
+        <fieldset className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+          <legend className="px-1 text-sm font-semibold">วิธีชำระเงิน</legend>
+          {/* Both methods end in the same place: the buyer transfers, then
+              uploads a slip an admin verifies. The choice is recorded because
+              the buyer made it, not because it changes verification. */}
+          {(
+            [
+              {
+                value: 'bank_transfer' as const,
+                title: 'โอนผ่านธนาคาร',
+                hint: `${brandConfig.bankTransfer.bankName} · แนบสลิปหลังสั่งซื้อ`,
+              },
+              {
+                value: 'promptpay' as const,
+                title: 'พร้อมเพย์ (PromptPay)',
+                hint: 'สแกน QR ของร้าน กรอกยอดเอง แล้วแนบสลิป',
+              },
+            ]
+          ).map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 text-sm has-checked:border-primary"
+            >
+              <input
+                type="radio"
+                name="payment-method"
+                value={option.value}
+                checked={paymentMethod === option.value}
+                onChange={() => setPaymentMethod(option.value)}
+                className="mt-1"
+              />
+              <span>
+                <span className="block font-semibold">{option.title}</span>
+                <span className="block text-muted-foreground">{option.hint}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
 
       <section className="flex flex-col gap-2.5 rounded-md border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">สรุปรายการ</h2>
