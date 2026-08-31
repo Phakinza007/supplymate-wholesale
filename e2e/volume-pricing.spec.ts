@@ -29,8 +29,8 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   // Keep probe products at the end of /shop so they never become the
   // "first product" other specs buy.
   await adminPage.locator('#sort_order').fill('9000')
-  await adminPage.getByRole('button', { name: 'Save product' }).click()
-  await expect(adminPage.getByRole('heading', { name: 'Edit product' })).toBeVisible()
+  await adminPage.getByRole('button', { name: 'บันทึกสินค้า' }).click()
+  await expect(adminPage.getByRole('heading', { name: 'แก้ไขสินค้า' })).toBeVisible()
 
   // A tier at or below the MOQ is unreachable; the DB trigger refuses it.
   await adminPage.locator('#tier_min_quantity').fill('2')

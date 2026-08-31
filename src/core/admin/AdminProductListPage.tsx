@@ -8,7 +8,18 @@ import { ProductImagesPanel } from '@/core/admin/ProductImagesPanel'
 import { ProductPriceTiersPanel } from '@/core/admin/ProductPriceTiersPanel'
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Feature } from '@/lib/Feature'
 import { PRODUCT_STATUSES, productStatusLabel, type ProductStatus } from '@/lib/productStatus'
 import { ProductStatusControl } from '@/core/admin/ProductStatusControl'
@@ -29,18 +40,40 @@ export function AdminProductListPage() {
   // where archived products are removed from the admin list.
   const [statusFilter, setStatusFilter] = useState<'current' | 'all' | ProductStatus>('current')
 
-  if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
-  if (isError) return <p className="p-8 text-destructive">Failed to load products.</p>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 px-4 pb-8 md:px-0">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-72 w-full" />
+      </div>
+    )
+  }
+
+  // Distinct from an empty catalogue on purpose: an owner who reads a failed
+  // load as "no products" would re-create rows that already exist.
+  if (isError) {
+    return (
+      <div className="px-4 pb-8 md:px-0">
+        <Alert tone="error" title="โหลดสินค้าไม่สำเร็จ">
+          ลองรีเฟรชอีกครั้ง อย่าเพิ่งสร้างสินค้าใหม่ — ของเดิมอาจยังอยู่
+        </Alert>
+      </div>
+    )
+  }
 
   if (editing) {
     const initial = editing === 'new' ? undefined : editing
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-8 px-4 pb-8">
         <div>
-          <h1 className="mb-6 text-2xl font-semibold">
-            {editing === 'new' ? 'New product' : 'Edit product'}
+          <h1 className="mb-6 text-[length:var(--text-app-title)] font-bold tracking-tight">
+            {editing === 'new' ? 'เพิ่มสินค้า' : 'แก้ไขสินค้า'}
           </h1>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <Alert tone="error" title="บันทึกสินค้าไม่สำเร็จ" className="mb-4">
+              {error}
+            </Alert>
+          )}
           <AdminProductForm
             initial={initial}
             categories={categories ?? []}
@@ -154,47 +187,47 @@ export function AdminProductListPage() {
         ))}
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <Alert tone="error" title="ดำเนินการไม่สำเร็จ">{error}</Alert>}
 
       {visibleProducts.length === 0 ? (
-        <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-          ไม่มีสินค้าในสถานะนี้
-        </p>
+        <EmptyState
+          title="ไม่มีสินค้าในสถานะนี้"
+          description="ลองเลือกตัวกรองอื่น หรือเพิ่มสินค้าใหม่"
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[46rem] text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-left text-xs font-semibold text-muted-foreground">
-                <th scope="col" className="px-4 py-3">สินค้า</th>
-                <th scope="col" className="px-4 py-3">หน่วย</th>
-                <th scope="col" className="px-4 py-3">ราคา / ขั้น</th>
-                <th scope="col" className="px-4 py-3">สถานะ</th>
-                <th scope="col" className="px-4 py-3 text-right">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Table stickyHeader className="min-w-[46rem]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>สินค้า</TableHead>
+              <TableHead>หน่วย</TableHead>
+              <TableHead>ราคา / ขั้น</TableHead>
+              <TableHead>สถานะ</TableHead>
+              <TableHead className="text-right">จัดการ</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
               {visibleProducts.map((product) => {
                 const packageUnit = product.package_unit as PackageUnit
                 const tierCount = product.product_price_tiers?.[0]?.count ?? 0
                 const archived = product.status === 'archived'
 
                 return (
-                  <tr key={product.id} className={'border-b last:border-0 ' + (archived ? 'opacity-60' : '')}>
-                    <td className="px-4 py-3">
+                  <TableRow key={product.id} className={archived ? 'opacity-60' : undefined}>
+                    <TableCell>
                       <p className={'font-semibold ' + (archived ? 'line-through' : '')}>
                         {product.name}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {product.sku ?? 'ไม่มี SKU'} · {product.categories?.name ?? 'ไม่มีหมวดหมู่'}
                       </p>
-                    </td>
-                    <td className="px-4 py-3 tabular-nums">
+                    </TableCell>
+                    <TableCell className="tabular-nums">
                       {unitNoun(packageUnit)}
                       <span className="mt-0.5 block text-xs text-muted-foreground">
                         {product.units_per_package.toLocaleString('th-TH')} ชิ้น
                       </span>
-                    </td>
-                    <td className="px-4 py-3 font-semibold tabular-nums">
+                    </TableCell>
+                    <TableCell className="font-semibold tabular-nums">
                       {formatPrice(product.price)}
                       <span
                         className={
@@ -206,16 +239,16 @@ export function AdminProductListPage() {
                       >
                         {tierCount > 0 ? `${tierCount} ขั้น` : 'ยังไม่มีขั้น'}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <ProductStatusControl
                         value={product.status}
                         productName={product.name}
                         disabled={updateProduct.isPending}
                         onChange={(status) => changeStatus(product, status)}
                       />
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => setEditing(product)}>
                           แก้ไข
@@ -229,20 +262,19 @@ export function AdminProductListPage() {
                             try {
                               setEditing(await duplicateProduct.mutateAsync(product))
                             } catch (err) {
-                              setError(getErrorMessage(err, 'Failed to duplicate product.'))
+                              setError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
                             }
                           }}
                         >
                           ทำซ้ำ
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
-          </table>
-        </div>
+          </TableBody>
+        </Table>
       )}
 
       <dl className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">

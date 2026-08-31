@@ -33,7 +33,7 @@ export function ProductStatusControl({
     <div
       role="group"
       aria-label={`สถานะของ ${productName}`}
-      className="flex w-fit overflow-hidden rounded-md border text-xs font-semibold"
+      className="flex w-fit overflow-hidden rounded-md border border-border text-xs font-semibold"
     >
       {PRODUCT_STATUSES.map((status) => {
         const selected = value === status

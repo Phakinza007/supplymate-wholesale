@@ -1,7 +1,10 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { slugify } from '@/lib/slugify'
 import type { Database } from '@/lib/database.types'
 
@@ -36,7 +39,7 @@ export function AdminCategoryForm({
   function field(key: 'name' | 'slug' | 'description') {
     return {
       value: (form[key] as string) ?? '',
-      onChange: (e: ChangeEvent<HTMLInputElement>) =>
+      onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((f) => ({ ...f, [key]: e.target.value })),
     }
   }
@@ -54,27 +57,22 @@ export function AdminCategoryForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="name">Name</Label>
+      <Field label="ชื่อหมวด" required>
         <Input id="name" required {...field('name')} onBlur={handleNameBlur} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="slug">Slug</Label>
+      </Field>
+      <Field label="Slug" hint="ใช้ใน URL — เว้นว่างไว้จะสร้างจากชื่อให้อัตโนมัติ" required>
         <Input id="slug" required {...field('slug')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Input id="description" {...field('description')} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="parent">Parent category</Label>
-        <select
+      </Field>
+      <Field label="คำอธิบาย">
+        <Textarea id="description" {...field('description')} />
+      </Field>
+      <Field label="หมวดแม่">
+        <Select
           id="parent"
           value={form.parent_id ?? ''}
           onChange={(e) => setForm((f) => ({ ...f, parent_id: e.target.value || null }))}
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
         >
-          <option value="">None</option>
+          <option value="">ไม่มี</option>
           {categories
             .filter((c) => c.id !== initial?.id)
             .map((c) => (
@@ -82,31 +80,28 @@ export function AdminCategoryForm({
                 {c.name}
               </option>
             ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="sort_order">Sort order</Label>
+        </Select>
+      </Field>
+      <Field label="ลำดับการแสดง" hint="ตัวเลขน้อยมาก่อน">
         <Input
           id="sort_order"
           type="number"
           value={form.sort_order ?? 0}
           onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) || 0 }))}
         />
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={form.is_active ?? true}
-          onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-        />
-        Active (visible in the storefront)
-      </label>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save category'}
+      </Field>
+      <Checkbox
+        checked={form.is_active ?? true}
+        onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+      >
+        แสดงในหน้าร้าน
+      </Checkbox>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังบันทึก' : 'บันทึกหมวด'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          ยกเลิก
         </Button>
       </div>
     </form>

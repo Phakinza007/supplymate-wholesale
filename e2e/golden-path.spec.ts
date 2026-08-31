@@ -38,20 +38,20 @@ test('golden path: register, buy, pay, admin fulfills, customer sees tracking an
   await expect(adminPage.getByRole('heading', { name: 'ข้อมูลธุรกิจผู้สั่งซื้อ' })).toBeVisible()
   await expect(adminPage.getByText('Golden Path Business', { exact: true })).toBeVisible()
 
-  await adminPage.getByRole('button', { name: 'Verify payment' }).click()
-  await expect(adminPage.getByText('Status: verified')).toBeVisible()
+  await adminPage.getByRole('button', { name: 'ยืนยันการชำระเงิน' }).click()
+  await expect(adminPage.getByText('ตรวจสอบการชำระเงินแล้ว', { exact: true })).toBeVisible()
 
   await adminPage.locator('#tracking').fill('TH1234567890')
   await adminPage.locator('#carrier').fill('Thailand Post')
-  await adminPage.getByRole('button', { name: 'Mark as shipped' }).click()
-  await expect(adminPage.getByText('Status: shipped')).toBeVisible()
+  await adminPage.getByRole('button', { name: 'บันทึกการจัดส่ง' }).click()
+  await expect(adminPage.getByText('จัดส่งแล้ว', { exact: true })).toBeVisible()
 
   await customerPage.goto(orderUrl)
   await expect(customerPage.getByText('จัดส่งแล้ว', { exact: true })).toBeVisible()
   await expect(customerPage.getByText('Thailand Post · TH1234567890')).toBeVisible()
 
-  await adminPage.getByRole('button', { name: 'Mark as done' }).click()
-  await expect(adminPage.getByText('Status: done')).toBeVisible()
+  await adminPage.getByRole('button', { name: 'ปิดคำสั่งซื้อ' }).click()
+  await expect(adminPage.getByText('คำสั่งซื้อเสร็จสมบูรณ์', { exact: true })).toBeVisible()
 
   await customerPage.goto(orderUrl)
   await expect(customerPage.getByText('คำสั่งซื้อเสร็จสมบูรณ์', { exact: true })).toBeVisible()
@@ -88,20 +88,20 @@ test('admin must explain a rejected slip and buyer can safely re-upload', async 
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
   await adminPage.goto('/admin/orders')
   await adminPage.getByRole('link', { name: orderNumber }).click()
-  await adminPage.getByRole('button', { name: 'Verify payment' }).click()
-  await expect(adminPage.getByText('Status: verified')).toBeVisible()
+  await adminPage.getByRole('button', { name: 'ยืนยันการชำระเงิน' }).click()
+  await expect(adminPage.getByText('ตรวจสอบการชำระเงินแล้ว', { exact: true })).toBeVisible()
 
   const rejectionReason = adminPage.getByRole('textbox', {
     name: 'เหตุผลที่ให้แนบสลิปใหม่',
   })
-  const reject = adminPage.getByRole('button', { name: 'Reject slip (request re-upload)' })
+  const reject = adminPage.getByRole('button', { name: 'ปฏิเสธสลิป' })
   await expect(reject).toBeDisabled()
   await rejectionReason.fill('   ')
   await expect(reject).toBeDisabled()
   await rejectionReason.fill('ยอดโอนไม่ตรง')
   await expect(reject).toBeEnabled()
   await reject.click()
-  await expect(adminPage.getByText('Status: pending')).toBeVisible()
+  await expect(adminPage.getByText('รอตรวจสอบการชำระเงิน', { exact: true })).toBeVisible()
 
   await customerPage.goto(orderUrl)
   await expect(customerPage.getByText('ยอดโอนไม่ตรง', { exact: true })).toBeVisible()

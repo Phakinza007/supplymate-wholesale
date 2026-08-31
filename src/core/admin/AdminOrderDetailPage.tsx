@@ -7,9 +7,14 @@ import { getErrorMessage } from '@/lib/getErrorMessage'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/formatPrice'
 import { paymentMethodLabel } from '@/lib/paymentMethod'
+import { orderStatusLabel, orderStatusTone } from '@/lib/orderStatus'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 
 function useSignedSlipUrl(path: string | null) {
   return useQuery({
@@ -22,8 +27,34 @@ function useSignedSlipUrl(path: string | null) {
       return data.signedUrl
     },
     enabled: !!path,
+    // A 60-second URL goes stale while the owner is still reading the order;
+    // refresh it before they click.
     refetchInterval: 45_000,
   })
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-md border border-border bg-card">
+      <h2 className="border-b border-border px-4 py-3 text-sm font-semibold">{title}</h2>
+      <div className="px-4 py-3.5 text-sm">{children}</div>
+    </section>
+  )
+}
+
+function MoneyRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div
+      className={
+        strong
+          ? 'flex items-baseline justify-between gap-4 border-t border-border pt-2.5 font-semibold'
+          : 'flex items-baseline justify-between gap-4 text-muted-foreground'
+      }
+    >
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
+  )
 }
 
 export function AdminOrderDetailPage() {
@@ -41,8 +72,23 @@ export function AdminOrderDetailPage() {
   const [cancelReason, setCancelReason] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
 
-  if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
-  if (isError || !order) return <p className="p-8 text-destructive">Order not found.</p>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 px-4 pb-8 md:px-0">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    )
+  }
+
+  if (isError || !order) {
+    return (
+      <div className="px-4 pb-8 md:px-0">
+        <Alert tone="error" title="ไม่พบคำสั่งซื้อนี้">ลิงก์อาจไม่ถูกต้อง หรือคำสั่งซื้อถูกลบไปแล้ว</Alert>
+      </div>
+    )
+  }
 
   const address = order.shipping_address as {
     recipient_name?: string
@@ -54,260 +100,284 @@ export function AdminOrderDetailPage() {
   } | null
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Order #{order.order_number}</h1>
-        <p className="text-sm capitalize text-muted-foreground">Status: {order.status}</p>
-      </div>
+    <div className="flex flex-col gap-5 px-4 pb-8 md:px-0">
+      <PageHeader
+        title={
+          <>
+            คำสั่งซื้อ <span className="font-mono">#{order.order_number}</span>
+          </>
+        }
+        action={
+          <Badge tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status)}</Badge>
+        }
+      />
 
-      <div className="flex flex-col gap-2 rounded-md border p-4 text-sm">
-        <h2 className="font-medium">Customer</h2>
-        <p>{order.customer_name}</p>
-        <p className="text-muted-foreground">{order.customer_phone}</p>
-        {order.customer_email && (
-          <p className="text-muted-foreground">{order.customer_email}</p>
-        )}
+      {actionError && <Alert tone="error" title="ดำเนินการไม่สำเร็จ">{actionError}</Alert>}
+
+      <Section title="ลูกค้า">
+        <p className="font-semibold">{order.customer_name}</p>
+        <p className="font-mono text-muted-foreground">{order.customer_phone}</p>
+        {order.customer_email && <p className="text-muted-foreground">{order.customer_email}</p>}
         {order.customer_note && (
-          <p className="text-muted-foreground">Note: {order.customer_note}</p>
+          <p className="mt-1.5 text-muted-foreground">หมายเหตุ: {order.customer_note}</p>
         )}
-      </div>
+      </Section>
 
-      <div className="flex flex-col gap-1 rounded-md border p-4 text-sm">
-        <h2 className="font-medium">ข้อมูลธุรกิจผู้สั่งซื้อ</h2>
+      <Section title="ข้อมูลธุรกิจผู้สั่งซื้อ">
         {order.business_name ? (
-          <p>{order.business_name}</p>
+          <p className="font-semibold">{order.business_name}</p>
         ) : (
           <p className="text-muted-foreground">ไม่มีข้อมูลธุรกิจ</p>
         )}
         {order.tax_id && (
-          <p className="text-muted-foreground">เลขประจำตัวผู้เสียภาษี: {order.tax_id}</p>
+          <p className="mt-1 text-muted-foreground">
+            เลขประจำตัวผู้เสียภาษี: <span className="font-mono">{order.tax_id}</span>
+          </p>
         )}
         {order.branch_name && <p className="text-muted-foreground">สาขา: {order.branch_name}</p>}
-      </div>
+      </Section>
 
       {address && (
-        <div className="flex flex-col gap-1 rounded-md border p-4 text-sm">
-          <h2 className="font-medium">Shipping address</h2>
-          <p>{address.recipient_name}</p>
-          <p className="text-muted-foreground">
+        <Section title="ที่อยู่จัดส่ง">
+          <p className="font-semibold">{address.recipient_name}</p>
+          <p className="mt-0.5 leading-relaxed text-muted-foreground">
             {address.line1}
             {address.line2 ? `, ${address.line2}` : ''}, {address.province} {address.postal_code}
           </p>
-          <p className="text-muted-foreground">{address.phone}</p>
-        </div>
+          <p className="font-mono text-muted-foreground">{address.phone}</p>
+        </Section>
       )}
 
-      <div className="flex flex-col gap-2 border-y py-4">
-        {order.order_items.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm">
-            <span>
-              {item.product_name}
-              {item.variant_name ? ` (${item.variant_name})` : ''} × {item.quantity}
-            </span>
-            <span>{formatPrice(item.line_total ?? item.unit_price * item.quantity)}</span>
-          </div>
-        ))}
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Subtotal</span>
-          <span>{formatPrice(order.subtotal)}</span>
+      <Section title="รายการสินค้า">
+        <ul className="flex flex-col gap-2.5">
+          {order.order_items.map((item) => (
+            <li key={item.id} className="flex items-baseline justify-between gap-4">
+              <span>
+                {item.product_name}
+                {item.variant_name ? ` (${item.variant_name})` : ''}
+                <span className="text-muted-foreground"> × {item.quantity}</span>
+              </span>
+              <span className="shrink-0 tabular-nums">
+                {formatPrice(item.line_total ?? item.unit_price * item.quantity)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3.5 flex flex-col gap-1.5 border-t border-border pt-3">
+          <MoneyRow label="ยอดรวมสินค้า" value={formatPrice(order.subtotal)} />
+          {order.discount_total > 0 && (
+            <MoneyRow
+              label={`ส่วนลด${order.promo_code ? ` (${order.promo_code})` : ''}`}
+              value={`-${formatPrice(order.discount_total)}`}
+            />
+          )}
+          <MoneyRow label="ค่าจัดส่ง" value={formatPrice(order.shipping_fee)} />
+          {order.vat_total > 0 && (
+            <MoneyRow label="ภาษีมูลค่าเพิ่ม 7%" value={formatPrice(order.vat_total)} />
+          )}
+          <MoneyRow label="ยอดรวมทั้งสิ้น" value={formatPrice(order.total)} strong />
         </div>
-        {order.discount_total > 0 && (
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Discount{order.promo_code ? ` (${order.promo_code})` : ''}</span>
-            <span>-{formatPrice(order.discount_total)}</span>
-          </div>
-        )}
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Shipping</span>
-          <span>{formatPrice(order.shipping_fee)}</span>
-        </div>
-        {order.vat_total > 0 && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">ภาษีมูลค่าเพิ่ม 7%</span>
-            <span>{formatPrice(order.vat_total)}</span>
-          </div>
-        )}
-        <div className="flex justify-between font-medium">
-          <span>Total</span>
-          <span>{formatPrice(order.total)}</span>
-        </div>
-      </div>
+      </Section>
 
-      <div className="flex flex-col gap-2">
-        <h2 className="font-medium">Payment slip</h2>
+      <Section title="สลิปการโอน">
         {/* Which method the buyer chose. It does not change how the slip is
             verified — both end in the same manual check — but it tells the
             shop which account to reconcile the transfer against. */}
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground">
           วิธีที่ผู้ซื้อเลือก: {paymentMethodLabel(order.payment_method)}
         </p>
-        {!order.payment_slip_path ? (
-          <p className="text-sm text-muted-foreground">No payment slip uploaded yet.</p>
-        ) : isSlipUrlError ? (
-          <p className="text-sm text-destructive">Failed to load payment slip.</p>
-        ) : slipUrl ? (
-          <a
-            href={slipUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-primary underline"
-          >
-            View payment slip →
-          </a>
-        ) : null}
+        <div className="mt-2">
+          {!order.payment_slip_path ? (
+            <p className="text-muted-foreground">ยังไม่ได้แนบสลิป</p>
+          ) : isSlipUrlError ? (
+            // Deliberately distinct from "no slip": conflating a fetch failure
+            // with an unpaid order is exactly the wrong way to be wrong next to
+            // a reject button.
+            <Alert tone="error" title="โหลดสลิปไม่สำเร็จ">
+              ยังตัดสินใจจากสลิปนี้ไม่ได้ — ลองรีเฟรชก่อน อย่าเพิ่งปฏิเสธ
+            </Alert>
+          ) : slipUrl ? (
+            <a
+              href={slipUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center font-semibold text-signal underline underline-offset-4"
+            >
+              เปิดสลิป →
+            </a>
+          ) : null}
+        </div>
         {order.payment_note && (
-          <p className="text-sm text-muted-foreground">Note: {order.payment_note}</p>
+          <p className="mt-1.5 text-muted-foreground">หมายเหตุ: {order.payment_note}</p>
         )}
-      </div>
+      </Section>
 
       {order.tracking_number && (
-        <div className="text-sm">
-          <h2 className="font-medium">Shipping</h2>
-          <p className="text-muted-foreground">
+        <Section title="การจัดส่ง">
+          <p className="font-mono">
             {order.shipping_carrier} · {order.tracking_number}
           </p>
-        </div>
+        </Section>
       )}
 
       {order.order_status_history.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h2 className="font-medium">History</h2>
-          <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
+        <Section title="ประวัติสถานะ">
+          <ul className="flex flex-col gap-1 text-muted-foreground">
             {order.order_status_history.map((entry) => (
-              <li key={entry.id}>
-                {new Date(entry.created_at).toLocaleString()} — {entry.from_status ?? 'created'} →{' '}
-                {entry.to_status}
+              <li key={entry.id} className="tabular-nums">
+                {new Date(entry.created_at).toLocaleString('th-TH')} —{' '}
+                {entry.from_status ? orderStatusLabel(entry.from_status, 'short') : 'สร้างคำสั่งซื้อ'}{' '}
+                → {orderStatusLabel(entry.to_status, 'short')}
               </li>
             ))}
           </ul>
-        </div>
+        </Section>
       )}
-
-      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
 
       {order.status === 'pending' && (
         <Button
-          disabled={!order.payment_slip_path || verifyPayment.isPending}
+          disabled={!order.payment_slip_path}
+          loading={verifyPayment.isPending}
           onClick={async () => {
             setActionError(null)
             try {
               await verifyPayment.mutateAsync()
             } catch (err) {
-              setActionError(getErrorMessage(err, 'Failed to verify payment.'))
+              setActionError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
             }
           }}
         >
-          {verifyPayment.isPending ? 'Verifying…' : 'Verify payment'}
+          {verifyPayment.isPending ? 'กำลังยืนยัน' : 'ยืนยันการชำระเงิน'}
         </Button>
       )}
 
       {order.status === 'verified' && (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tracking">Tracking number</Label>
-            <Input
-              id="tracking"
-              value={trackingNumber}
-              onChange={(e) => setTrackingNumber(e.target.value)}
-            />
-            <Label htmlFor="carrier">Shipping carrier</Label>
-            <Input
-              id="carrier"
-              value={shippingCarrier}
-              onChange={(e) => setShippingCarrier(e.target.value)}
-            />
-            <Button
-              disabled={shipOrder.isPending}
-              onClick={async () => {
-                setActionError(null)
-                try {
-                  await shipOrder.mutateAsync({
-                    tracking_number: trackingNumber || undefined,
-                    shipping_carrier: shippingCarrier || undefined,
-                  })
-                } catch (err) {
-                  setActionError(getErrorMessage(err, 'Failed to mark as shipped.'))
-                }
-              }}
-            >
-              {shipOrder.isPending ? 'Saving…' : 'Mark as shipped'}
-            </Button>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="rejection-reason">เหตุผลที่ให้แนบสลิปใหม่</Label>
-            <Input
-              id="rejection-reason"
-              value={rejectionReason}
-              onChange={(event) => setRejectionReason(event.target.value)}
-            />
-            <Button
-              variant="outline"
-              disabled={!rejectionReason.trim() || rejectSlip.isPending}
-              onClick={async () => {
-                setActionError(null)
-                try {
-                  await rejectSlip.mutateAsync({ reason: rejectionReason })
-                  setRejectionReason('')
-                } catch (err) {
-                  setActionError(getErrorMessage(err, 'Failed to reject slip.'))
-                }
-              }}
-            >
-              {rejectSlip.isPending ? 'Rejecting…' : 'Reject slip (request re-upload)'}
-            </Button>
-          </div>
+        <div className="flex flex-col gap-4">
+          <Section title="บันทึกการจัดส่ง">
+            <div className="flex flex-col gap-4">
+              <Field label="เลขพัสดุ">
+                <Input
+                  id="tracking"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                />
+              </Field>
+              <Field label="ขนส่ง">
+                <Input
+                  id="carrier"
+                  value={shippingCarrier}
+                  onChange={(e) => setShippingCarrier(e.target.value)}
+                />
+              </Field>
+              <Button
+                className="self-start"
+                loading={shipOrder.isPending}
+                onClick={async () => {
+                  setActionError(null)
+                  try {
+                    await shipOrder.mutateAsync({
+                      tracking_number: trackingNumber || undefined,
+                      shipping_carrier: shippingCarrier || undefined,
+                    })
+                  } catch (err) {
+                    setActionError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
+                  }
+                }}
+              >
+                {shipOrder.isPending ? 'กำลังบันทึก' : 'บันทึกการจัดส่ง'}
+              </Button>
+            </div>
+          </Section>
+
+          <Section title="ขอให้แนบสลิปใหม่">
+            <div className="flex flex-col gap-4">
+              <Field
+                label="เหตุผลที่ให้แนบสลิปใหม่"
+                hint="ลูกค้าจะเห็นข้อความนี้ในหน้าคำสั่งซื้อของเขา"
+              >
+                <Input
+                  id="rejection-reason"
+                  value={rejectionReason}
+                  onChange={(event) => setRejectionReason(event.target.value)}
+                />
+              </Field>
+              <Button
+                variant="outline"
+                className="self-start"
+                disabled={!rejectionReason.trim()}
+                loading={rejectSlip.isPending}
+                onClick={async () => {
+                  setActionError(null)
+                  try {
+                    await rejectSlip.mutateAsync({ reason: rejectionReason })
+                    setRejectionReason('')
+                  } catch (err) {
+                    setActionError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
+                  }
+                }}
+              >
+                {rejectSlip.isPending ? 'กำลังส่งคำขอ' : 'ปฏิเสธสลิป'}
+              </Button>
+            </div>
+          </Section>
         </div>
       )}
 
       {order.status === 'shipped' && (
         <Button
-          disabled={completeOrder.isPending}
+          loading={completeOrder.isPending}
           onClick={async () => {
             setActionError(null)
             try {
               await completeOrder.mutateAsync()
             } catch (err) {
-              setActionError(getErrorMessage(err, 'Failed to mark as done.'))
+              setActionError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
             }
           }}
         >
-          {completeOrder.isPending ? 'Saving…' : 'Mark as done'}
+          {completeOrder.isPending ? 'กำลังบันทึก' : 'ปิดคำสั่งซื้อ'}
         </Button>
       )}
 
       {(order.status === 'pending' || order.status === 'verified' || order.status === 'shipped') && (
-        <div className="flex flex-col gap-2 border-t pt-4">
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
           {!showCancelForm ? (
-            <Button variant="destructive" size="sm" onClick={() => setShowCancelForm(true)}>
-              Cancel order
+            <Button
+              variant="ghost"
+              size="sm"
+              className="min-h-11 self-start text-destructive hover:bg-[var(--status-cancelled-bg)] sm:min-h-9"
+              onClick={() => setShowCancelForm(true)}
+            >
+              ยกเลิกคำสั่งซื้อ
             </Button>
           ) : (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cancel-reason">Cancellation reason</Label>
-              <Input
-                id="cancel-reason"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-              />
-              <div className="flex gap-2">
+            <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4">
+              <Field label="เหตุผลที่ยกเลิก" hint="ลูกค้าจะเห็นเหตุผลนี้" required>
+                <Input
+                  id="cancel-reason"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                />
+              </Field>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="destructive"
-                  size="sm"
-                  disabled={!cancelReason || cancelOrder.isPending}
+                  disabled={!cancelReason}
+                  loading={cancelOrder.isPending}
                   onClick={async () => {
                     setActionError(null)
                     try {
                       await cancelOrder.mutateAsync(cancelReason)
                       setShowCancelForm(false)
                     } catch (err) {
-                      setActionError(getErrorMessage(err, 'Failed to cancel order.'))
+                      setActionError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
                     }
                   }}
                 >
-                  {cancelOrder.isPending ? 'Cancelling…' : 'Confirm cancel'}
+                  {cancelOrder.isPending ? 'กำลังยกเลิก' : 'ยืนยันการยกเลิก'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowCancelForm(false)}>
-                  Never mind
+                <Button variant="outline" onClick={() => setShowCancelForm(false)}>
+                  ไม่ยกเลิกแล้ว
                 </Button>
               </div>
             </div>
@@ -315,11 +385,10 @@ export function AdminOrderDetailPage() {
         </div>
       )}
 
-      {(order.status === 'done' || order.status === 'cancelled') && (
-        <p className="text-sm text-muted-foreground">
-          This order is {order.status}
-          {order.status === 'cancelled' && order.cancel_reason ? `: ${order.cancel_reason}` : '.'}
-        </p>
+      {/* Only when there is something the badge in the header does not already
+          say. Repeating the status word for word under it is noise. */}
+      {order.status === 'cancelled' && order.cancel_reason && (
+        <Alert tone="warning" title="เหตุผลที่ยกเลิก">{order.cancel_reason}</Alert>
       )}
     </div>
   )

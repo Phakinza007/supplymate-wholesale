@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { slugify } from '@/lib/slugify'
 import type { Database } from '@/lib/database.types'
 import type { PackageUnit } from '@/lib/wholesale'
@@ -54,8 +57,7 @@ export function AdminProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="name">Name</Label>
+      <Field label="ชื่อสินค้า" required>
         <Input
           id="name"
           required
@@ -63,43 +65,38 @@ export function AdminProductForm({
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           onBlur={handleNameBlur}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="slug">Slug</Label>
+      </Field>
+      <Field label="Slug" hint="ใช้ใน URL — เว้นว่างไว้จะสร้างจากชื่อให้อัตโนมัติ" required>
         <Input
           id="slug"
           required
           value={form.slug}
           onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
         />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Input
+      </Field>
+      <Field label="รายละเอียด">
+        <Textarea
           id="description"
           value={form.description ?? ''}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
         />
-      </div>
+      </Field>
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="package_unit">หน่วยสั่งซื้อ</Label>
-          <select
+        <Field label="หน่วยสั่งซื้อ">
+          <Select
             id="package_unit"
             value={form.package_unit}
             onChange={(e) =>
               setForm((f) => ({ ...f, package_unit: e.target.value as PackageUnit }))
             }
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
           >
             <option value="carton">ลัง</option>
             <option value="pack">แพ็ก</option>
             <option value="roll">ม้วน</option>
             <option value="case">กล่อง</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="units_per_package">จำนวนต่อหน่วย</Label>
+          </Select>
+        </Field>
+        <Field label="จำนวนต่อหน่วย" required>
           <Input
             id="units_per_package"
             type="number"
@@ -113,9 +110,8 @@ export function AdminProductForm({
               }))
             }
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="min_order_quantity">ขั้นต่ำต่อรายการ</Label>
+        </Field>
+        <Field label="ขั้นต่ำต่อรายการ" required>
           <Input
             id="min_order_quantity"
             type="number"
@@ -129,11 +125,10 @@ export function AdminProductForm({
               }))
             }
           />
-        </div>
+        </Field>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="price">Price (THB)</Label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="ราคาต่อหน่วยสั่งซื้อ" hint="ราคาก่อนภาษี" required>
           <Input
             id="price"
             type="number"
@@ -143,9 +138,8 @@ export function AdminProductForm({
             value={form.price}
             onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) || 0 }))}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="compare_at_price">Compare-at price</Label>
+        </Field>
+        <Field label="ราคาก่อนลด" hint="แสดงขีดฆ่าคู่กับราคาขาย เว้นว่างได้">
           <Input
             id="compare_at_price"
             type="number"
@@ -159,19 +153,17 @@ export function AdminProductForm({
               }))
             }
           />
-        </div>
+        </Field>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="sku">SKU</Label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="รหัสสินค้า (SKU)">
           <Input
             id="sku"
             value={form.sku ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value || null }))}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="stock_quantity">Stock quantity</Label>
+        </Field>
+        <Field label="จำนวนคงเหลือ">
           <Input
             id="stock_quantity"
             type="number"
@@ -181,65 +173,55 @@ export function AdminProductForm({
               setForm((f) => ({ ...f, stock_quantity: Number(e.target.value) || 0 }))
             }
           />
-        </div>
+        </Field>
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="category">Category</Label>
-        <select
+      <Field label="หมวดสินค้า">
+        <Select
           id="category"
           value={form.category_id ?? ''}
           onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value || null }))}
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
         >
-          <option value="">None</option>
+          <option value="">ไม่ระบุ</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="sort_order">Sort order</Label>
+        </Select>
+      </Field>
+      <Field label="ลำดับการแสดง" hint="ตัวเลขน้อยมาก่อน">
         <Input
           id="sort_order"
           type="number"
           value={form.sort_order ?? 0}
           onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) || 0 }))}
         />
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={form.track_inventory ?? true}
-          onChange={(e) => setForm((f) => ({ ...f, track_inventory: e.target.checked }))}
-        />
-        Track inventory
-      </label>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="status">สถานะ</Label>
-        <select
+      </Field>
+      <Checkbox
+        checked={form.track_inventory ?? true}
+        onChange={(e) => setForm((f) => ({ ...f, track_inventory: e.target.checked }))}
+      >
+        ตัดสต๊อกอัตโนมัติ
+      </Checkbox>
+      <Field label="สถานะ" hint={'เฉพาะสถานะ "เปิดขาย" เท่านั้นที่ลูกค้าเห็นในหน้าร้าน'}>
+        <Select
           id="status"
           value={form.status ?? 'draft'}
           onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ProductStatus }))}
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
         >
           {PRODUCT_STATUSES.map((status) => (
             <option key={status} value={status}>
               {productStatusLabel(status)}
             </option>
           ))}
-        </select>
-        <p className="text-xs text-muted-foreground">
-          เฉพาะสถานะ "เปิดขาย" เท่านั้นที่ลูกค้าเห็นในหน้าร้าน
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save product'}
+        </Select>
+      </Field>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" loading={submitting}>
+          {submitting ? 'กำลังบันทึก' : 'บันทึกสินค้า'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          ยกเลิก
         </Button>
       </div>
     </form>

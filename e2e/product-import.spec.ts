@@ -46,7 +46,7 @@ test('CSV import inserts new products as drafts and updates existing ones withou
     .getByRole('button', { name: 'แก้ไข' })
     .click()
   await page.locator('#status').selectOption('active')
-  await page.getByRole('button', { name: 'Save product' }).click()
+  await page.getByRole('button', { name: 'บันทึกสินค้า' }).click()
   await page.goto(`/products/${slugA}`)
   await expect(page.getByRole('heading', { name: `Import A ${suffix}` })).toBeVisible()
 

@@ -12,7 +12,17 @@ import { useProductImport, type ImportResult } from '@/core/admin/useProductImpo
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
 import { productStatusLabel } from '@/lib/productStatus'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { PageHeader } from '@/components/PageHeader'
 
 const MAX_CSV_BYTES = 5 * 1024 * 1024
 const PREVIEW_LIMIT = 20
@@ -82,16 +92,18 @@ export function AdminProductImportPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 pb-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">นำเข้าสินค้าจากไฟล์ CSV</h1>
-        <Button size="sm" variant="outline" asChild>
-          <Link to="/admin/products">กลับไปหน้ารายการ</Link>
-        </Button>
-      </div>
+    <div className="flex max-w-3xl flex-col gap-6 px-4 pb-8 md:px-0">
+      <PageHeader
+        title="นำเข้าสินค้าจากไฟล์ CSV"
+        action={
+          <Button variant="outline" asChild>
+            <Link to="/admin/products">กลับไปหน้ารายการ</Link>
+          </Button>
+        }
+      />
 
-      <div className="rounded-md border p-4 text-sm">
-        <p className="mb-2 font-medium">คอลัมน์ที่รองรับ</p>
+      <div className="rounded-md border border-border bg-card p-4 text-sm">
+        <p className="mb-2 font-semibold">คอลัมน์ที่รองรับ</p>
         <p className="text-muted-foreground">
           จำเป็น: <code>name</code>, <code>slug</code>, <code>price</code> · ไม่บังคับ:{' '}
           {IMPORT_COLUMNS.filter((c) => !['name', 'slug', 'price'].includes(c)).join(', ')}
@@ -101,27 +113,30 @@ export function AdminProductImportPage() {
           <strong>อัปเดตเฉพาะคอลัมน์ที่มีอยู่ในไฟล์</strong> คอลัมน์ที่ไม่ได้ใส่มาจะคงค่าเดิมไว้ รวมถึงสถานะ
           เว้นแต่ไฟล์จะระบุคอลัมน์ <code>status</code> มาด้วย
         </p>
-        <Button size="sm" variant="outline" className="mt-3" onClick={downloadTemplate}>
+        <Button variant="outline" className="mt-3" onClick={downloadTemplate}>
           ดาวน์โหลดไฟล์ตัวอย่าง
         </Button>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="csv" className="text-sm font-medium">
+        <label htmlFor="csv" className="text-sm font-semibold">
           เลือกไฟล์ CSV
         </label>
-        <input id="csv" type="file" accept=".csv,text/csv" onChange={handleFileChange} />
-        {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
+        <input
+          id="csv"
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleFileChange}
+          className="text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-card file:px-3 file:py-1.5 file:text-sm file:font-semibold"
+        />
+        {fileName && <p className="font-mono text-sm text-muted-foreground">{fileName}</p>}
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <Alert tone="error" title="นำเข้าไม่สำเร็จ">{error}</Alert>}
 
       {rowErrors.length > 0 && (
-        <div className="flex flex-col gap-1 rounded-md border border-destructive/40 p-3 text-sm">
-          <p className="font-medium text-destructive">
-            ข้ามไป {rowErrors.length} แถวเพราะข้อมูลไม่ถูกต้อง
-          </p>
-          <ul className="flex flex-col gap-1 text-muted-foreground">
+        <Alert tone="warning" title={`ข้ามไป ${rowErrors.length} แถวเพราะข้อมูลไม่ถูกต้อง`}>
+          <ul className="flex flex-col gap-1">
             {rowErrors.slice(0, PREVIEW_LIMIT).map((rowError) => (
               <li key={rowError.line}>
                 บรรทัด {rowError.line}: {rowError.message}
@@ -129,49 +144,49 @@ export function AdminProductImportPage() {
             ))}
           </ul>
           {rowErrors.length > PREVIEW_LIMIT && (
-            <p className="text-muted-foreground">
-              …และอีก {rowErrors.length - PREVIEW_LIMIT} แถว
-            </p>
+            <p className="mt-1">…และอีก {rowErrors.length - PREVIEW_LIMIT} แถว</p>
           )}
-        </div>
+        </Alert>
       )}
 
       {rows && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium">พร้อมนำเข้า {rows.length} รายการ</p>
+          <p className="text-sm font-semibold tabular-nums">พร้อมนำเข้า {rows.length} รายการ</p>
           {rows.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="py-1 pr-3">name</th>
-                    <th className="py-1 pr-3">slug</th>
-                    <th className="py-1 pr-3">price</th>
-                    <th className="py-1">status</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>name</TableHead>
+                    <TableHead>slug</TableHead>
+                    <TableHead numeric>price</TableHead>
+                    <TableHead>status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {rows.slice(0, PREVIEW_LIMIT).map((row) => (
-                    <tr key={row.slug} className="border-b last:border-0">
-                      <td className="py-1 pr-3">{row.name}</td>
-                      <td className="py-1 pr-3">{row.slug}</td>
-                      <td className="py-1 pr-3">{formatPrice(row.price)}</td>
-                      <td className="py-1">
+                    <TableRow key={row.slug}>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell className="font-mono text-xs">{row.slug}</TableCell>
+                      <TableCell numeric>{formatPrice(row.price)}</TableCell>
+                      <TableCell>
                         {row.status ? productStatusLabel(row.status) : 'ตามเดิม / แบบร่าง'}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
+              {/* Say what was left out rather than letting the preview imply the
+                  file is only this long. */}
               {rows.length > PREVIEW_LIMIT && (
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm tabular-nums text-muted-foreground">
                   แสดง {PREVIEW_LIMIT} จาก {rows.length} รายการ
                 </p>
               )}
             </div>
           )}
           <div>
-            <Button onClick={runImport} disabled={rows.length === 0 || importProducts.isPending}>
+            <Button onClick={runImport} disabled={rows.length === 0} loading={importProducts.isPending}>
               {progress
                 ? `กำลังนำเข้า ${progress.done}/${progress.total}…`
                 : `ยืนยันนำเข้า ${rows.length} รายการ`}
@@ -181,22 +196,22 @@ export function AdminProductImportPage() {
       )}
 
       {result && (
-        <div className="flex flex-col gap-2 rounded-md border p-4 text-sm">
-          <p className="font-medium">นำเข้าเสร็จสิ้น</p>
-          <p>เพิ่มใหม่ {result.inserted} รายการ · อัปเดต {result.updated} รายการ</p>
+        <div className="flex flex-col gap-3">
+          <Alert tone="success" title="นำเข้าเสร็จสิ้น">
+            <span className="tabular-nums">
+              เพิ่มใหม่ {result.inserted} รายการ · อัปเดต {result.updated} รายการ
+            </span>
+          </Alert>
           {result.failures.length > 0 && (
-            <>
-              <p className="font-medium text-destructive">
-                ไม่สำเร็จ {result.failures.length} รายการ
-              </p>
-              <ul className="flex flex-col gap-1 text-muted-foreground">
+            <Alert tone="error" title={`ไม่สำเร็จ ${result.failures.length} รายการ`}>
+              <ul className="flex flex-col gap-1">
                 {result.failures.slice(0, PREVIEW_LIMIT).map((failure) => (
                   <li key={failure.slug}>
                     {failure.slug}: {failure.message}
                   </li>
                 ))}
               </ul>
-            </>
+            </Alert>
           )}
         </div>
       )}

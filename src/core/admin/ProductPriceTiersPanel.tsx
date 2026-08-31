@@ -5,9 +5,11 @@ import {
 } from '@/core/admin/useProductPriceTiers'
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
+import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const MAX_TIERS = 10
 
@@ -29,37 +31,48 @@ export function ProductPriceTiersPanel({ productId }: { productId: string }) {
       setMinQuantity('')
       setUnitPrice('')
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to add price tier.'))
+      setError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
     }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="font-medium">ราคาขายส่งตามจำนวน</h2>
+      <h2 className="text-sm font-semibold">ราคาขายส่งตามจำนวน</h2>
       <p className="text-xs text-muted-foreground">
         จำนวนขั้นต่ำของแต่ละขั้นต้องมากกว่า "ขั้นต่ำต่อรายการ" ของสินค้า และมีได้สูงสุด {MAX_TIERS} ขั้น
       </p>
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {isError && <p className="text-sm text-destructive">Failed to load price tiers.</p>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {isLoading && <Skeleton className="h-20 w-full" />}
+      {/* Distinct from "no tiers yet": an owner who reads a failed load as an
+          empty ladder would re-enter tiers that already exist. */}
+      {isError && (
+        <Alert tone="error" title="โหลดขั้นราคาไม่สำเร็จ">
+          ลองรีเฟรชก่อน อย่าเพิ่งกรอกใหม่ — ขั้นเดิมอาจยังอยู่
+        </Alert>
+      )}
+      {error && <Alert tone="error" title="จัดการขั้นราคาไม่สำเร็จ">{error}</Alert>}
+      {!isLoading && !isError && tiers?.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          ยังไม่มีขั้นราคา — ลูกค้าจะจ่ายราคาปกติทุกจำนวน
+        </p>
+      )}
 
       {tiers && tiers.length > 0 && (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
           {tiers.map((tier) => (
-            <li
-              key={tier.id}
-              className="flex items-center justify-between rounded-md border p-2 text-sm"
-            >
-              <span>
-                ตั้งแต่ {tier.min_quantity} ขึ้นไป · {formatPrice(Number(tier.unit_price))}
+            <li key={tier.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <span className="tabular-nums">
+                ตั้งแต่ {tier.min_quantity.toLocaleString('th-TH')} ขึ้นไป ·{' '}
+                <strong className="font-semibold">{formatPrice(Number(tier.unit_price))}</strong>
               </span>
               <Button
                 size="sm"
-                variant="outline"
-                disabled={deleteTier.isPending}
+                variant="ghost"
+                className="min-h-11 text-destructive hover:bg-[var(--status-cancelled-bg)] sm:min-h-9"
+                aria-label={`ลบขั้นราคาตั้งแต่ ${tier.min_quantity}`}
+                loading={deleteTier.isPending}
                 onClick={() =>
                   deleteTier.mutate(tier.id, {
-                    onError: (err) => setError(getErrorMessage(err, 'Failed to delete price tier.')),
+                    onError: (err) => setError(getErrorMessage(err, 'ลองใหม่อีกครั้ง')),
                   })
                 }
               >
@@ -71,8 +84,7 @@ export function ProductPriceTiersPanel({ productId }: { productId: string }) {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="tier_min_quantity">ตั้งแต่จำนวน</Label>
+        <Field label="ตั้งแต่จำนวน" required>
           <Input
             id="tier_min_quantity"
             type="number"
@@ -82,9 +94,8 @@ export function ProductPriceTiersPanel({ productId }: { productId: string }) {
             value={minQuantity}
             onChange={(e) => setMinQuantity(e.target.value)}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="tier_unit_price">ราคาต่อหน่วย</Label>
+        </Field>
+        <Field label="ราคาต่อหน่วย" required>
           <Input
             id="tier_unit_price"
             type="number"
@@ -95,11 +106,11 @@ export function ProductPriceTiersPanel({ productId }: { productId: string }) {
             value={unitPrice}
             onChange={(e) => setUnitPrice(e.target.value)}
           />
-        </div>
+        </Field>
         <Button
           type="submit"
-          size="sm"
-          disabled={addTier.isPending || (tiers?.length ?? 0) >= MAX_TIERS}
+          loading={addTier.isPending}
+          disabled={(tiers?.length ?? 0) >= MAX_TIERS}
         >
           เพิ่มขั้นราคา
         </Button>

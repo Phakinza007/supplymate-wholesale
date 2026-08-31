@@ -23,8 +23,8 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
   // Keep probe products at the end of /shop so they never become the
   // "first product" other specs buy.
   await page.locator('#sort_order').fill('9000')
-  await page.getByRole('button', { name: 'Save product' }).click()
-  await expect(page.getByRole('heading', { name: 'Edit product' })).toBeVisible()
+  await page.getByRole('button', { name: 'บันทึกสินค้า' }).click()
+  await expect(page.getByRole('heading', { name: 'แก้ไขสินค้า' })).toBeVisible()
 
   // A draft is invisible to customers.
   await page.goto(`/products/${slug}`)
@@ -34,14 +34,14 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
   await page.goto('/admin/products')
   await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'แก้ไข' }).click()
   await page.locator('#status').selectOption('active')
-  await page.getByRole('button', { name: 'Save product' }).click()
+  await page.getByRole('button', { name: 'บันทึกสินค้า' }).click()
   await page.goto(`/products/${slug}`)
   await expect(page.getByRole('heading', { name })).toBeVisible()
 
   // Duplicating it produces a draft copy that is still invisible.
   await page.goto('/admin/products')
   await page.getByRole('row').filter({ hasText: name }).getByRole('button', { name: 'ทำซ้ำ' }).click()
-  await expect(page.getByRole('heading', { name: 'Edit product' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'แก้ไขสินค้า' })).toBeVisible()
   await expect(page.locator('#name')).toHaveValue(`${name} (สำเนา)`)
   await expect(page.locator('#slug')).toHaveValue(`${slug}-copy`)
   await expect(page.locator('#sku')).toHaveValue('')
@@ -65,7 +65,7 @@ test('draft products stay off the storefront, and duplicates land as drafts', as
     .filter({ has: page.getByRole('button', { name: 'แสดง', pressed: true }) })
   await originalRow.getByRole('button', { name: 'แก้ไข' }).click()
   await page.locator('#status').selectOption('archived')
-  await page.getByRole('button', { name: 'Save product' }).click()
+  await page.getByRole('button', { name: 'บันทึกสินค้า' }).click()
 
   const archivedRow = page
     .getByRole('row')
