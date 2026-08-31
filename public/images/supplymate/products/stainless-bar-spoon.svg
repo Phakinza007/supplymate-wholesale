@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="ช้อนบาร์สเตนเลสด้ามเกลียว">
+  <rect width="640" height="640" fill="#f1f1f5"/>
+  <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 246 150 L 362 400"/>
+    <ellipse cx="384" cy="426" rx="40" ry="26"/>
+    <path d="M 254.9 201 L 278.9 189" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 267.6 228.5 L 291.6 216.5" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 280.4 256 L 304.4 244" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 293.2 283.5 L 317.2 271.5" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 305.9 311 L 329.9 299" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 318.7 338.5 L 342.7 326.5" stroke="#c9c9d3" stroke-width="5"/>
+  </g>
+  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">30 cm</text>
+</svg>

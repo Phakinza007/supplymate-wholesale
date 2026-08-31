@@ -1,0 +1,46 @@
+import { describe, expect, it } from 'vitest'
+import { SHAPES, renderProductArt } from './productArt.mjs'
+
+const render = (shape) =>
+  renderProductArt({ shape, caption: '10 oz', label: 'ตัวอย่างสินค้า', options: {} })
+
+describe('renderProductArt', () => {
+  it('renders one self-contained SVG root at a square viewBox', () => {
+    const svg = render('cup')
+    expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true)
+    expect(svg.trimEnd().endsWith('</svg>')).toBe(true)
+    expect(svg.match(/<svg/g)).toHaveLength(1)
+    expect(svg).toContain('viewBox="0 0 640 640"')
+  })
+
+  it('never reaches outside the file', () => {
+    for (const shape of Object.keys(SHAPES)) {
+      const svg = render(shape)
+      expect(svg).not.toContain('http://www.w3.org/1999/xlink')
+      expect(svg).not.toMatch(/https?:\/\/(?!www\.w3\.org\/2000\/svg)/)
+      expect(svg).not.toContain('<image')
+      expect(svg).not.toContain('@import')
+    }
+  })
+
+  it('labels the drawing for assistive technology and prints the caption', () => {
+    const svg = renderProductArt({
+      shape: 'bag',
+      caption: 'size M',
+      label: 'ถุงกระดาษ & ฝา',
+      options: { handle: true },
+    })
+    expect(svg).toContain('aria-label="ถุงกระดาษ &amp; ฝา"')
+    expect(svg).toContain('>size M<')
+  })
+
+  it('draws something for every shape in the vocabulary', () => {
+    for (const shape of Object.keys(SHAPES)) {
+      expect(SHAPES[shape]({}).join('').length).toBeGreaterThan(40)
+    }
+  })
+
+  it('rejects an unknown shape rather than emitting an empty drawing', () => {
+    expect(() => render('teapot')).toThrow(/teapot/)
+  })
+})

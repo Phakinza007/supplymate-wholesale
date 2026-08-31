@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="สติกเกอร์ระบุวันผลิตแบบเขียน">
+  <rect width="640" height="640" fill="#f1f1f5"/>
+  <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="170" y="170" width="300" height="300" rx="14"/>
+    <rect x="198" y="200" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <rect x="330" y="200" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <rect x="198" y="290" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <rect x="330" y="290" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <rect x="198" y="380" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <rect x="330" y="380" width="116" height="62" rx="10" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 214 230 L 298 230" stroke="#4a63c8" stroke-width="7"/>
+  </g>
+  <text x="320" y="558" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">date labels</text>
+</svg>
