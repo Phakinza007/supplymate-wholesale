@@ -212,6 +212,7 @@ export function ProductDetailPage() {
               disabled={addToCartDisabled}
             />
             <Button
+              data-tour="add-to-cart"
               disabled={addToCartDisabled}
               onClick={() => {
                 const addedQuantity = Math.max(minimumQuantity, quantity)

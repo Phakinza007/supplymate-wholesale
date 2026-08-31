@@ -77,7 +77,7 @@ export function CartPage() {
         ))}
       </ul>
 
-      <div className="rounded-md border border-border bg-card px-4 py-3.5">
+      <div className="rounded-md border border-border bg-card px-4 py-3.5" data-tour="cart-summary">
         {tierDiscount > 0 && (
           <dl className="mb-3 flex flex-col gap-1.5 border-b border-border pb-3 text-sm">
             <div className="flex justify-between gap-4">

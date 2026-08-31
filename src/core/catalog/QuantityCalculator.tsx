@@ -36,7 +36,7 @@ export function QuantityCalculator({
     'flex w-12 items-center justify-center bg-muted text-xl text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-40'
 
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-3.5" data-tour="quantity">
       <div className="flex w-fit items-stretch overflow-hidden rounded-lg border-2 border-primary">
         <button
           type="button"

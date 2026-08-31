@@ -180,7 +180,10 @@ export function CheckoutPage() {
       </fieldset>
 
       {promptPayAvailable && (
-        <fieldset className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+        <fieldset
+          className="flex flex-col gap-3 rounded-md border border-border bg-card p-4"
+          data-tour="payment-methods"
+        >
           <legend className="px-1 text-sm font-semibold">วิธีชำระเงิน</legend>
           {/* Both methods end in the same place: the buyer transfers, then
               uploads a slip an admin verifies. The choice is recorded because

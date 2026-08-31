@@ -34,7 +34,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="category-title" className="space-y-10">
+      <section aria-labelledby="category-title" data-tour="home-categories" className="space-y-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-muted-foreground">หมวดสินค้า</p>

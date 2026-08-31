@@ -80,7 +80,7 @@ export function ProductListPage() {
       {/* One toolbar: search, categories and the result state together, so the
           products stay in the first screen instead of below a filter panel. */}
       <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-3">
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+        <form onSubmit={handleSearchSubmit} data-tour="catalogue-search" className="flex gap-2">
           <div className="relative flex-1">
             <Input
               type="search"

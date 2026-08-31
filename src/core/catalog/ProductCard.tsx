@@ -22,6 +22,8 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/products/${product.slug}`}
+      data-tour="catalogue-tiers"
+      data-tour-tiers={tiers.length > 0 ? 'true' : undefined}
       className="group flex flex-col overflow-hidden rounded-md border border-border bg-card transition-colors hover:border-input"
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">

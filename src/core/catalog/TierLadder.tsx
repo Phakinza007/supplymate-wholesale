@@ -35,7 +35,11 @@ export function TierLadder({
   const shownUpgrade = compact ? null : upgrade
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="tier-ladder-heading">
+    <section
+      className="flex flex-col gap-3"
+      data-tour="tier-ladder"
+      aria-labelledby="tier-ladder-heading"
+    >
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="tier-ladder-heading" className="font-semibold text-foreground">
           {compact ? 'ยิ่งสั่งมาก ยิ่งถูก' : 'ราคาขั้นบันได'}
