@@ -27,3 +27,34 @@ describe('showcase cart', () => {
     expect(useCartStore.getState().items[0]?.quantity).toBe(3)
   })
 })
+
+describe('reconcilePricing', () => {
+  beforeEach(() => useCartStore.getState().clear())
+
+  it('replaces the cached unit price on the matching line only', () => {
+    useCartStore.getState().addItem(line, 3)
+    useCartStore.getState().addItem({ ...line, productId: 'other', productSlug: 'other' }, 3)
+
+    useCartStore.getState().reconcilePricing(line.productId, null, 1200)
+
+    const items = useCartStore.getState().items
+    expect(items.find((i) => i.productId === line.productId)?.unitPrice).toBe(1200)
+    expect(items.find((i) => i.productId === 'other')?.unitPrice).toBe(1290)
+  })
+
+  it('feeds the recomputed subtotal', () => {
+    useCartStore.getState().addItem(line, 10)
+    useCartStore.getState().reconcilePricing(line.productId, null, 1200)
+
+    const subtotal = useCartStore
+      .getState()
+      .items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+    expect(subtotal).toBe(12_000)
+  })
+
+  it('ignores a line that is not in the cart', () => {
+    useCartStore.getState().addItem(line, 3)
+    useCartStore.getState().reconcilePricing('not-in-cart', null, 1)
+    expect(useCartStore.getState().items[0]?.unitPrice).toBe(1290)
+  })
+})

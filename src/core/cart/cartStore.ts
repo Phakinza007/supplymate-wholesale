@@ -31,6 +31,7 @@ interface CartState {
     packageUnit: PackageUnit,
     minOrderQuantity: number,
   ) => void
+  reconcilePricing: (productId: string, variantId: string | null, unitPrice: number) => void
   clear: () => void
 }
 
@@ -78,6 +79,17 @@ export const useCartStore = create<CartState>()((set) => ({
         sameLine(item, { productId, variantId })
           ? { ...item, packageUnit, minOrderQuantity }
           : item,
+      ),
+    })),
+  // The cart caches a price at add-to-cart time for display. Once the cart
+  // page has the product's live tiers it re-resolves the line price and
+  // pushes it back here, so useCartSubtotal() and the checkout total stay
+  // truthful. create_order() still re-prices everything server-side; this
+  // only keeps the number the customer is shown from drifting.
+  reconcilePricing: (productId, variantId, unitPrice) =>
+    set((state) => ({
+      items: state.items.map((item) =>
+        sameLine(item, { productId, variantId }) ? { ...item, unitPrice } : item,
       ),
     })),
   clear: () => set({ items: [] }),
