@@ -1,8 +1,9 @@
-export type PaymentMethod = 'bank_transfer' | 'promptpay'
+export type PaymentMethod = 'bank_transfer' | 'promptpay' | 'cod'
 
 const LABEL: Record<PaymentMethod, string> = {
   bank_transfer: 'โอนผ่านธนาคาร',
   promptpay: 'พร้อมเพย์',
+  cod: 'เก็บเงินปลายทาง',
 }
 
 // Falls back to the raw value rather than guessing: a method added to the DB

@@ -57,9 +57,16 @@ export function CheckoutPage() {
   // An unset promptPay.qrImageUrl is the off switch — a shop without a QR is
   // never offered the method, so there is nothing to choose between.
   const promptPayAvailable = brandConfig.promptPay.qrImageUrl !== ''
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'promptpay'>(
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'promptpay' | 'cod'>(
     'bank_transfer',
   )
+  // The ceiling is on the final total, which the browser cannot compute — it
+  // does not know the tax. Comparing the goods subtotal is a strict, correct
+  // guard without duplicating the tax formula here: subtotal is never larger
+  // than the total, so anything it rejects the server would reject too. The
+  // narrow band just under the ceiling is left to create_order to refuse.
+  const codOverCeiling = subtotal >= brandConfig.cod.maxTotal
+  const codAvailable = brandConfig.cod.enabled && !codOverCeiling
 
   const placeOrder = useMutation({
     mutationFn: async () => {
@@ -190,6 +197,15 @@ export function CheckoutPage() {
                 title: 'พร้อมเพย์ (PromptPay)',
                 hint: 'สแกน QR ของร้าน กรอกยอดเอง แล้วแนบสลิป',
               },
+              ...(codAvailable
+                ? [
+                    {
+                      value: 'cod' as const,
+                      title: 'เก็บเงินปลายทาง (COD)',
+                      hint: `จ่ายเงินสดตอนรับของ · ค่าบริการ ${formatPrice(brandConfig.cod.fee)}`,
+                    },
+                  ]
+                : []),
             ]
           ).map((option) => (
             <label
@@ -210,6 +226,12 @@ export function CheckoutPage() {
               </span>
             </label>
           ))}
+          {brandConfig.cod.enabled && codOverCeiling && (
+            <p className="text-sm text-muted-foreground">
+              เก็บเงินปลายทางรับได้ไม่เกิน {formatPrice(brandConfig.cod.maxTotal)} ต่อคำสั่งซื้อ
+              — ยอดนี้เกินเพดาน
+            </p>
+          )}
         </fieldset>
       )}
 

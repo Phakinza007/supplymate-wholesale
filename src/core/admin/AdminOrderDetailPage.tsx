@@ -172,6 +172,9 @@ export function AdminOrderDetailPage() {
             />
           )}
           <MoneyRow label="ค่าจัดส่ง" value={formatPrice(order.shipping_fee)} />
+          {order.cod_fee > 0 && (
+            <MoneyRow label="ค่าบริการเก็บเงินปลายทาง" value={formatPrice(order.cod_fee)} />
+          )}
           {order.vat_total > 0 && (
             <MoneyRow label="ภาษีมูลค่าเพิ่ม 7%" value={formatPrice(order.vat_total)} />
           )}
@@ -186,6 +189,12 @@ export function AdminOrderDetailPage() {
         <p className="text-muted-foreground">
           วิธีที่ผู้ซื้อเลือก: {paymentMethodLabel(order.payment_method)}
         </p>
+        {order.payment_method === 'cod' && (
+          <Alert tone="warning" title="เก็บเงินปลายทาง — ไม่มีสลิปให้ตรวจ">
+            เงินเก็บตอนส่งของ กดยืนยันเมื่อตรวจแล้วว่าที่อยู่ส่งได้จริงและของพร้อมส่ง —
+            พัสดุ COD ที่ถูกปฏิเสธปลายทาง ร้านรับภาระค่าส่งกลับเอง
+          </Alert>
+        )}
         <div className="mt-2">
           {!order.payment_slip_path ? (
             <p className="text-muted-foreground">ยังไม่ได้แนบสลิป</p>

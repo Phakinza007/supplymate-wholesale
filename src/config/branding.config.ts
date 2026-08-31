@@ -38,6 +38,20 @@ export interface BrandConfig {
     /** Shown under the QR so the buyer can check they scanned the right shop. */
     promptPayId: string
   }
+  /**
+   * Cash on delivery. `enabled: false` removes the option from checkout.
+   *
+   * `fee` and `maxTotal` are for DISPLAY ONLY — the amounts that bind are
+   * `calc_cod_fee()` and `cod_max_total()` in the database, because the
+   * browser cannot be trusted with either. Keep these in step with that
+   * migration; if they drift, the buyer sees one number and is charged the
+   * other.
+   */
+  cod: {
+    enabled: boolean
+    fee: number
+    maxTotal: number
+  }
   features: FeatureFlags
 }
 
@@ -70,6 +84,11 @@ export const brandConfig: BrandConfig = {
     qrImageUrl: '/images/supplymate/promptpay-demo-qr.svg',
     accountName: 'SupplyMate Demo Account',
     promptPayId: '0-0000-00000-00-0 (demo only)',
+  },
+  cod: {
+    enabled: true,
+    fee: 40,
+    maxTotal: 30_000,
   },
   features: {
     reviews: true,

@@ -195,6 +195,29 @@ Step 8 (E2E tests) are done.
   a new upload is being requested (no rejection reason surfaces anywhere on their page) — a known,
   deferred gap; see the Admin order management section below.
 
+## Cash on delivery
+
+- **The courier collects at the door, so nothing is verified before dispatch — but the order still
+  waits for an admin.** The status path is unchanged (`pending -> verified -> shipped -> done`);
+  what "verified" means for a COD order is "the shop checked the address is deliverable and the
+  stock is there", not "money arrived". A refused COD parcel costs the shop the round trip, which
+  is why it is not auto-approved.
+- **`attach_payment_slip()` refuses COD orders in SQL**, not just in the UI. It is a
+  `SECURITY DEFINER` RPC the browser calls directly, so hiding the upload form would leave the
+  door open to attaching a slip to an order nobody has paid.
+- The fee is its own column, not folded into `shipping_fee`: a receipt reading "delivery ฿90" when
+  the truth is ฿50 delivery plus a ฿40 service fee is a receipt that cannot be reconciled.
+- **The fee sits inside the VAT base**, alongside delivery — it is consideration the shop charges.
+  `e2e/cod.spec.ts` reads the rendered figures back and checks the whole identity, because moving
+  the fee outside the base is a 2.80 THB error per order that no one will spot by eye.
+- **The ceiling is on the final total**, since that is the cash the courier actually collects, and
+  it is enforced in `create_order()` — the browser cannot compute that total because it does not
+  know the tax. `CheckoutPage` only hides COD when the *goods subtotal* alone already exceeds the
+  ceiling: a strict guard that needs no copy of the tax formula, leaving the narrow band just under
+  the ceiling for the server to refuse with a message.
+- `brandConfig.cod.fee` / `.maxTotal` are **display only**. `calc_cod_fee()` and `cod_max_total()`
+  are what bind. Keep them in step or the buyer reads one number and is charged another.
+
 ## VAT
 
 - **Catalogue prices are VAT-exclusive.** Tax is added at order time, never folded into a price.

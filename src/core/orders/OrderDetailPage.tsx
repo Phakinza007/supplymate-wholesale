@@ -129,6 +129,7 @@ export function OrderDetailPage() {
   }
 
   const isPromptPay = order.payment_method === 'promptpay'
+  const isCod = order.payment_method === 'cod'
 
   return (
     <div className="animate-in fade-in duration-150 motion-reduce:animate-none mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-10">
@@ -202,6 +203,9 @@ export function OrderDetailPage() {
             />
           )}
           <MoneyRow label="ค่าจัดส่ง" value={formatPrice(order.shipping_fee)} />
+          {order.cod_fee > 0 && (
+            <MoneyRow label="ค่าบริการเก็บเงินปลายทาง" value={formatPrice(order.cod_fee)} />
+          )}
           {/* Catalogue prices are VAT-exclusive, so the tax is a line of its
               own rather than something folded into the prices above. */}
           {order.vat_total > 0 && (
@@ -211,7 +215,21 @@ export function OrderDetailPage() {
         </div>
       </Section>
 
-      {order.status === 'pending' && !order.payment_slip_path && (
+      {order.status === 'pending' && isCod && (
+        <Section title="ชำระเงินปลายทาง">
+          <p className="text-sm">
+            จ่ายเงินสด{' '}
+            <strong className="tabular-nums">{formatPrice(order.total)}</strong>{' '}
+            กับพนักงานขนส่งตอนรับของ ไม่ต้องโอนหรือแนบสลิปล่วงหน้า
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            ยอดนี้รวมค่าบริการเก็บเงินปลายทาง {formatPrice(order.cod_fee)} แล้ว
+            ทางร้านจะติดต่อยืนยันก่อนจัดส่ง
+          </p>
+        </Section>
+      )}
+
+      {order.status === 'pending' && !isCod && !order.payment_slip_path && (
         <Section
           title={isPromptPay ? 'ชำระเงินด้วยพร้อมเพย์' : 'ชำระเงินด้วยการโอน'}
         >

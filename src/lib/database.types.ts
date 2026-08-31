@@ -270,6 +270,7 @@ export type Database = {
           business_name: string | null
           cancel_reason: string | null
           cancelled_at: string | null
+          cod_fee: number
           completed_at: string | null
           created_at: string
           customer_email: string | null
@@ -307,6 +308,7 @@ export type Database = {
           business_name?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
+          cod_fee?: number
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -344,6 +346,7 @@ export type Database = {
           business_name?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
+          cod_fee?: number
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
