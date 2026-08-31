@@ -279,7 +279,7 @@ function pump() {
 function stick({ tip = 'round' }) {
   const parts = [
     draw(`M ${CX - 66} ${BASE - 300} L ${CX + 14} ${BASE - 40}`, `stroke-width="22"`),
-    draw(`M ${CX + 40} ${BASE - 286} L ${CX + 104} ${BASE - 56}`, `${soft} stroke-width="16"`),
+    draw(`M ${CX + 40} ${BASE - 286} L ${CX + 104} ${BASE - 56}`, `stroke="${HAIRLINE}" stroke-width="16"`),
   ]
 
   parts.push(

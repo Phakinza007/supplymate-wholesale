@@ -1,8 +1,35 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { SHAPES, renderProductArt } from './productArt.mjs'
 
 const render = (shape) =>
   renderProductArt({ shape, caption: '10 oz', label: 'ตัวอย่างสินค้า', options: {} })
+
+// A duplicate attribute on one element (e.g. two `stroke-width`s from combining
+// a shared constant like `soft`/`mark` with an explicit override) is an XML
+// well-formedness violation that breaks loading the file as <img src>, even
+// though it's invisible to a substring check. This is a small hand-rolled
+// scan over each `<tag ...>` -- not a full XML parser, and deliberately not
+// one: it only needs to catch a repeated attribute name, and pulling in an
+// XML library for that would be overkill for a build script with no other
+// XML-parsing need.
+function tagsOf(svg) {
+  return svg.match(/<[a-zA-Z][^>]*>/g) ?? []
+}
+
+function duplicateAttributeNames(tag) {
+  const names = []
+  const attrPattern = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*"/g
+  let match
+  while ((match = attrPattern.exec(tag))) {
+    names.push(match[1])
+  }
+  return names.filter((name, index) => names.indexOf(name) !== index)
+}
+
+const catalogue = JSON.parse(
+  readFileSync(new URL('../src/demo/catalogue.data.json', import.meta.url), 'utf8'),
+)
 
 describe('renderProductArt', () => {
   it('renders one self-contained SVG root at a square viewBox', () => {
@@ -42,5 +69,21 @@ describe('renderProductArt', () => {
 
   it('rejects an unknown shape rather than emitting an empty drawing', () => {
     expect(() => render('teapot')).toThrow(/teapot/)
+  })
+
+  it('emits well-formed XML for every product in the catalogue -- no element repeats an attribute', () => {
+    for (const product of catalogue.products) {
+      const svg = renderProductArt({
+        shape: product.art.shape,
+        caption: product.art.caption,
+        label: product.name,
+        options: product.art.options ?? {},
+      })
+
+      for (const tag of tagsOf(svg)) {
+        const duplicates = duplicateAttributeNames(tag)
+        expect(duplicates, `${product.slug} (${product.art.shape}): ${tag}`).toEqual([])
+      }
+    }
   })
 })
