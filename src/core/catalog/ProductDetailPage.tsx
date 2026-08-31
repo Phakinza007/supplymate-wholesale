@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useProduct } from '@/core/catalog/useProduct'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
+import { ProductImageFallback } from './ProductImageFallback'
 import { formatPrice } from '@/lib/formatPrice'
 import { buildTierRows, nextTierUpgrade, resolveTierPrice, sortTiers } from '@/lib/priceTiers'
 import { PriceBlock } from '@/core/catalog/PriceBlock'
@@ -113,12 +114,14 @@ export function ProductDetailPage() {
       <div className="grid gap-8 md:grid-cols-2">
         <div className="flex flex-col gap-2">
           <div className="aspect-square overflow-hidden rounded-md border border-border bg-muted">
-            {activeImage && (
+            {activeImage ? (
               <img
                 src={resolveImageUrl(activeImage.storage_path)}
                 alt={activeImage.alt ?? product.name}
                 className="h-full w-full object-cover"
               />
+            ) : (
+              <ProductImageFallback label="ยังไม่มีรูปสินค้า" />
             )}
           </div>
           {images.length > 1 && (

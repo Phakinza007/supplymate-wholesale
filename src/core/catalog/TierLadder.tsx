@@ -57,7 +57,7 @@ export function TierLadder({
                 จำนวน ({unitNoun(packageUnit)})
               </th>
               <th scope="col" className="px-3 py-2 text-right font-semibold">
-                ต่อลัง
+                ต่อ{unitNoun(packageUnit)}
               </th>
               <th scope="col" className="px-3 py-2 text-right font-semibold">
                 ต่อชิ้น

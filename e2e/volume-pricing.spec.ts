@@ -100,3 +100,37 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await customerContext.close()
   await adminContext.close()
 })
+
+test('the ladder is labelled in the product\'s own unit, not always in ลัง', async ({ page }) => {
+  // Every seeded product is sold by the ลัง, which is exactly why the ladder's
+  // "per package" column header sat hardcoded as "ต่อลัง" for as long as it
+  // did. A product sold by the แพ็ก is the only thing that catches it.
+  const suffix = `${Date.now()}`
+  const slug = `pack-unit-probe-${suffix}`
+
+  await logIn(page, { email: 'admin@example.com', password: 'password123' })
+  await page.goto('/admin/products')
+  await page.getByRole('button', { name: '+ เพิ่มสินค้า' }).click()
+  await page.locator('#name').fill(`Pack Unit Probe ${suffix}`)
+  await page.locator('#name').blur()
+  await page.locator('#slug').fill(slug)
+  await expect(page.locator('#slug')).toHaveValue(slug)
+  await page.locator('#package_unit').selectOption('pack')
+  await page.locator('#price').fill('500')
+  await page.locator('#stock_quantity').fill('100')
+  await page.locator('#status').selectOption('active')
+  await page.locator('#sort_order').fill('9001')
+  await page.getByRole('button', { name: 'บันทึกสินค้า' }).click()
+  await expect(page.getByRole('heading', { name: 'แก้ไขสินค้า' })).toBeVisible()
+
+  await page.locator('#tier_min_quantity').fill('10')
+  await page.locator('#tier_unit_price').fill('450')
+  await page.getByRole('button', { name: 'เพิ่มขั้นราคา' }).click()
+  await expect(page.getByText('ตั้งแต่ 10 ขึ้นไป · ฿450.00')).toBeVisible()
+
+  await page.goto(`/products/${slug}`)
+  const ladder = page.getByRole('table')
+  await expect(ladder.getByRole('columnheader', { name: 'จำนวน (แพ็ก)' })).toBeVisible()
+  await expect(ladder.getByRole('columnheader', { name: 'ต่อแพ็ก' })).toBeVisible()
+  await expect(ladder.getByRole('columnheader', { name: 'ต่อลัง' })).toHaveCount(0)
+})

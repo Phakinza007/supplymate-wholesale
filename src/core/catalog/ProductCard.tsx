@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
+import { ProductImageFallback } from './ProductImageFallback'
 import { formatPrice } from '@/lib/formatPrice'
 import { formatPackageLabel, perItemPrice, quantityLabel, type PackageUnit } from '@/lib/wholesale'
 import { cheapestTier, type PriceTier } from '@/lib/priceTiers'
@@ -24,13 +25,15 @@ export function ProductCard({ product }: { product: Product }) {
       className="group flex flex-col overflow-hidden rounded-md border border-border bg-card transition-colors hover:border-input"
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">
-        {image && (
+        {image ? (
           <img
             src={resolveImageUrl(image.storage_path)}
             alt={image.alt ?? product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
+        ) : (
+          <ProductImageFallback />
         )}
       </div>
       <div className="flex flex-1 flex-col p-3.5">
