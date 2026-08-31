@@ -99,6 +99,36 @@ Step 8 (E2E tests) are done.
   `shipping_carrier`, collected by the admin but currently invisible to the customer. Worth a
   follow-up plan rather than assuming it's covered.
 
+## Volume pricing
+
+- `product_price_tiers` (`supabase/migrations/20260831000200_product_price_tiers.sql`) holds
+  wholesale quantity breaks as `(product_id, min_quantity, unit_price)`. The applicable tier is the
+  one with the **highest `min_quantity` still `<= quantity ordered`**; with none qualifying,
+  `products.price` applies. Precedence, highest first: `product_variants.price_override` →
+  matching tier → `products.price`.
+- **This is core, not an optional module** — there is no feature flag and no `<Feature>` wrapper. A
+  wholesale kit that cannot express a quantity break is not a wholesale kit. Its E2E spec
+  (`e2e/volume-pricing.spec.ts`) therefore runs unconditionally, unlike the flag-guarded
+  `test.skip(!brandConfig.features.x, ...)` specs the Phase 2 modules ship.
+- `create_order()` resolves the tier **itself**, inside its `_cart` temp table, under the same
+  `for no key update` product lock it already held. `resolveTierPrice()` (`src/lib/priceTiers.ts`)
+  expresses the same rule on the client for display only — the standing rule from Variants and
+  Promotions applies unchanged: the mutating RPC never trusts a client-side price.
+- Two rules live in the `enforce_price_tier_rules` trigger rather than in CHECK constraints,
+  because both need a cross-row or cross-table read: **at most 10 tiers per product** (Shopify's
+  documented limit) and **`min_quantity > products.min_order_quantity`** (a tier at or below the
+  MOQ is unreachable, since every order already starts at the MOQ).
+- `CartPage` re-resolves each line's price from the live tiers `useProduct()` already fetches and
+  pushes the result into the cart store via **`reconcilePricing`**. That is what keeps
+  `useCartSubtotal()` and `CheckoutPage`'s total truthful without either file knowing tiers exist.
+  A variant line is skipped — the cart page does not fetch variants, and an override outranks a
+  tier anyway.
+- `ProductListPage` deliberately still shows the base price. Tier pricing is a detail-page concern,
+  matching how Shopify's collection pages behave.
+- `useProductPriceTierMutations` **deletes** tiers outright. That does not contradict the
+  "deactivate, never delete" rule in the Admin section — that rule is about products and
+  categories, which have order history hanging off them. A price tier is a rule, not a record.
+
 ## Cart, checkout, payment slip
 
 - Cart is client-only: a Zustand store (`src/core/cart/cartStore.ts`) persisted to `localStorage`
