@@ -17,6 +17,7 @@ const product: Product = {
   name: 'แก้วพลาสติกใส 16 ออนซ์',
   package_unit: 'carton',
   price: 1290,
+  price_per_piece: 25.8,
   sku: 'CUP-16',
   slug: 'clear-cup-16oz',
   sort_order: 5,

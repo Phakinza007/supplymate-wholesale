@@ -2,16 +2,21 @@ import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
 import { formatPackageLabel, perItemPrice, quantityLabel, type PackageUnit } from '@/lib/wholesale'
+import { cheapestTier, type PriceTier } from '@/lib/priceTiers'
+import { Badge } from '@/components/ui/badge'
 import type { Database } from '@/lib/database.types'
 
 type Product = Database['public']['Tables']['products']['Row'] & {
   product_images: Database['public']['Tables']['product_images']['Row'][]
+  product_price_tiers?: PriceTier[]
 }
 
 export function ProductCard({ product }: { product: Product }) {
   const image = [...product.product_images].sort((a, b) => a.sort_order - b.sort_order)[0]
   const packageUnit = product.package_unit as PackageUnit
   const price = Number(product.price)
+  const tiers = product.product_price_tiers ?? []
+  const best = cheapestTier(tiers)
 
   return (
     <Link
@@ -29,9 +34,14 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
       <div className="flex flex-1 flex-col p-3.5">
-        <p className="text-xs font-semibold text-muted-foreground">
-          {formatPackageLabel(packageUnit, product.units_per_package)}
-        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground">
+            {formatPackageLabel(packageUnit, product.units_per_package)}
+          </span>
+          {tiers.length > 0 && (
+            <Badge tone="pending">ราคาส่ง {tiers.length + 1} ขั้น</Badge>
+          )}
+        </div>
         <h3 className="mt-1 leading-snug font-semibold text-balance">{product.name}</h3>
 
         <p className="mt-2.5 flex items-baseline gap-2">
@@ -64,6 +74,13 @@ export function ProductCard({ product }: { product: Product }) {
             </dd>
           </div>
         </dl>
+
+        {best && (
+          <p className="mt-2 text-xs text-[var(--price-per-unit)] tabular-nums">
+            ถูกสุด {formatPrice(perItemPrice(Number(best.unit_price), product.units_per_package))}{' '}
+            ต่อชิ้น เมื่อสั่ง {quantityLabel(packageUnit, best.min_quantity)}
+          </p>
+        )}
       </div>
     </Link>
   )

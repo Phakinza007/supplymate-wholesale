@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildTierRows,
+  cheapestTier,
   nextTierUpgrade,
   resolveTierPrice,
   sortTiers,
@@ -133,5 +134,32 @@ describe('nextTierUpgrade', () => {
 
   it('returns null when there are no tiers at all', () => {
     expect(nextTierUpgrade(1290, [], 3)).toBeNull()
+  })
+})
+
+describe('cheapestTier', () => {
+  const ladder: PriceTier[] = [
+    { min_quantity: 10, unit_price: 1190 },
+    { min_quantity: 100, unit_price: 1020 },
+    { min_quantity: 5, unit_price: 1240 },
+  ]
+
+  it('finds the lowest unit price regardless of input order', () => {
+    expect(cheapestTier(ladder)).toEqual({ min_quantity: 100, unit_price: 1020 })
+  })
+
+  it('returns null when there are no tiers', () => {
+    expect(cheapestTier([])).toBeNull()
+  })
+
+  it('prefers the smaller quantity when two tiers share a price', () => {
+    // A ladder should never be shaped this way, but if it is, quote the
+    // quantity the buyer reaches first rather than the higher one.
+    expect(
+      cheapestTier([
+        { min_quantity: 50, unit_price: 900 },
+        { min_quantity: 20, unit_price: 900 },
+      ]),
+    ).toEqual({ min_quantity: 20, unit_price: 900 })
   })
 })

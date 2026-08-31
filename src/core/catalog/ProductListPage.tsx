@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCategories } from '@/core/catalog/useCategories'
-import { useProducts } from '@/core/catalog/useProducts'
+import { PRODUCT_SORTS, useProducts, type ProductSort } from '@/core/catalog/useProducts'
 import { ProductCard } from '@/core/catalog/ProductCard'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,8 @@ export function ProductListPage() {
   const categorySlug = searchParams.get('category') ?? undefined
   const search = searchParams.get('q') ?? undefined
   const page = Number(searchParams.get('page') ?? '1')
+  const sort = (searchParams.get('sort') ?? 'default') as ProductSort
+  const tieredOnly = searchParams.get('tiered') === '1'
 
   const [searchInput, setSearchInput] = useState(search ?? '')
 
@@ -41,6 +43,8 @@ export function ProductListPage() {
   const { data, isLoading, isError } = useProducts({
     categoryId: activeCategory?.id,
     search,
+    sort,
+    tieredOnly,
     page,
     pageSize: PAGE_SIZE,
     enabled: productsEnabled,
@@ -110,6 +114,48 @@ export function ProductListPage() {
               {cat.name}
             </button>
           ))}
+        </div>
+
+        {/* Sorting by price-per-piece is the comparison a wholesale buyer
+            actually makes, so it sits beside the categories rather than behind
+            a menu. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div role="group" aria-label="เรียงลำดับ" className="flex flex-wrap gap-2">
+            {PRODUCT_SORTS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={sort === option.value}
+                onClick={() =>
+                  updateParams({
+                    sort: option.value === 'default' ? undefined : option.value,
+                    page: undefined,
+                  })
+                }
+                className={cn(
+                  CHIP,
+                  sort === option.value
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'hover:bg-accent',
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-pressed={tieredOnly}
+            onClick={() => updateParams({ tiered: tieredOnly ? undefined : '1', page: undefined })}
+            className={cn(
+              CHIP,
+              tieredOnly
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'hover:bg-accent',
+            )}
+          >
+            มีราคาขั้นบันได
+          </button>
         </div>
 
         {data && !categoryNotFound && (

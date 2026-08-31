@@ -100,3 +100,22 @@ export function nextTierUpgrade(
     savings: Math.round((current - unitPrice) * next.min_quantity),
   }
 }
+
+// The "ถูกสุด ฿X เมื่อสั่ง N" line on a catalogue card: the best price this
+// product can reach, and the quantity that reaches it. Ties resolve to the
+// smaller quantity — quoting the higher one would overstate what the buyer
+// has to commit to.
+export function cheapestTier(tiers: PriceTier[]): PriceTier | null {
+  let best: PriceTier | null = null
+  for (const tier of tiers) {
+    if (
+      !best ||
+      Number(tier.unit_price) < Number(best.unit_price) ||
+      (Number(tier.unit_price) === Number(best.unit_price) &&
+        tier.min_quantity < best.min_quantity)
+    ) {
+      best = tier
+    }
+  }
+  return best
+}

@@ -527,6 +527,7 @@ export type Database = {
           name: string
           package_unit: string
           price: number
+          price_per_piece: number | null
           sku: string | null
           slug: string
           sort_order: number
