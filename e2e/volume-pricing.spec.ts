@@ -72,7 +72,7 @@ test('quantity price breaks are shown, enforced by the trigger, and charged by c
   await customerPage.getByText('เพิ่มแล้ว').waitFor()
 
   await customerPage.goto('/cart')
-  await expect(customerPage.getByText('฿900.00 each')).toBeVisible()
+  await expect(customerPage.getByText('฿900.00 / 1 ลัง')).toBeVisible()
   await expect(customerPage.getByText('฿9,000.00').first()).toBeVisible()
 
   await customerPage.getByRole('link', { name: 'ไปหน้าชำระเงิน' }).click()

@@ -12,7 +12,9 @@ export async function addAddress(
   opts: { recipientName: string; phone: string; line1: string; province: string; postalCode: string },
 ): Promise<void> {
   await page.goto('/account/addresses')
-  await page.getByRole('button', { name: 'เพิ่มที่อยู่' }).click()
+  // `exact` matters: the empty-state CTA is "เพิ่มที่อยู่แรก", which a
+  // substring match also picks up.
+  await page.getByRole('button', { name: 'เพิ่มที่อยู่', exact: true }).click()
   await page.locator('#recipient_name').fill(opts.recipientName)
   await page.locator('#phone').fill(opts.phone)
   await page.locator('#line1').fill(opts.line1)

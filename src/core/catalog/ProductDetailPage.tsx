@@ -12,7 +12,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Feature } from '@/lib/Feature'
-import { formatPackageLabel, quantityLabel, type PackageUnit } from '@/lib/wholesale'
+import { quantityLabel, type PackageUnit } from '@/lib/wholesale'
 import type { Database } from '@/lib/database.types'
 
 type Variant = Database['public']['Tables']['product_variants']['Row']
@@ -156,20 +156,6 @@ export function ProductDetailPage() {
               </span>
             </p>
           )}
-          <dl className="grid grid-cols-2 overflow-hidden rounded-md border border-border bg-card text-sm">
-            <div className="border-r border-border p-3">
-              <dt className="text-xs text-muted-foreground">จำนวนต่อหน่วย</dt>
-              <dd className="mt-0.5 font-semibold tabular-nums">
-                {formatPackageLabel(packageUnit, product.units_per_package)}
-              </dd>
-            </div>
-            <div className="p-3">
-              <dt className="text-xs text-muted-foreground">สั่งขั้นต่ำ</dt>
-              <dd className="mt-0.5 font-semibold tabular-nums">
-                {quantityLabel(packageUnit, minimumQuantity)} ต่อรายการ
-              </dd>
-            </div>
-          </dl>
           <TierLadder rows={tierRows} upgrade={tierUpgrade} packageUnit={packageUnit} />
           <Feature flag="variants">
             <Suspense fallback={null}>

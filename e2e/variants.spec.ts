@@ -11,7 +11,7 @@ test('variants module: admin creates variants, customer must select one, cart/ch
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
 
   await adminPage.goto('/admin/products')
-  await adminPage.getByRole('button', { name: 'Edit' }).first().click()
+  await adminPage.getByRole('button', { name: 'แก้ไข' }).first().click()
   const productSlug = await adminPage.locator('#slug').inputValue()
 
   await adminPage.getByRole('button', { name: 'Add variant' }).click()
@@ -73,7 +73,7 @@ test('variants module: deactivating a variant after it is in the customer cart f
   await logIn(adminPage, { email: 'admin@example.com', password: 'password123' })
 
   await adminPage.goto('/admin/products')
-  await adminPage.getByRole('button', { name: 'Edit' }).first().click()
+  await adminPage.getByRole('button', { name: 'แก้ไข' }).first().click()
   const productSlug = await adminPage.locator('#slug').inputValue()
 
   // Reuses the "Small" variant created by the previous test in this file
@@ -102,6 +102,8 @@ test('variants module: deactivating a variant after it is in the customer cart f
   // customer's (localStorage-persisted) cart.
   await adminPage
     .locator('li', { hasText: 'Small' })
+    // VariantsPanel's own row button is still "Edit" — only the admin product
+    // list was renamed to แก้ไข.
     .getByRole('button', { name: 'Edit' })
     .click()
   await adminPage.locator('#variant-name').waitFor()

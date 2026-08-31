@@ -72,7 +72,10 @@ test('CSV import inserts new products as drafts and updates existing ones withou
   await expect(page.getByText('฿1,500.00 / 1 ลัง')).toBeVisible()
   // And min_order_quantity survived, even though the refresh omitted it — a
   // full-payload update would have reset it to the parser default of 1.
-  await expect(page.getByText('สั่งขั้นต่ำ 2 ลัง ต่อรายการ')).toBeVisible()
+  await expect(page.getByRole('spinbutton', { name: 'จำนวนที่สั่งซื้อ' })).toHaveAttribute(
+    'min',
+    '2',
+  )
 
   // B was never published, so the refresh must not have published it either.
   await page.goto(`/products/${slugB}`)
