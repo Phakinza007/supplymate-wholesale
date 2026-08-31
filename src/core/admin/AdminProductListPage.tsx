@@ -8,6 +8,7 @@ import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
 import { Button } from '@/components/ui/button'
 import { Feature } from '@/lib/Feature'
+import { PRODUCT_STATUSES, productStatusLabel, type ProductStatus } from '@/lib/productStatus'
 import { formatPackageLabel, quantityLabel, type PackageUnit } from '@/lib/wholesale'
 import type { Database } from '@/lib/database.types'
 
@@ -18,9 +19,12 @@ type Product = Database['public']['Tables']['products']['Row']
 export function AdminProductListPage() {
   const { data: products, isLoading, isError } = useAdminProducts()
   const { data: categories } = useAdminCategories()
-  const { createProduct, updateProduct } = useAdminProductMutations()
+  const { createProduct, updateProduct, duplicateProduct } = useAdminProductMutations()
   const [editing, setEditing] = useState<Product | 'new' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // 'current' is the default view and hides archived rows, matching Shopify,
+  // where archived products are removed from the admin list.
+  const [statusFilter, setStatusFilter] = useState<'current' | 'all' | ProductStatus>('current')
 
   if (isLoading) return <p className="p-8 text-muted-foreground">Loading…</p>
   if (isError) return <p className="p-8 text-destructive">Failed to load products.</p>
@@ -58,6 +62,11 @@ export function AdminProductListPage() {
             }}
           />
         </div>
+        {editing !== 'new' && editing.status === 'draft' && (
+          <p className="text-sm text-muted-foreground">
+            สำเนาสินค้าไม่ได้คัดลอกรูปภาพมาด้วย — กรุณาอัปโหลดรูปใหม่ก่อนเปลี่ยนสถานะเป็น "เปิดขาย"
+          </p>
+        )}
         {editing !== 'new' && <ProductImagesPanel productId={editing.id} />}
         {editing !== 'new' && (
           <Feature flag="variants">
@@ -70,6 +79,12 @@ export function AdminProductListPage() {
     )
   }
 
+  const visibleProducts = (products ?? []).filter((product) => {
+    if (statusFilter === 'all') return true
+    if (statusFilter === 'current') return product.status !== 'archived'
+    return product.status === statusFilter
+  })
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 pb-8">
       <div className="flex items-center justify-between">
@@ -78,8 +93,30 @@ export function AdminProductListPage() {
           New product
         </Button>
       </div>
+      <div className="flex flex-wrap gap-2">
+        {(['current', 'all', ...PRODUCT_STATUSES] as const).map((filter) => (
+          <button
+            key={filter}
+            type="button"
+            onClick={() => setStatusFilter(filter)}
+            className={
+              'rounded-full border px-3 py-1 text-xs ' +
+              (statusFilter === filter
+                ? 'border-foreground font-medium'
+                : 'border-input text-muted-foreground hover:text-foreground')
+            }
+          >
+            {filter === 'current'
+              ? 'กำลังใช้งาน'
+              : filter === 'all'
+                ? 'ทั้งหมด'
+                : productStatusLabel(filter)}
+          </button>
+        ))}
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <ul className="flex flex-col gap-2">
-        {products?.map((product) => {
+        {visibleProducts.map((product) => {
           const packageUnit = product.package_unit as PackageUnit
 
           return (
@@ -90,9 +127,9 @@ export function AdminProductListPage() {
               <div>
                 <p className="font-medium">
                   {product.name}
-                  {!product.is_active && (
-                    <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>
-                  )}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    ({productStatusLabel(product.status)})
+                  </span>
                 </p>
                 <p className="text-muted-foreground">
                   {product.categories?.name ?? 'Uncategorized'} · {formatPrice(product.price)}
@@ -102,9 +139,26 @@ export function AdminProductListPage() {
                   {quantityLabel(packageUnit, product.min_order_quantity)}
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => setEditing(product)}>
-                Edit
-              </Button>
+              <div className="flex shrink-0 gap-2">
+                <Button size="sm" variant="outline" onClick={() => setEditing(product)}>
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={duplicateProduct.isPending}
+                  onClick={async () => {
+                    setError(null)
+                    try {
+                      setEditing(await duplicateProduct.mutateAsync(product))
+                    } catch (err) {
+                      setError(getErrorMessage(err, 'Failed to duplicate product.'))
+                    }
+                  }}
+                >
+                  ทำซ้ำ
+                </Button>
+              </div>
             </li>
           )
         })}
