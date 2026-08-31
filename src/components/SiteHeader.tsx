@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ShoppingCart } from 'lucide-react'
 import { brandConfig } from '@/config/branding.config'
@@ -20,6 +21,15 @@ export function SiteHeader() {
   const { user, signOut } = useAuth()
   const { data: profile } = useProfile()
   const cartCount = useCartTotalItems()
+  // A count that changes is easy to miss on a phone. One short bump draws the
+  // eye; `bump` is a key, so a rapid second add restarts the motion instead of
+  // queueing another one behind it.
+  const previousCount = useRef(cartCount)
+  const [bump, setBump] = useState(0)
+  useEffect(() => {
+    if (cartCount > previousCount.current) setBump((n) => n + 1)
+    previousCount.current = cartCount
+  }, [cartCount])
 
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-card/95 backdrop-blur">
@@ -58,8 +68,15 @@ export function SiteHeader() {
               <ShoppingCart aria-hidden="true" className="size-4" />
               <span>ตะกร้า</span>
               <span
+                key={bump}
+                data-slot="cart-count"
                 aria-label={`สินค้าในตะกร้า ${cartCount} รายการ`}
-                className="min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-primary-foreground"
+                className={cn(
+                  'min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-primary-foreground',
+                  // Not on first paint: the product register has no page-load
+                  // choreography, so this only runs on an actual add.
+                  bump > 0 && '[animation:cart-bump_200ms_var(--ease-out-quint)]',
+                )}
               >
                 {cartCount}
               </span>
