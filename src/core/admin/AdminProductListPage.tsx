@@ -4,6 +4,7 @@ import { useAdminCategories } from '@/core/admin/useAdminCategories'
 import { useAdminProductMutations } from '@/core/admin/useAdminProductMutations'
 import { AdminProductForm } from '@/core/admin/AdminProductForm'
 import { ProductImagesPanel } from '@/core/admin/ProductImagesPanel'
+import { ProductPriceTiersPanel } from '@/core/admin/ProductPriceTiersPanel'
 import { getErrorMessage } from '@/lib/getErrorMessage'
 import { formatPrice } from '@/lib/formatPrice'
 import { Button } from '@/components/ui/button'
@@ -68,6 +69,7 @@ export function AdminProductListPage() {
           </p>
         )}
         {editing !== 'new' && <ProductImagesPanel productId={editing.id} />}
+        {editing !== 'new' && <ProductPriceTiersPanel productId={editing.id} />}
         {editing !== 'new' && (
           <Feature flag="variants">
             <Suspense fallback={null}>
