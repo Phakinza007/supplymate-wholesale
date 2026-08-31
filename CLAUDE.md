@@ -92,12 +92,11 @@ Step 8 (E2E tests) are done.
   order before clicking it, and its `isError` state is handled distinctly from "no slip uploaded" —
   conflating the two would let a transient fetch failure look identical to a customer never having
   paid, which is exactly the wrong failure mode for a button that can reject/cancel an order.
-- **Known gap, not yet built:** the customer never sees *why* a slip was rejected or that a
-  cancellation happened for a stated reason — `cancel_reason` and a rejection note both exist
-  server-side (`order_status_history.note` is RLS-readable by the order's owner) but nothing writes
-  or displays them on the customer-facing `OrderDetailPage`. Same for `tracking_number`/
-  `shipping_carrier`, collected by the admin but currently invisible to the customer. Worth a
-  follow-up plan rather than assuming it's covered.
+- **The customer sees the reasons now** — this was an open gap for a while and is not one any
+  more. `OrderDetailPage` renders `payment_rejection_reason` above the re-upload form,
+  `cancel_reason` when an order is cancelled, and `shipping_carrier` · `tracking_number` once it
+  ships. `golden-path.spec.ts` covers all three, including the reject → re-upload bounce, so a
+  regression here fails a test rather than going quiet.
 
 ## Volume pricing
 
@@ -286,6 +285,42 @@ Step 8 (E2E tests) are done.
   `retry: false`, not `.single()` — `.single()` throws on zero rows, and TanStack Query's default
   3-retry backoff turns a "not found" into a multi-second hang before the UI catches up.
 
+## Design system
+
+Both surfaces — the Supabase app and the static showcase — draw from one set of tokens in
+`src/index.css` and one set of primitives in `src/components/ui/`.
+
+- **The palette is "Ledger": every neutral sits on one indigo hue (265) at chroma 0–0.02, and the
+  primary action is ink-filled rather than brand-coloured.** Colour is spent on exactly two things:
+  order status and product photography. The reasoning is in the comment above the token block, and
+  it matters — the previous warm-cream ground fought the paper (a delivery note, a tax invoice) that
+  a buyer holds next to the screen. Don't reintroduce a tinted background "for warmth".
+- **`--border` and `--input` are deliberately different weights.** `--border` is a quiet hairline
+  between rows with no contrast floor; `--input` bounds an interactive control and must clear WCAG
+  1.4.11's 3:1 (measured 3.24:1 on white). Don't collapse them.
+- **Twelve primitives, and no component should hand-roll what they cover**: `alert` `badge` `button`
+  `checkbox` `empty-state` `field` `input` `label` `select` `skeleton` `table` `textarea`. `Field`
+  in particular owns the label/hint/error/`aria-describedby`/`aria-invalid` wiring that seventeen
+  pages each used to get partly wrong. There is no `dialog` and there should not be one: the
+  list-or-form convention replaces modals here.
+- **The notice (`components/ui/toaster.tsx`) never disappears on a timer.** Feedback that vanishes
+  makes people race the clock to check what they just did, and an auto-dismissing message with a
+  button in it is both a WCAG 2.2.1 timing problem and unreachable for a screen reader. It shows one
+  message, replaced rather than stacked, and splits itself: a text-only `role="status"` live region
+  for the announcement, ordinary DOM for the controls. On mobile it sits in normal flow at the top
+  of the page — floating it covered the sticky buy bar, and floating it at the top covered the nav.
+- **Mobile gets 44px touch targets, desktop keeps its density** (`min-h-11 sm:min-h-9`). The buyer
+  is on a phone in a prep kitchen; the admin is mouse-first.
+- **Two CSS cascade traps, each hit once here:** a rule *outside* any `@layer` beats every layered
+  utility no matter its specificity (an unlayered `input { border-color: … }` silently ate every
+  Tailwind border utility), and a rule in `@layer base` *loses* to `@layer utilities` no matter its
+  specificity (a `:where(…):user-invalid` rule in base matched its selector and painted nothing).
+  Validation and state styles belong on the primitives, in the utilities layer, next to the class
+  they must beat.
+- **`aria-invalid:` is not a built-in Tailwind variant** — use `aria-[invalid=true]:`. `:user-invalid`
+  needs `[&:user-invalid]:`, and only matches after genuine user interaction, so a synthetic
+  focus/blur will not trigger it.
+
 ## Showcase design system
 
 The static showcase (`src/showcase/`, mounted by `src/main.tsx`) carries two rules that were
@@ -340,7 +375,16 @@ Two smaller invariants worth not rediscovering:
 
 ## Commands
 
-- `npm run dev` — start the dev server
+- **Which app runs is a build-time switch.** `src/main.tsx` branches on `VITE_SHOWCASE_MODE`,
+  defined unconditionally in `vite.config.ts`. The **static showcase is the default** because it
+  runs with no Supabase project configured — `src/lib/supabase.ts` throws at module scope without
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, so a fresh clone or the Pages deploy would
+  white-screen if the real app were the default. Both entries are imported dynamically and the
+  branch is on a build-time literal, so Rollup drops the unused one entirely — that is what keeps
+  Supabase code out of the Pages bundle, which `scripts/assert-static-showcase.mjs` enforces.
+- `npm run dev` — start the dev server (showcase)
+- `npm run dev:app` — start the dev server with the real Supabase-backed app
+- `npm run build:app` — production build of the real app
 - `npm run build` — typecheck (`tsc -b`) + production build
 - `npm run typecheck` — typecheck only
 - `npm run lint` — oxlint + `scripts/check-core-boundary.mjs` (fails if `src/core` imports from
@@ -350,8 +394,23 @@ Two smaller invariants worth not rediscovering:
 
 ## Testing
 
-- `npm run test:e2e` runs the Playwright suite in `e2e/` (`golden-path.spec.ts` +
-  `security.spec.ts`), single worker, against a **local Supabase stack only** — never point it at a
+- **Always run `npm run test:e2e`, never bare `npx playwright test`** — only the npm script runs
+  `pretest:e2e`, and without the DB reset the promotions and variants specs fail on rows left by the
+  previous run. That failure looks like a code regression and is not one.
+- **A stale locator presents as a 60-second timeout, not an assertion failure.** Three separate
+  times in this codebase a spec waiting on renamed text (a button label, a `getByLabel`, an
+  `(inactive)` substring that became a `Badge`) read as a slow test. Open
+  `test-results/*/error-context.md` before calling anything a flake. Real flakes here look
+  different: a cold Supabase makes the golden path take ~25s against a ~3s warm run, which is why
+  the Playwright timeout is 60s rather than the 30s default.
+- **Two Playwright projects, two dev servers.** `chromium` serves the real app on :5174 with
+  `VITE_SHOWCASE_MODE=false`; `showcase` serves the static showcase on :5175. One server cannot host
+  both, because the entry is chosen at build time. `E2E_SERVERS=showcase` (used by
+  `npm run test:showcase-e2e`) starts only the server that run needs — booting both for a
+  single-project run wastes a Supabase-backed server and leaves an orphan on the port if Playwright
+  fails to reap it.
+- `npm run test:e2e` runs the Playwright suite in `e2e/`, single worker, against a **local Supabase
+  stack only** — never point it at a
   hosted project. Its `pretest:e2e` hook runs `supabase start`, writes `.env.e2e.local`
   (`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, read by both the Vite dev server started under
   `--mode e2e` and, via `dotenv.config()` in `playwright.config.ts`, the Node test process itself —
@@ -428,9 +487,13 @@ the first three (LINE Notify is architecturally different; see its own section b
 - **Every optional module ships a permanent, flag-guarded E2E spec**, not a throwaway one — this
   was established after Reviews' first pass shipped a spec that was deleted after use, leaving zero
   regression coverage for that module. The convention since (Variants, Promotions): a real spec
-  file under `e2e/` that opens with `test.skip(!brandConfig.features.x, '...')`, so it skips
-  cleanly under this repo's committed default flags and activates automatically the moment a client
-  flips the flag on. Keep new modules on this pattern rather than reverting to a scratch spec.
+  file under `e2e/` that opens with `test.skip(!brandConfig.features.x, '...')`, so it activates
+  automatically the moment a client flips the flag on. **`reviews` now ships `true`**, so its spec
+  runs on every `npm run test:e2e`; `qna`, `analyticsDashboard` and `pdfDocuments` are still off and
+  their specs still skip. A spec that has been sitting behind an off flag has not been run — when
+  you turn a flag on, expect the spec to be stale, and read the failure rather than assuming a
+  slow test is a flake (see Testing). Keep new modules on this pattern rather than reverting to a
+  scratch spec.
 - **Two security lessons, learned once each in Variants and Promotions, apply to every future
   module:** (a) a client-facing validation check (Variants' UI-side stock check, Promotions'
   `validate_promo_code()`) is a UX convenience only — the actual mutating RPC (`create_order()`)

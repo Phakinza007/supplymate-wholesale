@@ -12,6 +12,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/PageHeader'
 import {
   Table,
   TableBody,
@@ -64,7 +65,7 @@ export function AdminProductListPage() {
   if (editing) {
     const initial = editing === 'new' ? undefined : editing
     return (
-      <div className="mx-auto flex max-w-lg flex-col gap-8 px-4 pb-8">
+      <div className="flex max-w-lg flex-col gap-8 px-4 pb-8 md:px-0">
         <div>
           <h1 className="mb-6 text-[length:var(--text-app-title)] font-bold tracking-tight">
             {editing === 'new' ? 'เพิ่มสินค้า' : 'แก้ไขสินค้า'}
@@ -147,26 +148,24 @@ export function AdminProductListPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pb-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[length:var(--text-section-title)] font-bold tracking-tight">
-            สินค้าทั้งหมด
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+    <div className="flex flex-col gap-6 px-4 pb-8 md:px-0">
+      <PageHeader
+        title="สินค้าทั้งหมด"
+        description={
+          <span className="tabular-nums">
             {counts.all} รายการ · แสดงหน้าร้าน {counts.active} · ฉบับร่าง {counts.draft} · เก็บถาวร{' '}
             {counts.archived}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" asChild>
-            <Link to="/admin/products/import">นำเข้า CSV</Link>
-          </Button>
-          <Button size="sm" onClick={() => setEditing('new')}>
-            + เพิ่มสินค้า
-          </Button>
-        </div>
-      </div>
+          </span>
+        }
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/admin/products/import">นำเข้า CSV</Link>
+            </Button>
+            <Button onClick={() => setEditing('new')}>+ เพิ่มสินค้า</Button>
+          </div>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {filters.map((filter) => (
