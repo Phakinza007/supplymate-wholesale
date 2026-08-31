@@ -67,16 +67,31 @@ ones we would be overriding a library to get.
 | Unit | Responsibility | Testable by |
 |---|---|---|
 | `tourSteps.ts` | The step list as pure data. No DOM, no React. | unit |
-| `stepSequence.ts` | Which step is next, given skipped/unavailable steps and auth state. | unit |
+| `stepSequence.ts` | The auth-dependent plan (`planSteps`) and progress labels. | unit |
 | `tooltipPosition.ts` | Target rect + viewport + tooltip size → placement, clamped inside the viewport. | unit |
-| `waitForTarget.ts` | Resolve a `data-tour` anchor, or give up after a timeout. | unit (jsdom) |
+| `waitFor.ts` | Poll until a probe returns something, or give up. Injectable sleep. | unit |
+| `stepAnchors.test.ts` | Static guard that every anchor still exists in `src/`. | unit |
 | `TourOverlay.tsx` | Spotlight cut-out + tooltip. Presentation and accessibility. | E2E |
-| `TourProvider.tsx` | State machine: index, routing, persistence, start/stop. | E2E |
-| `index.tsx` | Composes the above; the lazy entry point. | E2E |
+| `TourLauncher.tsx` | The restart control, portalled into the header. | E2E |
+| `index.tsx` | The state machine and lazy entry point. | E2E |
 
-The three pure modules carry the logic most likely to be wrong. Positioning
-maths and sequence-skipping are where hand-rolled tours break, and neither
-needs a browser to test.
+The pure modules carry the logic most likely to be wrong. Positioning maths is
+where hand-rolled tours break, and it needs no browser to test.
+
+**`waitFor` takes an injectable `sleep` and counts attempts rather than
+wall-clock**, because vitest here runs in the `node` environment with no DOM and
+no fake timers configured. Adding jsdom to test one polling loop would be a new
+dev dependency for the sake of a five-line function.
+
+**The skip-an-absent-anchor loop lives in the state machine, not in
+`stepSequence`.** It has to interleave with navigation and awaiting, so
+expressing it as a pure function would mean faking the async — it is covered by
+E2E instead.
+
+**The restart control is portalled, not imported.** It belongs in the site
+header, but `SiteHeader` is core and may not import an optional module. Core
+renders an inert, empty `<div id="tour-launcher-slot">`; the module fills it
+with `createPortal`. With the flag off the div stays empty and invisible.
 
 ### Anchoring: `data-tour` attributes
 
@@ -165,8 +180,9 @@ avoid.
 
 - Auto-starts **once**, only for a first-time visitor whose entry point is `/`.
   Recorded in `localStorage` under `supplymate-tour-seen-v1`.
-- A "ดูวิธีสั่งซื้อ" control in the site header restarts it at any time. This is
-  the only entry point that matters after the first visit.
+- A "ดูวิธีสั่งซื้อ" control in the site header restarts it at any time — see
+  the portal note above. This is the only entry point that matters after the
+  first visit.
 - Exiting is always available: Escape, a close button, or clicking the backdrop.
 - The key is versioned so a materially rewritten tour can be shown again.
 
