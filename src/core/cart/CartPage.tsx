@@ -253,10 +253,10 @@ function CartLineItem({
           <span className="text-sm text-muted-foreground">{item.variantName}</span>
         )}
         <span className="flex flex-wrap items-center gap-2 text-sm tabular-nums text-muted-foreground">
-          <span>
-            {formatPrice(item.unitPrice)}
-            {packageUnit ? ` / ${quantityLabel(packageUnit, 1)}` : ''}
-          </span>
+          {/* No unit *count* here on purpose: "฿1,290.00 / 1 ลัง" would collide
+              with the quantity line below for anyone — a reader or a test —
+              looking for "1 ลัง" on this page. */}
+          <span>{formatPrice(item.unitPrice)} ต่อหน่วย</span>
           {product && item.unitPrice < Number(product.price) && (
             <Badge tone="verified">ราคาขายส่งตามจำนวน</Badge>
           )}
