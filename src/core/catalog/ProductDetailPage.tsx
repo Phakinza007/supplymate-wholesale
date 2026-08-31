@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useProduct } from '@/core/catalog/useProduct'
 import { resolveImageUrl } from '@/lib/resolveImageUrl'
 import { formatPrice } from '@/lib/formatPrice'
@@ -8,6 +8,7 @@ import { PriceBlock } from '@/core/catalog/PriceBlock'
 import { TierLadder } from '@/core/catalog/TierLadder'
 import { QuantityCalculator } from '@/core/catalog/QuantityCalculator'
 import { useCartStore } from '@/core/cart/cartStore'
+import { useToastStore } from '@/lib/toastStore'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,6 +23,7 @@ const VariantSelector = lazy(() => import('@/modules/optional/variants/VariantSe
 
 export function ProductDetailPage() {
   const { slug } = useParams()
+  const navigate = useNavigate()
   const { data: product, isLoading, isError } = useProduct(slug)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -30,10 +32,18 @@ export function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
   const [variantsErrored, setVariantsErrored] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
+  const showToast = useToastStore((state) => state.show)
 
   useEffect(() => {
     if (product) setQuantity(product.min_order_quantity)
   }, [product])
+
+  // Clear the in-place marker once the buyer changes what they would be
+  // adding — it should never describe a quantity or variant that is no longer
+  // on screen.
+  useEffect(() => {
+    setJustAdded(false)
+  }, [quantity, selectedVariant])
 
   if (isLoading) {
     return (
@@ -201,6 +211,7 @@ export function ProductDetailPage() {
             <Button
               disabled={addToCartDisabled}
               onClick={() => {
+                const addedQuantity = Math.max(minimumQuantity, quantity)
                 addItem(
                   {
                     productId: product.id,
@@ -213,10 +224,14 @@ export function ProductDetailPage() {
                     packageUnit,
                     minOrderQuantity: minimumQuantity,
                   },
-                  Math.max(minimumQuantity, quantity),
+                  addedQuantity,
                 )
                 setJustAdded(true)
-                setTimeout(() => setJustAdded(false), 2000)
+                showToast({
+                  title: 'เพิ่มลงตะกร้าแล้ว',
+                  detail: `${product.name} · ${quantityLabel(packageUnit, addedQuantity)} · ${formatPrice(effectiveUnitPrice * addedQuantity)}`,
+                  action: { label: 'ดูตะกร้า', onClick: () => navigate('/cart') },
+                })
               }}
             >
               {variantsErrored
@@ -227,14 +242,7 @@ export function ProductDetailPage() {
                     ? 'สินค้าหมด'
                     : 'เพิ่มลงตะกร้า'}
             </Button>
-            {justAdded && (
-              <span role="status" className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold">เพิ่มแล้ว</span>
-                <Link to="/cart" className="font-semibold text-signal underline underline-offset-4">
-                  ดูตะกร้า
-                </Link>
-              </span>
-            )}
+            {justAdded && <span className="text-sm font-semibold">เพิ่มแล้ว</span>}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCartStore } from '@/core/cart/cartStore'
+import { useToastStore } from '@/lib/toastStore'
 import { demoCategories, findDemoProduct } from '@/demo/catalogue'
 import { formatPrice } from '@/lib/formatPrice'
 import { quantityLabel } from '@/lib/wholesale'
@@ -10,8 +11,10 @@ import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 export function ShowcaseProductPage() {
   const { slug = '' } = useParams()
+  const navigate = useNavigate()
   const product = findDemoProduct(slug)
   const addItem = useCartStore((state) => state.addItem)
+  const showToast = useToastStore((state) => state.show)
   const [quantity, setQuantity] = useState(product?.minOrderQuantity ?? 1)
   const [added, setAdded] = useState(false)
 
@@ -113,6 +116,11 @@ export function ShowcaseProductPage() {
                 quantity,
               )
               setAdded(true)
+              showToast({
+                title: 'เพิ่มลงตะกร้าแล้ว',
+                detail: `${product.name} · ${quantityLabel(product.packageUnit, quantity)} · ${formatPrice(product.price * quantity)}`,
+                action: { label: 'ดูตะกร้า', onClick: () => navigate('/cart') },
+              })
             }}
             className="showcase-button showcase-button--primary"
           >

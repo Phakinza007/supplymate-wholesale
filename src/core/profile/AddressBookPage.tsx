@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
+import { useToastStore } from '@/lib/toastStore'
 import type { Database } from '@/lib/database.types'
 
 type Address = Database['public']['Tables']['addresses']['Row']
@@ -21,6 +22,7 @@ export function AddressBookPage() {
   const [editing, setEditing] = useState<Address | 'new' | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const showToast = useToastStore((state) => state.show)
 
   if (editing) {
     const initial = editing === 'new' ? undefined : editing
@@ -120,6 +122,30 @@ export function AddressBookPage() {
                   onClick={() => {
                     setDeleteError(null)
                     deleteAddress.mutate(address.id, {
+                      onSuccess: () => {
+                        showToast({
+                          title: 'ลบที่อยู่แล้ว',
+                          detail: address.label || address.recipient_name,
+                          action: {
+                            // Restores the same values under a new id — an undo
+                            // of the entry, not of the row.
+                            label: 'เลิกทำ',
+                            onClick: () =>
+                              createAddress.mutate({
+                                label: address.label,
+                                recipient_name: address.recipient_name,
+                                phone: address.phone,
+                                line1: address.line1,
+                                line2: address.line2,
+                                subdistrict: address.subdistrict,
+                                district: address.district,
+                                province: address.province,
+                                postal_code: address.postal_code,
+                                is_default: address.is_default,
+                              }),
+                          },
+                        })
+                      },
                       onError: (err) => {
                         setDeleteError(getErrorMessage(err, 'ลองใหม่อีกครั้ง'))
                       },

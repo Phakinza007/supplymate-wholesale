@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { HashRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import '@/showcase/showcase.css'
 import { useCartTotalItems } from '@/core/cart/cartStore'
@@ -6,12 +7,19 @@ import { ShowcaseCataloguePage } from '@/showcase/ShowcaseCataloguePage'
 import { ShowcaseCheckoutPage } from '@/showcase/ShowcaseCheckoutPage'
 import { ShowcaseFooter } from '@/showcase/ShowcaseFooter'
 import { ShowcaseNotice } from '@/showcase/ShowcaseNotice'
+import { Toaster } from '@/components/ui/toaster'
 import { PrimitivesPage } from '@/showcase/PrimitivesPage'
 import { ShowcaseProductPage } from '@/showcase/ShowcaseProductPage'
 import { toShowcaseAssetUrl } from '@/showcase/assetUrl'
 
 function ShowcaseHeader() {
   const cartCount = useCartTotalItems()
+  const previousCount = useRef(cartCount)
+  const [bump, setBump] = useState(0)
+  useEffect(() => {
+    if (cartCount > previousCount.current) setBump((n) => n + 1)
+    previousCount.current = cartCount
+  }, [cartCount])
 
   return (
     <header className="showcase-header">
@@ -38,8 +46,14 @@ function ShowcaseHeader() {
           <Link to="/cart" className="showcase-header__cart">
             <span>ตะกร้า</span>
             <span
+              key={bump}
+              data-slot="cart-count"
               aria-label={`สินค้าในตะกร้า ${cartCount} รายการ`}
-              className="showcase-header__cart-count"
+              className={
+                bump > 0
+                  ? 'showcase-header__cart-count [animation:cart-bump_200ms_var(--ease-out-quint)]'
+                  : 'showcase-header__cart-count'
+              }
             >
               {cartCount}
             </span>
@@ -59,6 +73,7 @@ export function ShowcaseApp() {
           {/* The single standing disclosure. Pages restate only the part that
               applies to the action in front of the buyer — see
               showcase-commit-caption. */}
+          <Toaster />
           <ShowcaseNotice id="showcase-demo-notice" />
           <Routes>
             <Route path="/" element={<ShowcaseCataloguePage mode="home" />} />

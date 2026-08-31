@@ -151,7 +151,7 @@ export function OrderListPage() {
       )}
 
       {!isLoading && !isError && orders && orders.length > 0 && (
-        <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-card">
+        <ul className="animate-in fade-in duration-150 motion-reduce:animate-none flex flex-col divide-y divide-border rounded-md border border-border bg-card">
           {visible.map((order) => (
             <li
               key={order.id}

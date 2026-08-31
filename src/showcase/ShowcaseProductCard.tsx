@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/core/cart/cartStore'
+import { useToastStore } from '@/lib/toastStore'
 import type { DemoProduct } from '@/demo/catalogue'
 import { formatPrice } from '@/lib/formatPrice'
 import { formatPackageLabel, perItemPrice, quantityLabel } from '@/lib/wholesale'
@@ -13,6 +14,7 @@ interface ShowcaseProductCardProps {
 
 export function ShowcaseProductCard({ product, eager = false }: ShowcaseProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
+  const showToast = useToastStore((state) => state.show)
   const [added, setAdded] = useState(false)
 
   return (
@@ -73,6 +75,10 @@ export function ShowcaseProductCard({ product, eager = false }: ShowcaseProductC
                 product.minOrderQuantity,
               )
               setAdded(true)
+              showToast({
+                title: 'เพิ่มลงตะกร้าแล้ว',
+                detail: `${product.name} · ${quantityLabel(product.packageUnit, product.minOrderQuantity)} · ${formatPrice(product.price * product.minOrderQuantity)}`,
+              })
             }}
             className="showcase-button showcase-button--outline showcase-button--block"
           >

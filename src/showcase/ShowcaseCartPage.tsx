@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCartStore, useCartSubtotal, type CartItem } from '@/core/cart/cartStore'
 import { QuantityStepper } from '@/showcase/QuantityStepper'
 import { WholesaleOrderSummary } from '@/showcase/WholesaleOrderSummary'
+import { useToastStore } from '@/lib/toastStore'
 
 interface CartLineControlsProps {
   item: CartItem
@@ -50,6 +51,8 @@ export function ShowcaseCartPage() {
   const items = useCartStore((state) => state.items)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
+  const addItem = useCartStore((state) => state.addItem)
+  const showToast = useToastStore((state) => state.show)
   const subtotal = useCartSubtotal()
 
   if (items.length === 0) {
@@ -76,7 +79,15 @@ export function ShowcaseCartPage() {
           <CartLineControls
             item={item}
             onQuantityChange={(quantity) => updateQuantity(item.productId, item.variantId, quantity)}
-            onRemove={() => removeItem(item.productId, item.variantId)}
+            onRemove={() => {
+              const removed = { ...item }
+              removeItem(item.productId, item.variantId)
+              showToast({
+                title: 'นำออกจากตะกร้าแล้ว',
+                detail: removed.productName,
+                action: { label: 'เลิกทำ', onClick: () => addItem(removed, removed.quantity) },
+              })
+            }}
           />
         )}
       />
