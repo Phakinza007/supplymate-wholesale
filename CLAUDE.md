@@ -27,6 +27,19 @@ Step 8 (E2E tests) are done.
 - Products and categories are **deactivated (`is_active = false`), never deleted**, from the admin
   UI — no delete button exists anywhere in `src/core/admin/`. Hard delete stays possible outside the
   app (SQL/dashboard) as the safety net, not the happy path.
+- **`products.status` (`draft`/`active`/`archived`) is the only writable lifecycle field.**
+  `products.is_active` still exists and every storefront query and RLS policy still reads it, but
+  it is now DB-derived: `trg_products_sync_is_active` sets `is_active := (status = 'active')` on
+  every insert and update. **Client code must never write `is_active` on `products`** — the trigger
+  discards it. It was kept rather than replaced because `products_active_created_idx`, the
+  `products: public read` policy and the `product_images: public read` policy all read it, and
+  converting it to a `GENERATED` column needs `DROP ... CASCADE`, which would take those policies
+  with it. `categories.is_active` and `product_variants.is_active` are untouched and are still
+  written directly.
+- New products default to `draft`, and **`duplicateProduct`** (`useAdminProductMutations.ts`) always
+  lands its copy as `draft` with `sku: null` and a `-copy`/`-copy-N` slug from
+  `nextAvailableSlug()` — `slug` and `sku` are both `unique`, so a verbatim copy would fail.
+  Images are deliberately not copied; the admin re-uploads them.
 - The list-or-form single-page pattern (`editing: T | 'new' | null` local state, no separate
   create/edit routes) is now used by `AddressBookPage` (Step 2), `AdminCategoryListPage`, and
   `AdminProductListPage` — follow this convention for the next resource that needs simple CRUD
