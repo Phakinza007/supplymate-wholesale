@@ -7,6 +7,7 @@ export interface FeatureFlags {
   lineNotify: boolean
   pdfDocuments: boolean
   promotions: boolean
+  productTour: boolean
 }
 
 export interface BrandConfig {
@@ -99,5 +100,6 @@ export const brandConfig: BrandConfig = {
     lineNotify: false,
     pdfDocuments: false,
     promotions: true,
+    productTour: true,
   },
 }

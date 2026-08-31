@@ -1,6 +1,10 @@
+import { lazy, Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import { SiteHeader } from '@/components/SiteHeader'
 import { Toaster } from '@/components/ui/toaster'
+import { Feature } from '@/lib/Feature'
+
+const ProductTour = lazy(() => import('@/modules/optional/product-tour'))
 
 export function SiteLayout() {
   return (
@@ -10,6 +14,11 @@ export function SiteLayout() {
         <Toaster />
         <Outlet />
       </main>
+      <Feature flag="productTour">
+        <Suspense fallback={null}>
+          <ProductTour />
+        </Suspense>
+      </Feature>
     </div>
   )
 }

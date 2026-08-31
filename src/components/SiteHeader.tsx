@@ -45,6 +45,10 @@ export function SiteHeader() {
           aria-label="การนำทางหลัก"
           className="flex flex-wrap items-center gap-x-5 gap-y-2"
         >
+          {/* Filled by the product-tour module through a portal. Core may not
+              import an optional module, so it renders the slot and nothing
+              else; with the flag off this stays empty. */}
+          <div id="tour-launcher-slot" className="contents" />
           <NavLink to="/shop" className={navClass}>
             สินค้า
           </NavLink>
