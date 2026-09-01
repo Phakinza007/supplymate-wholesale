@@ -161,3 +161,25 @@ test('the catalogue can be read as a comparison table, and the choice is shareab
   await expect(page.getByRole('table')).toHaveCount(0)
   await expect(page).not.toHaveURL(/view=table/)
 })
+
+test('the catalogue keeps a heading a screen reader can navigate by', async ({ page }) => {
+  // The card titles are h3. Without a heading for the listing itself the
+  // outline jumps h1 -> h3, and someone browsing by heading cannot tell where
+  // the products begin.
+  await page.goto('/shop')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'รายการสินค้า' })).toBeAttached()
+})
+
+test('the comparison table holds the catalogue in one scroll', async ({ page }) => {
+  // A table split across pages reintroduces the re-reading it exists to
+  // remove, so it paginates far larger than the grid does.
+  await page.goto('/shop?view=table')
+  const rows = page.locator('tbody tr')
+  await expect(rows.first()).toBeVisible()
+  const tableRows = await rows.count()
+
+  await page.goto('/shop')
+  const cards = await page.locator('a[href^="/products/"]').count()
+  expect(tableRows).toBeGreaterThan(cards)
+})

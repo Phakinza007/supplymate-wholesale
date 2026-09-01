@@ -16,7 +16,12 @@ import { cn } from '@/lib/utils'
 const CHIP =
   'min-h-11 rounded-full border border-border px-3 text-sm font-semibold transition-colors sm:min-h-9'
 
-const PAGE_SIZE = 12
+// The grid is for browsing, so a short page keeps the drawings large. The
+// table exists to be read down a column; splitting that across three pages
+// reintroduces exactly the re-reading it removes, so it carries the whole
+// catalogue in one scroll.
+const GRID_PAGE_SIZE = 12
+const TABLE_PAGE_SIZE = 48
 
 export function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -28,6 +33,7 @@ export function ProductListPage() {
   // In the URL like every other catalogue control, so a buyer can send a
   // colleague the comparison they are actually looking at.
   const view = searchParams.get('view') === 'table' ? 'table' : 'grid'
+  const pageSize = view === 'table' ? TABLE_PAGE_SIZE : GRID_PAGE_SIZE
 
   const [searchInput, setSearchInput] = useState(search ?? '')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
@@ -52,7 +58,7 @@ export function ProductListPage() {
     sort,
     tieredOnly,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
     enabled: productsEnabled,
   })
 
@@ -72,7 +78,7 @@ export function ProductListPage() {
     updateParams({ q: searchInput || undefined, page: undefined })
   }
 
-  const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / PAGE_SIZE)) : 1
+  const totalPages = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : 1
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10">
@@ -193,36 +199,53 @@ export function ProductListPage() {
             มีราคาขั้นบันได
           </button>
 
-          {/* Cards are the default because the product drawings are worth
-              showing; the table is for the buyer who has stopped browsing and
-              started comparing, and wants to read prices down a column. */}
-          <div role="group" aria-label="รูปแบบการแสดงผล" className="ms-auto flex gap-2">
-            <button
-              type="button"
-              aria-pressed={view === 'grid'}
-              onClick={() => updateParams({ view: undefined })}
-              className={cn(
-                CHIP,
-                view === 'grid'
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'hover:bg-accent',
-              )}
+          {/* Deliberately NOT a chip. Every pill in this toolbar changes WHICH
+              products are listed; this changes HOW they are drawn. Sharing the
+              chip's shape and active treatment made the two indistinguishable,
+              so the view control is a segmented control with its own shape and
+              a visible label.
+
+              Cards stay the default: the drawings are worth showing to someone
+              still browsing. The table is for the buyer who has started
+              comparing. Switching resets the page, because the two views
+              paginate at different sizes. */}
+          <div className="ms-auto flex items-center gap-2">
+            <span id="view-label" className="text-xs font-semibold text-muted-foreground">
+              มุมมอง
+            </span>
+            <div
+              role="group"
+              aria-labelledby="view-label"
+              className="inline-flex overflow-hidden rounded-md border border-input"
             >
-              การ์ด
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === 'table'}
-              onClick={() => updateParams({ view: 'table' })}
-              className={cn(
-                CHIP,
-                view === 'table'
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'hover:bg-accent',
-              )}
-            >
-              ตารางเทียบราคา
-            </button>
+              {(
+                [
+                  { value: 'grid', label: 'การ์ด' },
+                  { value: 'table', label: 'ตารางเทียบราคา' },
+                ] as const
+              ).map((option, i) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={view === option.value}
+                  onClick={() =>
+                    updateParams({
+                      view: option.value === 'grid' ? undefined : option.value,
+                      page: undefined,
+                    })
+                  }
+                  className={cn(
+                    'min-h-11 px-3 text-sm font-semibold transition-colors sm:min-h-9',
+                    i > 0 && 'border-l border-input',
+                    view === option.value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-accent',
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -233,13 +256,23 @@ export function ProductListPage() {
         )}
       </div>
 
-      {showLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {[0, 1, 2, 3].map((card) => (
-            <Skeleton key={card} className="h-72 w-full" />
-          ))}
-        </div>
-      )}
+      {/* A skeleton exists to prefigure the layout about to replace it. Showing
+          card blocks and then rendering a table is the one thing it must not
+          do. */}
+      {showLoading &&
+        (view === 'table' ? (
+          <div className="flex flex-col gap-2">
+            {[0, 1, 2, 3, 4, 5].map((row) => (
+              <Skeleton key={row} className="h-14 w-full" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {[0, 1, 2, 3].map((card) => (
+              <Skeleton key={card} className="h-72 w-full" />
+            ))}
+          </div>
+        ))}
 
       {/* Distinct from "no results": a failed query must never read as an empty
           catalogue. */}
@@ -276,19 +309,26 @@ export function ProductListPage() {
         />
       )}
 
-      {!showLoading &&
-        !categoryNotFound &&
-        data &&
-        data.products.length > 0 &&
-        (view === 'table' ? (
-          <ProductTable products={data.products} />
-        ) : (
-          <div className="animate-in fade-in duration-150 motion-reduce:animate-none grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {data.products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ))}
+      {/* The card titles are h3, so without this the outline jumps h1 -> h3 and
+          a screen-reader user browsing by heading cannot tell where the
+          listing begins. Visually hidden: sighted users already have the
+          toolbar and the result count as the boundary. */}
+      {!showLoading && !categoryNotFound && data && data.products.length > 0 && (
+        <section aria-labelledby="product-results-heading">
+          <h2 id="product-results-heading" className="sr-only">
+            รายการสินค้า
+          </h2>
+          {view === 'table' ? (
+            <ProductTable products={data.products} />
+          ) : (
+            <div className="animate-in fade-in duration-150 motion-reduce:animate-none grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {data.products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {!categoryNotFound && data && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4">
