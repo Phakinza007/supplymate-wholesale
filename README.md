@@ -29,9 +29,11 @@ npm run dev
 
 - `npm run dev` — start the dev server
 - `npm run build` — typecheck + production build
-- `npm run build:pages` — build for `/supplymate-wholesale/` with hash-based routing
 - `npm run typecheck` — typecheck only
-- `npm run lint` — oxlint + the core/optional import boundary check
+- `npm run lint` — oxlint, the core/optional import boundary check, and the generated-artifact
+  checks (product art, seed catalogue, hosted catalogue)
+- `npm run generate:catalogue` — regenerate everything derived from
+  `src/demo/catalogue.data.json`
 - `npm run test:unit` — run the unit-test suite
 - `npm run preview` — preview the production build
 
@@ -43,12 +45,25 @@ npm run dev
 - Optional modules are reached through `<Feature flag="...">` + `React.lazy()` so a disabled
   module never enters the production bundle.
 
-## GitHub Pages release status
+## Deployment
 
-The manually triggered workflow deploys a static concept showcase to
-`https://phakinza007.github.io/supplymate-wholesale/`. It builds without Supabase credentials and
-does not include accounts, payments, or customer data. SupplyMate is a self-initiated,
-non-commercial concept demo.
+Production is Vercel: `https://supplymate-wholesale.vercel.app`. The project deploys the real
+Supabase-backed app — `VITE_SHOWCASE_MODE`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are
+set as Vercel environment variables, and `vercel.json`'s rewrite is what lets `BrowserRouter`
+serve deep links. Deploy with `vercel --prod`.
+
+**The live storefront's products come from the hosted Supabase project, not from
+`supabase/seed.sql`** (that file is local-dev only). Load or refresh them by running
+`docs/showcase-catalogue.sql` once in the hosted project's SQL Editor — it is generated from
+`src/demo/catalogue.data.json`, archives whatever is currently on the storefront instead of
+deleting it, and is safe to re-run.
+
+GitHub Pages was the earlier target and is retired. The base-path and hash-router branches it
+needed (`VITE_DEPLOY_TARGET=github-pages`, `src/lib/githubPagesAuth.ts`) are still in the code
+and dormant; nothing sets that variable any more.
+
+SupplyMate is a self-initiated, non-commercial concept demo. It does not carry real customer
+data.
 
 ## Pre-deploy smoke test
 

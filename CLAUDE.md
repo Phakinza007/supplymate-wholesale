@@ -209,14 +209,16 @@ Step 8 (E2E tests) are done.
 ## Catalogue data
 
 - **`src/demo/catalogue.data.json` is the single source of truth for categories and products** —
-  6 categories × 6 products. The static showcase reads it through `src/demo/catalogue.ts`, and
-  `supabase/seed.sql`'s catalogue block is generated from it. Editing either consumer by hand is
-  the mistake: edit the JSON and run `npm run generate:catalogue`.
-- **Two generators, both with a `--check` mode wired into `npm run lint`:**
+  6 categories × 6 products. The static showcase reads it through `src/demo/catalogue.ts`,
+  `supabase/seed.sql`'s catalogue block is generated from it, and so is
+  `docs/showcase-catalogue.sql`, the hand-run script that loads the **hosted** demo project.
+  Editing any consumer by hand is the mistake: edit the JSON and run `npm run generate:catalogue`.
+- **Three generators, each with a `--check` mode wired into `npm run lint`:**
   `scripts/generate-product-art.mjs` writes `public/images/supplymate/products/{slug}.svg` (one per
-  product, from that product's `art` spec, via the pure renderer in `scripts/productArt.mjs`), and
+  product, from that product's `art` spec, via the pure renderer in `scripts/productArt.mjs`);
   `scripts/generate-seed-catalogue.mjs` rewrites only the block between
-  `-- BEGIN generated catalogue` and `-- END generated catalogue` in `supabase/seed.sql`. Variants,
+  `-- BEGIN generated catalogue` and `-- END generated catalogue` in `supabase/seed.sql`; and
+  `scripts/generate-hosted-catalogue.mjs` writes `docs/showcase-catalogue.sql` whole. Variants,
   addresses and the sample orders below that block stay hand-written and reference the fixed
   product ids, so **a product's `id` in the JSON is not free to change** —
   `b1000000-…-0001/0005/0010/0018` are named by the seeded orders.
@@ -225,6 +227,16 @@ Step 8 (E2E tests) are done.
   `generate-product-art.mjs`) until it is deleted by hand — the generator reports orphans in both
   modes and deletes in neither, so re-running `npm run generate:catalogue` writes the renamed
   file but never removes the old one.
+- **The live site's products come from the hosted Supabase project, not from any file in this
+  repo.** Production is Vercel (`https://supplymate-wholesale.vercel.app`) serving the real
+  Supabase-backed app, so deploying a catalogue change does nothing to the storefront on its own:
+  `docs/showcase-catalogue.sql` has to be run once in the hosted project's SQL Editor. It archives
+  whatever is on the storefront rather than deleting it (old orders keep pointing at real rows),
+  releases any SKU an archived row still holds that the script is about to reassign, and is safe
+  to re-run. Its price ladders are **presentation policy, not product data** — the percentages and
+  the rule "the last product of each category deliberately gets no ladder" live in the generator,
+  because a catalogue where everything has tiers hides what the ladder filter and the
+  "ยังไม่มีขั้น" admin badge are for.
 - **This JSON is the demo catalogue, not a client's real one.** It exists so the static showcase
   and `supabase/seed.sql` describe the same thirty-six products instead of drifting; it is not
   where a cloning client's actual inventory goes. `supabase/seed.sql` is local-dev-only (see the

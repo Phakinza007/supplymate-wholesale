@@ -7,16 +7,14 @@ Demo credentials will be provisioned separately for each environment and are nev
 this repository. Buyer and admin verification roles are required for a future hosted smoke test;
 access must be requested from the project owner after the environment exists.
 
-The intended URL is `https://phakinza007.github.io/supplymate-wholesale/`. It is not a deployed
-demo yet: hosted Supabase configuration, repository secrets, a manual Pages workflow run, and a
-hosted smoke test are still pending. Supabase Auth must allow the redirect
-`https://phakinza007.github.io/supplymate-wholesale/` before sign-in is tested.
+The demo is deployed on Vercel at `https://supplymate-wholesale.vercel.app`, running the real
+Supabase-backed app against a hosted Supabase project. Supabase Auth must allow
+`https://supplymate-wholesale.vercel.app` as a redirect before sign-in is tested.
 
-The password-recovery callback used in the browser is
-`https://phakinza007.github.io/supplymate-wholesale/#/reset-password`. The full redirect URL is
-supplied to Supabase, but the fragment is stripped for server-side allowlist matching and is not
-included in the browser's HTTP request to GitHub Pages. The base URL above therefore remains the
-Supabase allowlist entry. The app consumes the recovery session before replacing token-bearing or
-auth-error fragments with a clean hash route.
+The password-recovery callback is `https://supplymate-wholesale.vercel.app/reset-password` — a
+real path, not a hash route, because outside a GitHub Pages build the app mounts `BrowserRouter`
+and `vercel.json`'s rewrite serves that path. The hash-fragment handling in
+`src/lib/githubPagesAuth.ts` only applies to a `VITE_DEPLOY_TARGET=github-pages` build, which
+nothing produces any more.
 
 No buyer, admin, Supabase, or payment credentials are published here.
