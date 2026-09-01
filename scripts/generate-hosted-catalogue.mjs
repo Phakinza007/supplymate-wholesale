@@ -129,6 +129,15 @@ on conflict (slug) do update
       sort_order = excluded.sort_order,
       is_active = true;
 
+-- 2b. Retire any category this catalogue does not name. Archiving products
+--     leaves their categories behind, and an empty category still shows up in
+--     the storefront's filter and on the home page as a heading with nothing
+--     under it. Deactivated, not deleted: archived products keep pointing at a
+--     real row.
+update public.categories
+   set is_active = false
+ where slug not in (${catalogue.categories.map((category) => text(category.slug)).join(', ')});
+
 -- 3. Products. \`price\` is per package (per ลัง/แพ็ก/กล่อง/ม้วน) and excludes
 --    VAT — the shop adds 7% at order time. \`is_active\` is never written here:
 --    trg_products_sync_is_active derives it from status.
