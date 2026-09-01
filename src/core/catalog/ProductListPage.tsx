@@ -4,6 +4,7 @@ import { useCategories } from '@/core/catalog/useCategories'
 import { PRODUCT_SORTS, useProducts, type ProductSort } from '@/core/catalog/useProducts'
 import { SearchSuggestions } from '@/core/catalog/SearchSuggestions'
 import { ProductCard } from '@/core/catalog/ProductCard'
+import { ProductTable } from '@/core/catalog/ProductTable'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -24,6 +25,9 @@ export function ProductListPage() {
   const page = Number(searchParams.get('page') ?? '1')
   const sort = (searchParams.get('sort') ?? 'default') as ProductSort
   const tieredOnly = searchParams.get('tiered') === '1'
+  // In the URL like every other catalogue control, so a buyer can send a
+  // colleague the comparison they are actually looking at.
+  const view = searchParams.get('view') === 'table' ? 'table' : 'grid'
 
   const [searchInput, setSearchInput] = useState(search ?? '')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
@@ -188,6 +192,38 @@ export function ProductListPage() {
           >
             มีราคาขั้นบันได
           </button>
+
+          {/* Cards are the default because the product drawings are worth
+              showing; the table is for the buyer who has stopped browsing and
+              started comparing, and wants to read prices down a column. */}
+          <div role="group" aria-label="รูปแบบการแสดงผล" className="ms-auto flex gap-2">
+            <button
+              type="button"
+              aria-pressed={view === 'grid'}
+              onClick={() => updateParams({ view: undefined })}
+              className={cn(
+                CHIP,
+                view === 'grid'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'hover:bg-accent',
+              )}
+            >
+              การ์ด
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'table'}
+              onClick={() => updateParams({ view: 'table' })}
+              className={cn(
+                CHIP,
+                view === 'table'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'hover:bg-accent',
+              )}
+            >
+              ตารางเทียบราคา
+            </button>
+          </div>
         </div>
 
         {data && !categoryNotFound && (
@@ -240,13 +276,19 @@ export function ProductListPage() {
         />
       )}
 
-      {!showLoading && !categoryNotFound && data && data.products.length > 0 && (
-        <div className="animate-in fade-in duration-150 motion-reduce:animate-none grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {data.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      {!showLoading &&
+        !categoryNotFound &&
+        data &&
+        data.products.length > 0 &&
+        (view === 'table' ? (
+          <ProductTable products={data.products} />
+        ) : (
+          <div className="animate-in fade-in duration-150 motion-reduce:animate-none grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {data.products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ))}
 
       {!categoryNotFound && data && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4">

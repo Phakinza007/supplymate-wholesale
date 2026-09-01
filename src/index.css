@@ -60,6 +60,10 @@
      competes with the per-carton price for weight. `--tier-current` tints the
      ladder row the buyer's quantity currently sits in. */
   --price-per-unit: oklch(0.47 0.11 155);
+  /* The tint behind a catalogue card's volume-price band. Same hue as
+     --price-per-unit at a fraction of the chroma, so the band separates the
+     figure from the rest of the card without becoming a second colour. */
+  --price-per-unit-bg: oklch(0.965 0.025 155);
   --tier-current-bg: oklch(0.965 0.015 265);
   --tier-current-border: oklch(0.24 0.045 265);
 

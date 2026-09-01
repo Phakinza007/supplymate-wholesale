@@ -44,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
             {formatPackageLabel(packageUnit, product.units_per_package)}
           </span>
           {tiers.length > 0 && (
-            <Badge tone="pending">ราคาส่ง {tiers.length + 1} ขั้น</Badge>
+            <Badge tone="pending">{tiers.length + 1} ขั้น</Badge>
           )}
         </div>
         <h3 className="mt-1 leading-snug font-semibold text-balance">{product.name}</h3>
@@ -63,29 +63,37 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </p>
 
-        {/* The same two rows on every card, aligned, so a buyer compares down a
-            column instead of re-reading each card. */}
-        <dl className="mt-2.5 flex flex-col border-t border-border text-xs">
-          <div className="flex items-baseline justify-between gap-3 border-b border-border/55 py-1.5">
-            <dt className="text-muted-foreground">เฉลี่ยต่อชิ้น</dt>
-            <dd className="font-semibold tabular-nums">
-              {formatPrice(perItemPrice(price, product.units_per_package))}
-            </dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-3 py-1.5">
-            <dt className="text-muted-foreground">สั่งขั้นต่ำ</dt>
-            <dd className="font-semibold tabular-nums">
-              {quantityLabel(packageUnit, product.min_order_quantity)}
-            </dd>
-          </div>
-        </dl>
+        {/* Three levels, not one. The old card stacked per-piece, minimum and the
+            volume price as three rows of the same small grey text, so nothing
+            could be scanned -- the line carrying the wholesale promise was the
+            smallest and last. Per-unit and minimum are supporting detail and
+            read as one quiet line; the volume price gets a band of its own. */}
+        <p className="mt-1 text-xs text-muted-foreground tabular-nums">
+          {formatPrice(perItemPrice(price, product.units_per_package))} ต่อชิ้น · ขั้นต่ำ{' '}
+          {quantityLabel(packageUnit, product.min_order_quantity)}
+        </p>
 
-        {best && (
-          <p className="mt-2 text-xs text-[var(--price-per-unit)] tabular-nums">
-            ถูกสุด {formatPrice(perItemPrice(Number(best.unit_price), product.units_per_package))}{' '}
-            ต่อชิ้น เมื่อสั่ง {quantityLabel(packageUnit, best.min_quantity)}
-          </p>
-        )}
+        {/* Always rendered, tiers or not. An attribute that appears on some
+            cards and vanishes on others reads as "this product lacks it"
+            rather than "this shop did not print it", and it leaves the grid
+            ragged. */}
+        <div className="mt-auto pt-2.5">
+          {best ? (
+            <div className="flex items-baseline justify-between gap-2 rounded-md bg-[var(--price-per-unit-bg)] px-2.5 py-1.5">
+              <span className="text-xs font-semibold text-[var(--price-per-unit)]">
+                สั่ง {quantityLabel(packageUnit, best.min_quantity)}
+              </span>
+              <span className="text-sm font-bold text-[var(--price-per-unit)] tabular-nums">
+                {formatPrice(perItemPrice(Number(best.unit_price), product.units_per_package))}
+                <span className="text-xs font-semibold"> / ชิ้น</span>
+              </span>
+            </div>
+          ) : (
+            <div className="rounded-md border border-dashed border-border px-2.5 py-1.5">
+              <span className="text-xs text-muted-foreground">ราคาเดียวทุกจำนวน</span>
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   )

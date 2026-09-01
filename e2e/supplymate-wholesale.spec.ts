@@ -135,3 +135,29 @@ test('records business checkout details in the buyer order snapshot', async ({ p
   await page.waitForURL(/\/orders\/.+/)
   await expect(page.getByText('กาแฟริมคลอง')).toBeVisible()
 })
+
+test('the catalogue can be read as a comparison table, and the choice is shareable', async ({
+  page,
+}) => {
+  await page.goto('/shop')
+  await page.getByRole('button', { name: 'ตารางเทียบราคา' }).click()
+
+  // The columns a wholesale buyer scans down: what a piece costs now, and what
+  // it costs at the bottom of the ladder.
+  const table = page.getByRole('table')
+  // `exact` matters: "ต่อชิ้น" is a substring of "ถูกสุดต่อชิ้น", and both are
+  // real headers side by side.
+  await expect(table.getByRole('columnheader', { name: 'ต่อชิ้น', exact: true })).toBeVisible()
+  await expect(table.getByRole('columnheader', { name: 'ถูกสุดต่อชิ้น' })).toBeVisible()
+  await expect(table.locator('a[href^="/products/"]').first()).toBeVisible()
+
+  // In the URL like every other catalogue control, so the view survives a
+  // reload and can be sent to a colleague.
+  await expect(page).toHaveURL(/view=table/)
+  await page.reload()
+  await expect(page.getByRole('table')).toBeVisible()
+
+  await page.getByRole('button', { name: 'การ์ด', exact: true }).click()
+  await expect(page.getByRole('table')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/view=table/)
+})
