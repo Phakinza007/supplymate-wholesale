@@ -7,20 +7,41 @@ const GAP = 12
 
 /**
  * The dim is four bands around the target rather than one sheet with a
- * `box-shadow` spread, because the hole has to be a real hole: on the
- * add-to-cart step the visitor must be able to press the button underneath.
- * A full-viewport backdrop would swallow that click, and the one step the tour
- * is built around would be impossible to complete.
+ * `box-shadow` spread, because on the waiting step the hole has to be a real
+ * hole: the visitor must be able to press the add-to-cart button underneath,
+ * and a full-viewport backdrop would swallow that click.
+ *
+ * `hole` is false on every other step, and that matters. An always-open hole
+ * lets a visitor click straight through a highlighted link and navigate away,
+ * leaving the tour narrating a step whose target is no longer on the page. The
+ * hole is a property of the one step that needs it, not of the overlay.
  */
-function Backdrop({ rect, onDismiss }: { rect: Rect | null; onDismiss: () => void }) {
+function Backdrop({
+  rect,
+  hole,
+  onDismiss,
+}: {
+  rect: Rect | null
+  hole: boolean
+  onDismiss: () => void
+}) {
   const band = 'pointer-events-auto absolute bg-black/55'
-  if (!rect) {
+  if (!rect || !hole) {
     return (
-      <div
-        aria-hidden="true"
-        className="pointer-events-auto absolute inset-0 bg-black/55"
-        onClick={onDismiss}
-      />
+      <div aria-hidden="true" onClick={onDismiss}>
+        <div className="pointer-events-auto absolute inset-0 bg-black/55" />
+        {rect && (
+          <div
+            className="pointer-events-none absolute rounded-md ring-2 ring-primary"
+            style={{
+              top: rect.top - 3,
+              left: rect.left - 3,
+              width: rect.width + 6,
+              height: rect.height + 6,
+            }}
+          />
+        )}
+      </div>
     )
   }
   const right = rect.left + rect.width
@@ -123,7 +144,7 @@ export function TourOverlay({
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[var(--z-tour)]" data-tour-overlay>
-      <Backdrop rect={targetRect} onDismiss={onClose} />
+      <Backdrop rect={targetRect} hole={waitingForAction} onDismiss={onClose} />
 
       <div
         ref={tooltipRef}

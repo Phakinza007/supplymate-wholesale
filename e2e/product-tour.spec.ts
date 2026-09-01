@@ -67,3 +67,23 @@ test('a deep link is never hijacked into the tour', async ({ page }) => {
   await expect(page.locator(dialog)).toHaveCount(0)
   await expect(page).toHaveURL(/\/cart/)
 })
+
+test('a highlighted link is not click-through on a step that is not waiting', async ({ page }) => {
+  // The spotlight hole exists for one step: the one that asks the visitor to
+  // press add-to-cart. Leaving it open on every step let a raw click land on a
+  // highlighted link and navigate away, stranding the tour on a step whose
+  // target was no longer on the page. Raw mouse click, not locator.click(),
+  // because Playwright's actionability check would refuse it -- and refusing is
+  // exactly the behaviour under test.
+  await page.goto('/')
+  const tour = page.getByRole('dialog')
+  await expect(tour).toBeVisible()
+
+  const link = page.locator('a[href^="/shop?category="]').first()
+  await expect(link).toBeVisible()
+  const box = await link.boundingBox()
+  if (!box) throw new Error('no category link to aim at')
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+
+  await expect(page).toHaveURL(/\/$|\/\?/)
+})
