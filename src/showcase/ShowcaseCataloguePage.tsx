@@ -27,10 +27,15 @@ export function ShowcaseCataloguePage({ mode }: ShowcaseCataloguePageProps) {
   }
 
   if (mode === 'home') {
-    const categoryTiles = demoCategories.map((category) => {
-      const products = demoProducts.filter((product) => product.categorySlug === category.slug)
-      return { ...category, imagePath: products[0].imagePath, productCount: products.length }
-    })
+    const categoryTiles = demoCategories.map((category) => ({
+      ...category,
+      productCount: demoProducts.filter((product) => product.categorySlug === category.slug).length,
+    }))
+    // One product per category: at 36 items, listing the catalogue twice on the
+    // home page buries the categories that are the actual way in.
+    const featured = demoCategories.flatMap(
+      (category) => demoProducts.find((product) => product.categorySlug === category.slug) ?? [],
+    )
 
     return (
       <div className="flex flex-col gap-14 pb-8">
@@ -55,17 +60,20 @@ export function ShowcaseCataloguePage({ mode }: ShowcaseCataloguePageProps) {
           </div>
         </section>
 
-        {/* The demo catalogue is small enough to show in full here; /shop is the
-            same set with search and category filters on top. */}
         <section aria-labelledby="featured-title">
-          <div className="max-w-2xl">
-            <p className="showcase-eyebrow">รายการทั้งหมด</p>
-            <h2 id="featured-title" className="showcase-section-title">
-              สินค้าในแคตตาล็อกตัวอย่าง
-            </h2>
+          <div className="showcase-section-header">
+            <div>
+              <p className="showcase-eyebrow">ตัวอย่างสินค้า</p>
+              <h2 id="featured-title" className="showcase-section-title">
+                ตัวอย่างจากทุกหมวด
+              </h2>
+            </div>
+            <Link to="/shop" className="showcase-section-header__link">
+              ดูสินค้าทั้งหมด {demoProducts.length.toLocaleString('th-TH')} รายการ
+            </Link>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {demoProducts.map((product, index) => (
+            {featured.map((product, index) => (
               <ShowcaseProductCard key={product.id} product={product} eager={index === 0} />
             ))}
           </div>

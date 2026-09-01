@@ -147,6 +147,12 @@
   text-decoration-line: underline;
 }
 
+.showcase-related {
+  margin-block-start: 3.5rem;
+  padding-block-start: 2rem;
+  border-block-start: 1px solid var(--border);
+}
+
 .showcase-lede {
   max-width: 60ch;
   margin-top: 0.75rem;

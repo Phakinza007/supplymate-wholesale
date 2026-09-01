@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="ถ้วยซุปกระดาษ 16 ออนซ์พร้อมฝา">
+  <rect width="640" height="640" fill="#f1f1f5"/>
+  <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 235 250 L 250 456 Q 250 470 264 470 L 376 470 Q 390 470 390 456 L 405 250"/>
+    <ellipse cx="320" cy="250" rx="85" ry="16"/>
+    <path d="M 250.1 324.8 L 389.9 324.8" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 251.9 351.2 L 388.1 351.2" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 221 246 L 221 220 L 419 220 L 419 246"/>
+    <ellipse cx="320" cy="220" rx="99" ry="15"/>
+    <path d="M 302 216 L 338 216" stroke="#4a63c8" stroke-width="7"/>
+  </g>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">16 oz · soup</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="สติกเกอร์ระวังแตก">
+  <rect width="640" height="640" fill="#f1f1f5"/>
+  <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 191 260 L 191 410 L 449 410 L 449 260"/>
+    <ellipse cx="320" cy="260" rx="129" ry="46"/>
+    <ellipse cx="320" cy="410" rx="129" ry="46"/>
+    <ellipse cx="320" cy="260" rx="49.6" ry="18" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 449 362 L 545 396 L 545 464 L 449 430 Z"/>
+    <path d="M 497 390 L 523 436 L 471 436 Z" stroke="#4a63c8" stroke-width="7"/>
+  </g>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">fragile</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="ชุดช้อนส้อมไบโอพลาสติก">
+  <rect width="640" height="640" fill="#f1f1f5"/>
+  <path d="M 120 478 L 520 478" stroke="#c9c9d3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="none" stroke="#2b2d3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="188" y="150" width="264" height="320" rx="20"/>
+    <path d="M 188 196 L 452 196" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 258 410 L 258 300" stroke-width="12"/>
+    <path d="M 230 242 L 230 300 L 286 300 L 286 242"/>
+    <path d="M 258 242 L 258 300" stroke="#c9c9d3" stroke-width="5"/>
+    <path d="M 382 410 L 382 298" stroke-width="12"/>
+    <ellipse cx="382" cy="266" rx="32" ry="40"/>
+  </g>
+  <text x="320" y="534" text-anchor="middle" fill="#5c5d6c" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34">fork · spoon</text>
+</svg>
