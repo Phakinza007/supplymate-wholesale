@@ -213,6 +213,9 @@ export function ProductDetailPage() {
             />
             <Button
               data-tour="add-to-cart"
+              data-tour-blocked={
+                variantsErrored ? 'variants' : needsSelection ? 'variant' : outOfStock ? 'stock' : undefined
+              }
               disabled={addToCartDisabled}
               onClick={() => {
                 const addedQuantity = Math.max(minimumQuantity, quantity)

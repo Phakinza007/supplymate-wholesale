@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tooltipPosition } from './tooltipPosition'
+import { clampRectToViewport, tooltipPosition } from './tooltipPosition'
 
 const desktop = { width: 1280, height: 800 }
 const tooltip = { width: 320, height: 160 }
@@ -43,5 +43,37 @@ describe('tooltipPosition', () => {
     expect(r.placement).toBe('sheet')
     expect(r.left).toBe(0)
     expect(r.top).toBe(812 - tooltip.height)
+  })
+})
+
+describe('clampRectToViewport', () => {
+  const viewport = { width: 1280, height: 800 }
+
+  it('leaves a target that already fits alone', () => {
+    const r = clampRectToViewport({ top: 200, left: 40, width: 300, height: 120 }, viewport, 64)
+    expect(r).toEqual({ top: 200, left: 40, width: 300, height: 120 })
+  })
+
+  it('trims a target taller than the viewport down to what is on screen', () => {
+    // The home page's category section is one element around six tiles: on a
+    // phone it is taller than the screen, so highlighting all of it highlights
+    // nothing. The visible slice is what the visitor can actually be shown.
+    const r = clampRectToViewport({ top: -100, left: 16, width: 343, height: 1300 }, viewport, 64)
+    expect(r).not.toBeNull()
+    expect(r!.top).toBe(64)
+    expect(r!.top + r!.height).toBe(viewport.height)
+  })
+
+  it('never reaches up under the sticky header', () => {
+    const r = clampRectToViewport({ top: 10, left: 0, width: 100, height: 200 }, viewport, 64)
+    expect(r!.top).toBe(64)
+    expect(r!.height).toBe(146)
+  })
+
+  it('returns null when the target has scrolled out of sight', () => {
+    expect(clampRectToViewport({ top: -500, left: 0, width: 100, height: 200 }, viewport, 64))
+      .toBeNull()
+    expect(clampRectToViewport({ top: 900, left: 0, width: 100, height: 200 }, viewport, 64))
+      .toBeNull()
   })
 })

@@ -39,6 +39,30 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, Math.max(min, max)))
 }
 
+/**
+ * Trim a target to the part of it the visitor can actually see.
+ *
+ * A step's anchor is whatever element carries the meaning, and that is
+ * sometimes a whole section: the home page's category block is one element
+ * around six tiles, which on a phone is taller than the screen. Highlighting
+ * all of it highlights nothing — the dim ends up a few pixels at the edges and
+ * the "spotlight" loses its job. Clamping to the visible slice keeps the
+ * highlight meaningful without asking every page to sprout finer anchors.
+ *
+ * Returns null when nothing of the target is on screen, which the caller reads
+ * as "no highlight to draw".
+ */
+export function clampRectToViewport(
+  rect: Rect,
+  viewport: { width: number; height: number },
+  headerHeight: number,
+): Rect | null {
+  const top = Math.max(rect.top, headerHeight)
+  const bottom = Math.min(rect.top + rect.height, viewport.height)
+  if (bottom - top <= 0) return null
+  return { top, left: rect.left, width: rect.width, height: bottom - top }
+}
+
 export function tooltipPosition({
   target,
   tooltip,

@@ -34,7 +34,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="category-title" data-tour="home-categories" className="space-y-10">
+      <section aria-labelledby="category-title" className="space-y-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-muted-foreground">หมวดสินค้า</p>
@@ -61,7 +61,7 @@ export function HomePage() {
           <p className="text-muted-foreground">ยังไม่มีหมวดสินค้าที่เปิดจำหน่าย</p>
         )}
         {categories.data && categories.data.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-tour="home-categories">
             {categories.data.map((category) => (
               <Link
                 key={category.id}

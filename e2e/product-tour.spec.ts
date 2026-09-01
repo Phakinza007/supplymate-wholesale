@@ -15,7 +15,7 @@ test('a visitor with no account can take the whole tour', async ({ page }) => {
   // never counted towards a step they cannot reach.
   await expect(tour).toContainText('ขั้นที่ 1 จาก 7')
 
-  await tour.getByRole('button', { name: 'ถัดไป' }).click()
+  await tour.getByRole('button', { name: /^ถัดไป/ }).click()
   await expect(page).toHaveURL(/\/shop/)
   await expect(tour).toContainText('หาของที่ต้องการ')
 
@@ -23,9 +23,9 @@ test('a visitor with no account can take the whole tour', async ({ page }) => {
   // walk is "press ถัดไป until the tour stops offering it" rather than a fixed
   // count -- a catalogue without price tiers legitimately has fewer steps.
   for (let i = 0; i < 6; i++) {
-    if (await tour.getByRole('button', { name: 'ข้าม' }).isVisible()) break
-    if (!(await tour.getByRole('button', { name: 'ถัดไป' }).isVisible())) break
-    await tour.getByRole('button', { name: 'ถัดไป' }).click()
+    if (await tour.getByRole('button', { name: /^ข้าม/ }).isVisible()) break
+    if (!(await tour.getByRole('button', { name: /^ถัดไป/ }).isVisible())) break
+    await tour.getByRole('button', { name: /^ถัดไป/ }).click()
     await page.waitForTimeout(300)
   }
 
@@ -39,7 +39,7 @@ test('a visitor with no account can take the whole tour', async ({ page }) => {
   await expect(page).toHaveURL(/\/cart/)
   await expect(tour).toContainText('ยอดรวมคิดจากขั้นที่ได้จริง')
 
-  await tour.getByRole('button', { name: 'จบทัวร์' }).click()
+  await tour.getByRole('button', { name: /^จบทัวร์/ }).click()
   await expect(page.locator(dialog)).toHaveCount(0)
 
   // The rule the whole design hangs on: the tour navigates and highlights, and
@@ -86,4 +86,51 @@ test('a highlighted link is not click-through on a step that is not waiting', as
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
 
   await expect(page).toHaveURL(/\/$|\/\?/)
+})
+
+test('the highlight is a highlight, not the whole page', async ({ page }) => {
+  // The first step's anchor is a block of category tiles, which on a phone is
+  // taller than the screen. Highlighting all of it dims a few pixels at the
+  // edges and reads as "nothing is highlighted", so the overlay draws only the
+  // part the visitor can see.
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/')
+  const tour = page.getByRole('dialog')
+  await expect(tour).toBeVisible()
+
+  const ring = page.locator('[data-tour-overlay] .ring-2')
+  await expect(ring).toBeVisible()
+  const box = await ring.boundingBox()
+  if (!box) throw new Error('no highlight drawn')
+  // Entirely on screen: an outline whose top and bottom are both off the
+  // viewport is not showing the visitor anything.
+  expect(box.y).toBeGreaterThanOrEqual(0)
+  expect(box.y + box.height).toBeLessThanOrEqual(813)
+})
+
+test('skipping the add-to-cart step still ends somewhere readable', async ({ page }) => {
+  // "ข้าม" is a button the tour itself offers on the waiting step. Taking it
+  // arrives at /cart with an empty cart, where the summary the closing step
+  // describes does not exist -- which used to render a black screen that closed
+  // itself about two seconds later, before the closing sentence could be read.
+  await page.goto('/')
+  const tour = page.getByRole('dialog')
+  await expect(tour).toBeVisible()
+
+  for (let i = 0; i < 8; i++) {
+    if (await tour.getByRole('button', { name: /^ข้าม/ }).isVisible()) break
+    if (!(await tour.getByRole('button', { name: /^ถัดไป/ }).isVisible())) break
+    await tour.getByRole('button', { name: /^ถัดไป/ }).click()
+    await page.waitForTimeout(300)
+  }
+  await tour.getByRole('button', { name: /^ข้าม/ }).click()
+
+  await expect(page).toHaveURL(/\/cart/)
+  await expect(tour).toContainText('ตะกร้ายังว่างอยู่')
+
+  // It stays put: the visitor closes the tour, the tour does not close itself.
+  await page.waitForTimeout(3000)
+  await expect(tour).toBeVisible()
+  await tour.getByRole('button', { name: /^จบทัวร์/ }).click()
+  await expect(page.locator(dialog)).toHaveCount(0)
 })

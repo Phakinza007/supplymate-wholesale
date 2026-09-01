@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { progressLabel } from './stepSequence'
-import { tooltipPosition, type Position, type Rect } from './tooltipPosition'
+import { clampRectToViewport, tooltipPosition, type Position, type Rect } from './tooltipPosition'
 
 const GAP = 12
 
@@ -93,17 +93,25 @@ export function TourOverlay({
 }) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<Position | null>(null)
+  // What the visitor can see of the target, which is what gets highlighted. A
+  // section-sized anchor is otherwise "highlighted" by dimming a few pixels at
+  // the screen edges.
+  const [visibleRect, setVisibleRect] = useState<Rect | null>(null)
 
   useLayoutEffect(() => {
     const node = tooltipRef.current
     if (!node) return
     const header = document.querySelector('header')
+    const headerHeight = header?.getBoundingClientRect().height ?? 0
+    const viewport = { width: window.innerWidth, height: window.innerHeight }
+    const clamped = targetRect ? clampRectToViewport(targetRect, viewport, headerHeight) : null
+    setVisibleRect(clamped)
     setPosition(
       tooltipPosition({
-        target: targetRect ?? { top: 0, left: 0, width: window.innerWidth, height: 0 },
+        target: clamped ?? { top: 0, left: 0, width: viewport.width, height: 0 },
         tooltip: { width: node.offsetWidth, height: node.offsetHeight },
-        viewport: { width: window.innerWidth, height: window.innerHeight },
-        headerHeight: header?.getBoundingClientRect().height ?? 0,
+        viewport,
+        headerHeight,
         gap: GAP,
       }),
     )
@@ -144,7 +152,7 @@ export function TourOverlay({
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[var(--z-tour)]" data-tour-overlay>
-      <Backdrop rect={targetRect} hole={waitingForAction} onDismiss={onClose} />
+      <Backdrop rect={visibleRect} hole={waitingForAction} onDismiss={onClose} />
 
       <div
         ref={tooltipRef}
@@ -164,20 +172,39 @@ export function TourOverlay({
         <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {index > 0 && (
-            <Button variant="outline" className="min-h-11 sm:min-h-9" onClick={onPrev}>
+            <Button
+              variant="outline"
+              className="min-h-11 sm:min-h-9"
+              aria-label={`ย้อนกลับ — ${progressLabel(index, total)}`}
+              onClick={onPrev}
+            >
               ย้อนกลับ
             </Button>
           )}
           {waitingForAction ? (
-            <Button variant="outline" className="min-h-11 sm:min-h-9" onClick={onSkip}>
+            <Button
+              variant="outline"
+              className="min-h-11 sm:min-h-9"
+              aria-label={`ข้าม — ${progressLabel(index, total)}`}
+              onClick={onSkip}
+            >
               ข้าม
             </Button>
           ) : (
-            <Button className="min-h-11 sm:min-h-9" onClick={onNext}>
+            <Button
+              className="min-h-11 sm:min-h-9"
+              aria-label={`${index === total - 1 ? 'จบทัวร์' : 'ถัดไป'} — ${progressLabel(index, total)}`}
+              onClick={onNext}
+            >
               {index === total - 1 ? 'จบทัวร์' : 'ถัดไป'}
             </Button>
           )}
-          <Button variant="ghost" className="ml-auto min-h-11 sm:min-h-9" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className="ml-auto min-h-11 sm:min-h-9"
+            aria-label="ปิดทัวร์"
+            onClick={onClose}
+          >
             ปิด
           </Button>
         </div>

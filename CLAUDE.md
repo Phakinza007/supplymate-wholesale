@@ -150,6 +150,33 @@ Step 8 (E2E tests) are done.
   unexplained 60-second Playwright timeout. It is a `scripts/*.mjs` check rather
   than a vitest file because it needs node's `fs`, and `tsconfig.app.json`
   deliberately gives `src/` no node types.
+- **An anchor must be small enough to point at something.** `data-tour` belongs
+  on the element the step is about, not the section around it: the first step
+  once anchored the whole category `<section>`, which on a phone is taller than
+  the screen, so the "spotlight" dimmed a few pixels at the edges and read as
+  *nothing* highlighted. `clampRectToViewport()` now trims any target to the
+  visible slice as a backstop, but the anchor is still the fix.
+- **Every step a visitor can reach needs a target that exists in that state.**
+  The closing step describes the cart summary, which only renders when the cart
+  has items — and the tour itself offers "ข้าม" on the add-to-cart step, which
+  arrives at `/cart` empty. The empty state therefore carries
+  `data-tour="cart-summary"` too, the filled summary marks itself with
+  `data-tour-cart-total` (the "ideal" target, same shape as `data-tour-tiers`),
+  and the step's `altBody` says something true about an empty cart. Before that,
+  the tour ended on a black screen that closed itself about two seconds later,
+  before its last sentence could be read. **The last step never auto-closes on a
+  missing anchor** — earlier steps skip, the last one stays and waits to be
+  dismissed.
+- **A step that explains why something is unavailable reads the reason from the
+  page.** `data-tour-blocked` on the add-to-cart button carries
+  `variant`/`stock`/`variants`, and `stepBody()` picks the matching entry from
+  the step's `altBodies`. One generic sentence got this wrong in production: an
+  out-of-stock product told the visitor to "choose an option that is in stock"
+  on a product that has no options.
+- **The tour's controls share their words with the page's own.** The catalogue's
+  pagination also says "ถัดไป", so the tour's buttons carry an `aria-label` with
+  the step number ("ถัดไป — ขั้นที่ 2 จาก 7"). E2E locators therefore match
+  `/^ถัดไป/`, not the exact string.
 - **The tour never operates a control that changes data.** It highlights and
   navigates. The add-to-cart step *waits*, and it detects completion by watching
   `useCartTotalItems()` rise — not by hooking the button, and never by writing to

@@ -34,6 +34,15 @@ export interface TourStep {
    * that cannot be pressed.
    */
   altBody?: string
+  /**
+   * Reason-specific alternatives, keyed by the target's `data-tour-blocked`
+   * value, used before `altBody`. One "this is unavailable" sentence cannot
+   * cover both causes: a product behind a variant choice needs a different
+   * instruction from one that is simply out of stock, and telling a visitor to
+   * "choose an option that is in stock" on a product with no options at all
+   * sends them looking for a control that does not exist.
+   */
+  altBodies?: Record<string, string>
   /** Steps behind ProtectedRoute. Dropped entirely for a logged-out visitor. */
   requiresSession?: true
 }
@@ -87,8 +96,13 @@ export const tourSteps: readonly TourStep[] = [
     anchor: 'add-to-cart',
     title: 'ลองกดเพิ่มลงตะกร้าดู',
     body: 'กดปุ่มนี้เองได้เลย ทัวร์รอตรงนี้ก่อน — จะได้เห็นว่าตะกร้าคิดราคาขั้นบันไดให้จริง',
-    altBody:
-      'สินค้าตัวนี้ยังกดสั่งไม่ได้ ต้องเลือกตัวเลือกที่มีของก่อน เลือกแล้วกดเพิ่มลงตะกร้าได้เลย หรือกดถัดไปเพื่อดูทัวร์ต่อ',
+    altBody: 'สินค้าตัวนี้ยังกดสั่งไม่ได้ตอนนี้ กดถัดไปเพื่อดูทัวร์ต่อได้เลย',
+    altBodies: {
+      variant:
+        'สินค้าตัวนี้ต้องเลือกตัวเลือกที่มีของก่อน เลือกแล้วกดเพิ่มลงตะกร้าได้เลย หรือกดถัดไปเพื่อดูทัวร์ต่อ',
+      stock: 'สินค้าตัวนี้หมดพอดี เลยยังกดสั่งไม่ได้ กดถัดไปเพื่อดูทัวร์ต่อได้เลย',
+      variants: 'ตอนนี้โหลดตัวเลือกของสินค้าไม่สำเร็จ กดถัดไปเพื่อดูทัวร์ต่อได้เลย',
+    },
     advance: 'action',
   },
   {
@@ -97,6 +111,11 @@ export const tourSteps: readonly TourStep[] = [
     anchor: 'cart-summary',
     title: 'ยอดรวมคิดจากขั้นที่ได้จริง',
     body: 'ถัดจากนี้คือเข้าสู่ระบบ เลือกที่อยู่จัดส่ง เลือกวิธีชำระเงิน แล้วแนบสลิป ระบบคิดค่าส่งและ VAT ให้ตอนสั่งซื้อ',
+    // Reached with an empty cart whenever the visitor skips the add-to-cart
+    // step, which the tour itself offers. The step still has to land somewhere
+    // it can be read, so the empty cart carries the anchor too.
+    altBody:
+      'ตะกร้ายังว่างอยู่ พอมีสินค้าในตะกร้า ตรงนี้จะสรุปยอดตามขั้นราคาที่ได้จริง ถัดจากนั้นคือเข้าสู่ระบบ เลือกที่อยู่จัดส่ง เลือกวิธีชำระเงิน แล้วแนบสลิป',
     advance: 'button',
   },
   {
@@ -109,3 +128,13 @@ export const tourSteps: readonly TourStep[] = [
     requiresSession: true,
   },
 ]
+
+/**
+ * The sentence to show for a step, given what the tour actually found on the
+ * page. A reason-specific alternative wins over the generic one, which wins
+ * over the copy written for the ideal case.
+ */
+export function stepBody(step: TourStep, ideal: boolean, reason?: string): string {
+  if (ideal) return step.body
+  return (reason && step.altBodies?.[reason]) || step.altBody || step.body
+}

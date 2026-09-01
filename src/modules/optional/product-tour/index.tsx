@@ -5,7 +5,7 @@ import { useCartTotalItems } from '@/core/cart/cartStore'
 import { TourLauncher } from './TourLauncher'
 import { TourOverlay } from './TourOverlay'
 import { planSteps } from './stepSequence'
-import { tourSteps, type TourStep } from './tourSteps'
+import { stepBody, tourSteps, type TourStep } from './tourSteps'
 import type { Rect } from './tooltipPosition'
 import { waitFor } from './waitFor'
 
@@ -37,17 +37,34 @@ function recalls(key: string): boolean {
  * ladder step that follows then skips on its own, because a product without
  * tiers renders no ladder.
  */
-function anchorNode(step: TourStep): { node: HTMLElement; ideal: boolean } | null {
+function anchorNode(
+  step: TourStep,
+): { node: HTMLElement; ideal: boolean; reason?: string } | null {
   if (step.id === 'catalogue-tiers') {
     const tiered = document.querySelector<HTMLElement>('[data-tour-tiers]')
     if (tiered) return { node: tiered, ideal: true }
     const any = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
     return any ? { node: any, ideal: false } : null
   }
+  // The cart summary only exists once something is in the cart, and the tour
+  // itself offers a "ข้าม" that arrives here with an empty one. The empty state
+  // carries the anchor so the closing step lands on something readable instead
+  // of a black screen that ends the tour before it can be read.
+  if (step.id === 'cart-summary') {
+    const filled = document.querySelector<HTMLElement>('[data-tour-cart-total]')
+    if (filled) return { node: filled, ideal: true }
+    const empty = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
+    return empty ? { node: empty, ideal: false } : null
+  }
   const node = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
   if (!node) return null
-  // An action step's target is only ideal if it can actually be operated.
-  return { node, ideal: !(node as HTMLButtonElement).disabled }
+  // An action step's target is only ideal if it can actually be operated, and
+  // the page says why it cannot.
+  return {
+    node,
+    ideal: !(node as HTMLButtonElement).disabled,
+    reason: node.dataset.tourBlocked,
+  }
 }
 
 function toRect(node: HTMLElement): Rect {
@@ -65,6 +82,7 @@ export default function ProductTour() {
   const [index, setIndex] = useState(0)
   const [rect, setRect] = useState<Rect | null>(null)
   const [targetIdeal, setTargetIdeal] = useState(true)
+  const [blockedReason, setBlockedReason] = useState<string | undefined>(undefined)
   const nodeRef = useRef<HTMLElement | null>(null)
   const cartOnEntry = useRef(0)
 
@@ -104,14 +122,18 @@ export default function ProductTour() {
     void waitFor(() => anchorNode(step)).then((found) => {
       if (cancelled) return
       if (!found) {
+        // Skipping beats waiting -- but the last step has nowhere to skip to,
+        // and closing on the spot means the visitor never reads the sentence
+        // the tour ends on. Show it with no highlight and let them close it.
         if (index + 1 < plan.length) setIndex(index + 1)
-        else stop()
+        else setTargetIdeal(false)
         return
       }
       nodeRef.current = found.node
       found.node.scrollIntoView({ block: 'center', behavior: 'auto' })
       cartOnEntry.current = cartCount
       setTargetIdeal(found.ideal)
+      setBlockedReason(found.reason)
       // Measure on the next frame: getBoundingClientRect in the same tick as
       // scrollIntoView returns the pre-scroll position, which puts the hole --
       // and therefore the clickable gap -- somewhere the target is not.
@@ -169,7 +191,7 @@ export default function ProductTour() {
       {plan && step && (
         <TourOverlay
           title={step.title}
-          body={!targetIdeal && step.altBody ? step.altBody : step.body}
+          body={stepBody(step, targetIdeal, blockedReason)}
           targetRect={rect}
           index={index}
           total={plan.length}
